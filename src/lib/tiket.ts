@@ -49,3 +49,17 @@ export function urutkanTiket<T extends Pick<TiketPenyewa, "status" | "dibuatPada
   const selesai = (t: T) => (t.status === "selesai" ? 1 : 0);
   return [...tiket].sort((a, b) => selesai(a) - selesai(b) || b.dibuatPada.localeCompare(a.dibuatPada));
 }
+
+/** Tiket di daftar owner: lengkap dengan kamar & penghuni pelapor. */
+export type TiketKos = TiketPenyewa & { nomorKamar: string; namaPenghuni: string; nomorWa: string };
+
+/** Jumlah tiket per status. */
+export function hitungTiket(tiket: Pick<TiketPenyewa, "status">[]): Record<StatusTiket, number> {
+  const jumlah: Record<StatusTiket, number> = { baru: 0, diproses: 0, selesai: 0 };
+  for (const t of tiket) jumlah[t.status] += 1;
+  return jumlah;
+}
+
+/** Status berikutnya yang bisa dipilih owner (baru → diproses → selesai); null bila sudah selesai. */
+export const statusBerikutnya = (s: StatusTiket): StatusTiket | null =>
+  s === "baru" ? "diproses" : s === "diproses" ? "selesai" : null;

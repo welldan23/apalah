@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { KATEGORI_TIKET, labelKategori, periksaTiket, urutkanTiket } from "./tiket.ts";
+import { hitungTiket, KATEGORI_TIKET, labelKategori, periksaTiket, statusBerikutnya, urutkanTiket } from "./tiket.ts";
 
 describe("tiket keluhan penyewa", () => {
   it("kategori tetap & labelnya", () => {
@@ -30,5 +30,10 @@ describe("tiket keluhan penyewa", () => {
       ]).map((x) => x.id),
       ["c", "b", "d", "a"],
     );
+  });
+
+  it("jumlah per status & langkah berikutnya untuk owner", () => {
+    assert.deepEqual(hitungTiket([{ status: "baru" }, { status: "baru" }, { status: "selesai" }]), { baru: 2, diproses: 0, selesai: 1 });
+    assert.deepEqual(["baru", "diproses", "selesai"].map((s) => statusBerikutnya(s as never)), ["diproses", "selesai", null]);
   });
 });

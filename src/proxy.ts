@@ -27,6 +27,7 @@ export const config = {
     "/pembayaran/:path*",
     "/reminder/:path*",
     "/kosta/:path*",
+    "/tiket/:path*",
     "/pilih-kos",
     "/api/dashboard/:path*",
     "/api/kosta/:path*",

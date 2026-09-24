@@ -14,12 +14,21 @@ describe("menu sesuai peran", () => {
       "Pembayaran",
       "Reminder",
       "Chat Kosta",
+      "Tiket keluhan",
       "Pengaturan",
     ]);
   });
 
   it("admin: menu operasional tanpa Pengaturan", () => {
-    assert.deepEqual(label("admin"), ["Dashboard", "Tagihan & Invoice", "Kamar & Penghuni", "Pembayaran", "Reminder", "Chat Kosta"]);
+    assert.deepEqual(label("admin"), [
+      "Dashboard",
+      "Tagihan & Invoice",
+      "Kamar & Penghuni",
+      "Pembayaran",
+      "Reminder",
+      "Chat Kosta",
+      "Tiket keluhan",
+    ]);
   });
 
   it("penyewa hanya tagihannya sendiri & tiket, tanpa data kos", () => {

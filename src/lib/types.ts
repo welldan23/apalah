@@ -177,6 +177,8 @@ export type DashboardData = {
   invoices: InvoiceRow[];
   /** Tagihan dengan pembayaran tidak cocok (semua periode) — untuk banner notifikasi. */
   perluReview: PembayaranPerluReview[];
+  /** Jumlah tiket keluhan penyewa per status. */
+  tiket: { baru: number; diproses: number; selesai: number };
 };
 
 /** Tagihan berstatus Perlu Review beserta uang yang sudah diterima gateway (tanpa pending). */

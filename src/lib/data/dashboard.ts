@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { getDb } from "@/db";
 import { getDaftarInvoice } from "@/lib/data/invoice";
 import { getRingkasanKos } from "@/lib/data/kos";
+import { getRingkasanTiket } from "@/lib/data/halaman-tiket";
 import { getRekapPemasukan } from "@/lib/data/pemasukan";
 import { getPerluReview } from "@/lib/data/perlu-review";
 import { getWorkspaceSession } from "@/lib/data/session";
@@ -40,5 +41,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     pemasukan: rekap.pemasukan,
     invoices,
     perluReview,
+    tiket: getRingkasanTiket(organizationId),
   };
 }
