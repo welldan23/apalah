@@ -1,10 +1,10 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "6f3a5d31428994e93adb74775974525d99edb4e0",
+  "generatedForCommit": "a1a97944b3e5d46f946b5ad9516b3d2a27095ec7",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 2518
     },
@@ -100,9 +100,9 @@
     },
     {
       "path": "src/app/(marketing)/page.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 789
+      "size": 913
     },
     {
       "path": "src/app/globals.css",
@@ -199,6 +199,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1347
+    },
+    {
+      "path": "src/components/landing/dashboard-preview-section.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 5875
     },
     {
       "path": "src/components/landing/faq-section.tsx",
@@ -394,9 +400,9 @@
     },
     {
       "path": "src/lib/landing/content.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 6759
+      "size": 9102
     },
     {
       "path": "src/lib/mock/kos-melati.ts",

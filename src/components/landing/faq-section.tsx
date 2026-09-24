@@ -13,8 +13,9 @@ export function FaqSection() {
           judul="Pertanyaan yang sering muncul"
         />
         <div className="divide-y rounded-2xl border bg-background">
+          {/* name yang sama: membuka satu pertanyaan menutup yang lain, supaya halaman tidak memanjang di ponsel. */}
           {FAQ.map(({ tanya, jawab }) => (
-            <details key={tanya} className="group px-5">
+            <details key={tanya} name="faq" className="group px-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-medium [&::-webkit-details-marker]:hidden">
                 {tanya}
                 <ChevronDown
