@@ -37,6 +37,7 @@ Buka http://localhost:3000 — otomatis diarahkan ke `/dashboard`.
 - `src/db/` — skema database (Drizzle), koneksi, migrasi, dan seed data contoh.
 - `src/app/api/dashboard/` — endpoint dashboard: ringkasan, invoice, pemasukan, dan aksi cepat
   (buat tagihan, tambah penghuni, kirim reminder).
+- `src/app/api/landing/konten` — konten landing publik (read-only, tanpa login).
 - `src/lib/aksi/` — logika aksi yang mengubah data; nominal & status ditentukan server.
 - `src/lib/whatsapp/` — adapter pengiriman WhatsApp (`WHATSAPP_PROVIDER`, default `log`).
 - `src/lib/data/` — kontrak data per halaman. Saat ini membaca data tiruan
