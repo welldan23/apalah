@@ -5,8 +5,9 @@ import { connection } from "next/server";
 
 import { getDb } from "@/db";
 import { getDaftarInvoice } from "@/lib/data/invoice";
+import { getRingkasanKos } from "@/lib/data/kos";
 import { getWorkspaceSession } from "@/lib/data/session";
-import type { InvoiceRow } from "@/lib/types";
+import type { InvoiceRow, RoomCell } from "@/lib/types";
 import { hariIniWib, periodeValid } from "@/lib/waktu";
 
 export type HalamanTagihan = {
@@ -16,6 +17,8 @@ export type HalamanTagihan = {
   /** Periode berjalan menurut WIB, YYYY-MM. */
   periodeBerjalan: string;
   invoices: InvoiceRow[];
+  /** Kamar terisi — pilihan kamar di form Buat tagihan. */
+  kamarTerisi: RoomCell[];
 };
 
 export async function getHalamanTagihan(periodeDiminta?: string): Promise<HalamanTagihan> {
@@ -27,6 +30,11 @@ export async function getHalamanTagihan(periodeDiminta?: string): Promise<Halama
   const periode =
     periodeDiminta && periodeValid(periodeDiminta) ? periodeDiminta : periodeBerjalan;
 
-  const invoices = await getDaftarInvoice(await getDb(), session.organization.id, { periode });
-  return { hariIni, periode, periodeBerjalan, invoices };
+  const db = await getDb();
+  const [invoices, ringkasan] = await Promise.all([
+    getDaftarInvoice(db, session.organization.id, { periode }),
+    getRingkasanKos(db, session.organization.id),
+  ]);
+  const kamarTerisi = ringkasan?.kamar.daftar.filter((k) => k.status === "terisi") ?? [];
+  return { hariIni, periode, periodeBerjalan, invoices, kamarTerisi };
 }

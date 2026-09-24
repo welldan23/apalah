@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "0992da36362f0081e0007d9366ec530ad09ddabf",
+  "generatedForCommit": "2b2ed33dbab923d0252dbfeb9825d8d5d4efffea",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -130,7 +130,7 @@
     },
     {
       "path": "src/app/(app)/tagihan/page.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1370
     },
@@ -232,7 +232,7 @@
     },
     {
       "path": "src/components/app-shell/nav-items.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1307
     },
@@ -256,7 +256,7 @@
     },
     {
       "path": "src/components/dashboard/invoice-status-table.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7267
     },
@@ -400,19 +400,19 @@
     },
     {
       "path": "src/components/status-filter-chips.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2133
     },
     {
       "path": "src/components/tagihan/daftar-invoice.tsx",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 7931
+      "size": 8797
     },
     {
       "path": "src/components/tagihan/periode-nav.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1340
     },
@@ -604,27 +604,33 @@
     },
     {
       "path": "src/lib/data/tagihan.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1181
     },
     {
       "path": "src/lib/format.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2817
     },
     {
       "path": "src/lib/format.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3406
     },
     {
-      "path": "src/lib/invoice.ts",
+      "path": "src/lib/invoice.test.ts",
       "reason": "new",
       "language": "typescript",
-      "size": 768
+      "size": 2488
+    },
+    {
+      "path": "src/lib/invoice.ts",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 2246
     },
     {
       "path": "src/lib/landing/content.ts",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FilePlus2, Search } from "lucide-react";
 
@@ -32,18 +32,20 @@ type Langkah = "isi" | "preview" | "menyimpan" | "selesai";
 type Hasil = { dibuat: number; totalNominal: number; dilewati: string[] };
 type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal", string>>;
 
-/** Buat Tagihan: pilih kamar, nominal & jatuh tempo → preview → konfirmasi owner. */
+/** Buat Tagihan: pilih satu/banyak kamar, nominal & jatuh tempo → preview → konfirmasi owner. */
 export function InvoiceFlow({
   periode,
+  periodeAwal = periodeBerikutnya(periode),
   kamar,
 }: {
-  /** Periode berjalan (YYYY-MM); default tagihan untuk periode berikutnya. */
+  /** Periode berjalan (YYYY-MM). */
   periode: string;
+  /** Periode tagihan yang dipilih saat form dibuka; default periode berikutnya. */
+  periodeAwal?: string;
   /** Kamar terisi yang bisa ditagih. */
   kamar: RoomCell[];
 }) {
   const router = useRouter();
-  const periodeAwal = periodeBerikutnya(periode);
   const [langkah, setLangkah] = useState<Langkah>("isi");
   const [hasil, setHasil] = useState<Hasil | null>(null);
   const [galatServer, setGalatServer] = useState<string | null>(null);
@@ -54,6 +56,24 @@ export function InvoiceFlow({
   const [nominalKhusus, setNominalKhusus] = useState<number | null>(null);
   const [cari, setCari] = useState("");
   const [galat, setGalat] = useState<Galat>({});
+  // Kamar yang sudah punya tagihan di periode terpilih (dicek ke server tiap periode berganti).
+  const [ditagih, setDitagih] = useState<{ periode: string; roomIds: Set<string> } | null>(null);
+  const sudahDitagih = ditagih?.periode === periodeTagihan ? ditagih.roomIds : null;
+
+  useEffect(() => {
+    if (!/^\d{4}-\d{2}$/.test(periodeTagihan)) return;
+    const batal = new AbortController();
+    fetch(`/api/dashboard/invoices?periode=${periodeTagihan}`, { signal: batal.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { invoices: { roomId: string }[] } | null) => {
+        if (data) {
+          setDitagih({ periode: periodeTagihan, roomIds: new Set(data.invoices.map((inv) => inv.roomId)) });
+        }
+      })
+      // Gagal cek tidak menghalangi: server tetap melewati kamar yang sudah ditagih.
+      .catch(() => {});
+    return () => batal.abort();
+  }, [periodeTagihan]);
 
   // Galat sebuah field hilang begitu field itu diubah.
   const bersihkan = (kunci: keyof Galat) =>
@@ -70,9 +90,10 @@ export function InvoiceFlow({
 
   const nominalUntuk = (k: RoomCell) =>
     modeNominal === "sewa" ? (k.hargaSewaPenghuni ?? k.hargaSewa) : (nominalKhusus ?? 0);
-  const penerima = kamar.filter((k) => dipilih.has(k.id));
+  const tersedia = sudahDitagih ? kamar.filter((k) => !sudahDitagih.has(k.id)) : kamar;
+  const penerima = tersedia.filter((k) => dipilih.has(k.id));
   const total = penerima.reduce((jumlah, k) => jumlah + nominalUntuk(k), 0);
-  const semuaDipilih = dipilih.size === kamar.length;
+  const semuaDipilih = penerima.length === tersedia.length;
 
   function toggle(id: string, cek: boolean) {
     bersihkan("kamar");
@@ -88,7 +109,8 @@ export function InvoiceFlow({
     const g: Galat = {};
     if (!periodeTagihan) g.periode = "Pilih periode tagihan.";
     if (!jatuhTempo) g.jatuhTempo = "Isi tanggal jatuh tempo.";
-    if (penerima.length === 0) g.kamar = "Pilih minimal satu kamar.";
+    if (tersedia.length === 0) g.kamar = "Semua kamar sudah punya tagihan untuk periode ini.";
+    else if (penerima.length === 0) g.kamar = "Pilih minimal satu kamar.";
     if (modeNominal === "khusus" && !nominalKhusus) g.nominal = "Isi nominal tagihan.";
     setGalat(g);
     if (Object.keys(g).length === 0) setLangkah("preview");
@@ -264,14 +286,14 @@ export function InvoiceFlow({
         <section aria-labelledby="tagihan-kamar" className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
             <h3 id="tagihan-kamar" className="text-sm font-medium">
-              Kamar · {dipilih.size} dipilih
+              Kamar · {penerima.length} dipilih
             </h3>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 bersihkan("kamar");
-                setDipilih(semuaDipilih ? new Set() : new Set(kamar.map((k) => k.id)));
+                setDipilih(semuaDipilih ? new Set() : new Set(tersedia.map((k) => k.id)));
               }}
             >
               {semuaDipilih ? "Kosongkan" : "Pilih semua"}
@@ -292,12 +314,20 @@ export function InvoiceFlow({
           <ul className="divide-y rounded-lg border bg-card">
             {tampil.map((k) => {
               const id = `tagihan-${k.id}`;
+              const ditagihPeriodeIni = sudahDitagih?.has(k.id) ?? false;
               return (
                 <li key={k.id}>
-                  <label htmlFor={id} className="flex cursor-pointer items-center gap-3 px-3 py-2">
+                  <label
+                    htmlFor={id}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2",
+                      ditagihPeriodeIni ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+                    )}
+                  >
                     <Checkbox
                       id={id}
-                      checked={dipilih.has(k.id)}
+                      checked={!ditagihPeriodeIni && dipilih.has(k.id)}
+                      disabled={ditagihPeriodeIni}
                       onCheckedChange={(cek) => toggle(k.id, cek === true)}
                     />
                     <span className="w-9 shrink-0 text-sm font-medium tabular-nums">
@@ -306,9 +336,15 @@ export function InvoiceFlow({
                     <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
                       {k.namaPenghuni}
                     </span>
-                    <span className="shrink-0 text-sm tabular-nums">
-                      {formatRupiah(nominalUntuk(k))}
-                    </span>
+                    {ditagihPeriodeIni ? (
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        Sudah ditagih
+                      </span>
+                    ) : (
+                      <span className="shrink-0 text-sm tabular-nums">
+                        {formatRupiah(nominalUntuk(k))}
+                      </span>
+                    )}
                   </label>
                 </li>
               );

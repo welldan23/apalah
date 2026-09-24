@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { BuatTagihan } from "@/components/tagihan/buat-tagihan";
 import { DaftarInvoice } from "@/components/tagihan/daftar-invoice";
 import { PeriodeNav } from "@/components/tagihan/periode-nav";
 import { getHalamanTagihan } from "@/lib/data/tagihan";
@@ -24,7 +25,14 @@ export default async function TagihanPage({ searchParams }: PageProps<"/tagihan"
             {formatRupiah(total)}
           </p>
         </div>
-        <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} />
+          <BuatTagihan
+            periode={data.periode}
+            periodeBerjalan={data.periodeBerjalan}
+            kamar={data.kamarTerisi}
+          />
+        </div>
       </header>
 
       <DaftarInvoice invoices={data.invoices} hariIni={data.hariIni} periode={data.periode} />
