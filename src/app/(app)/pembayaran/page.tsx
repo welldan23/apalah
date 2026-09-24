@@ -28,7 +28,7 @@ export default async function PembayaranPage({ searchParams }: PageProps<"/pemba
         <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} basePath="/pembayaran" />
       </header>
 
-      <DaftarPembayaran tagihan={data.tagihan} />
+      <DaftarPembayaran tagihan={data.tagihan} hariIni={data.hariIni} />
     </div>
   );
 }

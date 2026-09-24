@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import type { InvoiceStatus } from "@/lib/types";
+import type { InvoiceStatus, PaymentStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 // Warna status dipakai terbatas: selalu disertai ikon + label, tidak pernah warna saja.
@@ -81,6 +81,30 @@ export function InvoiceStatusBadge({
   className?: string;
 }) {
   const { label, tone, icon } = STATUS_INVOICE[status];
+  return (
+    <StatusBadge tone={tone} icon={icon} className={className}>
+      {label}
+    </StatusBadge>
+  );
+}
+
+const STATUS_PEMBAYARAN: Record<
+  PaymentStatus,
+  { label: string; tone: StatusTone; icon: LucideIcon }
+> = {
+  valid: { label: "Terverifikasi", tone: "success", icon: CircleCheck },
+  tidak_cocok: { label: "Tidak cocok", tone: "warning", icon: CircleAlert },
+  pending: { label: "Menunggu verifikasi", tone: "neutral", icon: Clock },
+};
+
+export function PaymentStatusBadge({
+  status,
+  className,
+}: {
+  status: PaymentStatus;
+  className?: string;
+}) {
+  const { label, tone, icon } = STATUS_PEMBAYARAN[status];
   return (
     <StatusBadge tone={tone} icon={icon} className={className}>
       {label}

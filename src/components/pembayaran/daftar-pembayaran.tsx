@@ -1,9 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 
 import { parseStatusFilter, type StatusFilter } from "@/components/dashboard/status-filter";
+import { DetailTagihan } from "@/components/pembayaran/detail-tagihan";
+import { ActionSheet } from "@/components/quick-actions/action-sheet";
 import { InvoiceStatusBadge, TONE_DOT, toneStatusInvoice } from "@/components/status-badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -39,7 +44,8 @@ function InfoBayar({ t }: { t: TagihanPembayaran }) {
     <>
       <span className="font-medium tabular-nums">{formatRupiah(t.dibayar)}</span>
       <span className="block text-xs text-muted-foreground">
-        {t.pembayaranTerakhir.metode} · {formatWaktu(t.pembayaranTerakhir.waktu)}
+        {t.pembayaranTerakhir.metode}
+        {t.pembayaranTerakhir.waktu && ` · ${formatWaktu(t.pembayaranTerakhir.waktu)}`}
       </span>
       {beda && <span className="block text-xs font-medium text-warning">{beda}</span>}
     </>
@@ -47,7 +53,14 @@ function InfoBayar({ t }: { t: TagihanPembayaran }) {
 }
 
 /** Pemantauan pembayaran: ringkasan per status (sekaligus filter) + daftar tagihan & uang masuk. */
-export function DaftarPembayaran({ tagihan }: { tagihan: TagihanPembayaran[] }) {
+export function DaftarPembayaran({
+  tagihan,
+  hariIni,
+}: {
+  tagihan: TagihanPembayaran[];
+  hariIni: string;
+}) {
+  const [dipilih, setDipilih] = useState<TagihanPembayaran | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const filter = parseStatusFilter(searchParams.get("status"));
@@ -125,20 +138,31 @@ export function DaftarPembayaran({ tagihan }: { tagihan: TagihanPembayaran[] }) 
             {/* Mobile: kartu */}
             <ul className="divide-y md:hidden">
               {tersaring.map((t) => (
-                <li key={t.id} className="flex items-start gap-3 px-4 py-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-xs font-semibold tabular-nums">
-                    {t.nomorKamar}
-                  </span>
-                  <div className="min-w-0 flex-1 text-sm">
-                    <p className="truncate font-medium">{t.namaPenghuni}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Tagihan <span className="tabular-nums">{formatRupiah(t.nominal)}</span>
-                    </p>
-                    <div className="mt-1">
-                      <InfoBayar t={t} />
-                    </div>
-                  </div>
-                  <InvoiceStatusBadge status={t.status} className="shrink-0" />
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    aria-haspopup="dialog"
+                    aria-label={`Detail tagihan ${t.nomorKamar} ${t.namaPenghuni}`}
+                    onClick={() => setDipilih(t)}
+                    className="flex w-full items-start gap-3 px-4 py-3 text-left outline-none hover:bg-muted/60 focus-visible:bg-muted/60"
+                  >
+                    <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-xs font-semibold tabular-nums">
+                      {t.nomorKamar}
+                    </span>
+                    <span className="min-w-0 flex-1 text-sm">
+                      <span className="block truncate font-medium">{t.namaPenghuni}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        Tagihan <span className="tabular-nums">{formatRupiah(t.nominal)}</span>
+                      </span>
+                      <span className="mt-1 block">
+                        <InfoBayar t={t} />
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1">
+                      <InvoiceStatusBadge status={t.status} />
+                      <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -151,7 +175,10 @@ export function DaftarPembayaran({ tagihan }: { tagihan: TagihanPembayaran[] }) 
                   <TableHead>Kamar</TableHead>
                   <TableHead className="text-right">Tagihan</TableHead>
                   <TableHead>Pembayaran diterima</TableHead>
-                  <TableHead className="pr-4">Status</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="pr-4">
+                    <span className="sr-only">Detail</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -163,8 +190,20 @@ export function DaftarPembayaran({ tagihan }: { tagihan: TagihanPembayaran[] }) 
                     <TableCell>
                       <InfoBayar t={t} />
                     </TableCell>
-                    <TableCell className="pr-4">
+                    <TableCell>
                       <InvoiceStatusBadge status={t.status} />
+                    </TableCell>
+                    <TableCell className="pr-4 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-haspopup="dialog"
+                        aria-label={`Detail tagihan ${t.nomorKamar} ${t.namaPenghuni}`}
+                        onClick={() => setDipilih(t)}
+                      >
+                        Detail
+                        <ChevronRight data-icon="inline-end" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -173,6 +212,15 @@ export function DaftarPembayaran({ tagihan }: { tagihan: TagihanPembayaran[] }) 
           </>
         )}
       </Card>
+
+      <ActionSheet
+        open={dipilih !== null}
+        onOpenChange={(buka) => !buka && setDipilih(null)}
+        title="Detail tagihan"
+        description="Rincian tagihan dan pembayaran yang diterima dari gateway."
+      >
+        {dipilih && <DetailTagihan tagihan={dipilih} hariIni={hariIni} />}
+      </ActionSheet>
     </>
   );
 }

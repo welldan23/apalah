@@ -2,7 +2,7 @@
 // "Dibayar" = uang yang diterima gateway (valid maupun tidak cocok); pembayaran pending
 // belum dihitung. Status Lunas tetap hanya dari pembayaran valid.
 
-import { desc, inArray } from "drizzle-orm";
+import { desc, inArray, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { getDaftarInvoice } from "./invoice.ts";
@@ -10,15 +10,23 @@ import type { InvoiceRow, PaymentStatus } from "@/lib/types";
 
 const { payments } = schema;
 
+export type PembayaranTercatat = {
+  id: string;
+  nominal: number;
+  metode: string;
+  provider: string;
+  referensi: string;
+  status: PaymentStatus;
+  /** ISO datetime verifikasi gateway; kosong bila masih pending. */
+  waktu?: string;
+};
+
 export type TagihanPembayaran = InvoiceRow & {
   dibayar: number;
-  pembayaranTerakhir?: {
-    nominal: number;
-    metode: string;
-    /** ISO datetime verifikasi gateway. */
-    waktu: string;
-    status: PaymentStatus;
-  };
+  /** Pembayaran terakhir yang sudah diterima (bukan pending). */
+  pembayaranTerakhir?: PembayaranTercatat;
+  /** Semua pembayaran untuk tagihan ini, termasuk pending; terbaru di atas. */
+  riwayat: PembayaranTercatat[];
 };
 
 export async function getDaftarTagihanPembayaran(
@@ -31,28 +39,38 @@ export async function getDaftarTagihanPembayaran(
 
   const bayar = await db
     .select({
+      id: payments.id,
       invoiceId: payments.invoiceId,
       nominal: payments.nominalDibayar,
       metode: payments.metode,
+      provider: payments.provider,
+      referensi: payments.referensiProvider,
       status: payments.status,
       waktu: payments.diverifikasiPada,
     })
     .from(payments)
     .where(inArray(payments.invoiceId, invoices.map((inv) => inv.id)))
-    .orderBy(desc(payments.diverifikasiPada));
+    // Pending (belum diverifikasi) di atas, lalu yang terbaru.
+    .orderBy(desc(sql`${payments.diverifikasiPada} is null`), desc(payments.diverifikasiPada));
 
   return invoices.map((inv) => {
-    const diterima = bayar.filter((p) => p.invoiceId === inv.id && p.status !== "pending" && p.waktu);
-    const terakhir = diterima[0];
+    const riwayat: PembayaranTercatat[] = bayar
+      .filter((p) => p.invoiceId === inv.id)
+      .map((p) => ({
+        id: p.id,
+        nominal: p.nominal,
+        metode: p.metode,
+        provider: p.provider,
+        referensi: p.referensi,
+        status: p.status,
+        waktu: p.waktu?.toISOString(),
+      }));
+    const diterima = riwayat.filter((p) => p.status !== "pending" && p.waktu);
     return {
       ...inv,
       dibayar: diterima.reduce((total, p) => total + p.nominal, 0),
-      pembayaranTerakhir: terakhir && {
-        nominal: terakhir.nominal,
-        metode: terakhir.metode,
-        waktu: terakhir.waktu!.toISOString(),
-        status: terakhir.status,
-      },
+      pembayaranTerakhir: diterima[0],
+      riwayat,
     };
   });
 }

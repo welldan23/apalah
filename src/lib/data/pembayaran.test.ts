@@ -47,10 +47,14 @@ describe("getDaftarTagihanPembayaran", () => {
     assert.equal(c09.pembayaranTerakhir?.waktu, "2026-09-23T12:42:00.000Z");
   });
 
-  it("pembayaran pending belum dihitung", async () => {
+  it("pembayaran pending belum dihitung, tapi tercatat di riwayat", async () => {
     const a03 = await cari("A03");
     assert.equal(a03.dibayar, 0);
     assert.equal(a03.pembayaranTerakhir, undefined);
+    assert.deepEqual(
+      a03.riwayat.map((p) => [p.status, p.nominal, p.referensi, p.waktu]),
+      [["pending", 500_000, "uji-pending", undefined]],
+    );
   });
 
   it("periode tanpa tagihan → kosong", async () => {
