@@ -1,12 +1,14 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import { SendHorizontal } from "lucide-react";
+import { ArrowLeftRight, SendHorizontal } from "lucide-react";
 
 import { BubblePesan } from "@/components/kosta/bubble-pesan";
+import { PemilihWorkspace } from "@/components/kosta/pemilih-workspace";
+import { ActionSheet } from "@/components/quick-actions/action-sheet";
 import { formatTanggal } from "@/lib/format";
 import { tampilNomorWa } from "@/lib/nomor-wa";
-import type { PesanKosta } from "@/lib/types";
+import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 import { tanggalWib } from "@/lib/waktu";
 
 const JEDA_BALASAN = 1100;
@@ -37,16 +39,21 @@ function IndikatorMengetik() {
 /** Panel chat owner dengan Kosta — isi sama dengan percakapan di WhatsApp. */
 export function ChatKosta({
   hariIni,
-  namaKos,
+  workspaceAktif,
+  workspaces,
   nomorWa,
   pesan: awal,
 }: {
   hariIni: string;
-  namaKos: string;
+  workspaceAktif: string;
+  workspaces: WorkspaceRingkas[];
   nomorWa: string;
   pesan: PesanKosta[];
 }) {
   const [pesan, setPesan] = useState(awal);
+  const [aktifId, setAktifId] = useState(workspaceAktif);
+  const [pilihKosTerbuka, setPilihKosTerbuka] = useState(false);
+  const aktif = workspaces.find((ws) => ws.id === aktifId) ?? workspaces[0];
   const [draf, setDraf] = useState("");
   const [mengetik, setMengetik] = useState(false);
   const bawahRef = useRef<HTMLLIElement>(null);
@@ -77,6 +84,21 @@ export function ChatKosta({
     }, JEDA_BALASAN);
   }
 
+  function gantiKos(ws: WorkspaceRingkas) {
+    setPilihKosTerbuka(false);
+    if (ws.id === aktifId) return;
+    setAktifId(ws.id);
+    setPesan((p) => [
+      ...p,
+      {
+        id: crypto.randomUUID(),
+        dari: "kosta",
+        waktu: new Date().toISOString(),
+        teks: `Oke, sekarang aku bantu untuk ${ws.namaKos} (${ws.jumlahKamar} kamar). Data kos lain tidak ikut dibaca.`,
+      },
+    ]);
+  }
+
   // Kelompokkan per tanggal WIB untuk pemisah "Hari ini" / tanggal.
   const grup: { tanggal: string; pesan: PesanKosta[] }[] = [];
   for (const p of pesan) {
@@ -95,15 +117,37 @@ export function ChatKosta({
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent font-semibold text-accent-foreground">
           K
         </span>
-        <div className="min-w-0 leading-tight">
+        <div className="min-w-0 flex-1 leading-tight">
           <h2 id="kosta-judul" className="font-semibold">
             Kosta
           </h2>
           <p className="truncate text-xs text-primary-foreground/75">
-            {mengetik ? "mengetik…" : `${namaKos} · WhatsApp ${tampilNomorWa(nomorWa)}`}
+            {mengetik ? "mengetik…" : `${aktif.namaKos} · WhatsApp ${tampilNomorWa(nomorWa)}`}
           </p>
         </div>
+        {workspaces.length > 1 && (
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setPilihKosTerbuka(true)}
+            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 text-sm font-medium outline-none hover:bg-primary-foreground/20 focus-visible:ring-3 focus-visible:ring-accent/40"
+          >
+            <ArrowLeftRight className="size-4" aria-hidden="true" />
+            Ganti kos
+          </button>
+        )}
       </header>
+
+      <ActionSheet
+        open={pilihKosTerbuka}
+        onOpenChange={setPilihKosTerbuka}
+        title="Pilih kos"
+        description="Kosta hanya membaca data kos yang dipilih."
+      >
+        <div className="overflow-y-auto p-4">
+          <PemilihWorkspace workspaces={workspaces} aktifId={aktif.id} onPilih={gantiKos} />
+        </div>
+      </ActionSheet>
 
       <ol
         aria-label="Percakapan dengan Kosta"

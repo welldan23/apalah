@@ -5,13 +5,16 @@
 import { connection } from "next/server";
 
 import { getWorkspaceSession } from "@/lib/data/session";
-import { mockPercakapanKosta } from "@/lib/mock/kosta";
-import type { PesanKosta } from "@/lib/types";
+import { mockPercakapanKosta, mockWorkspaceLain } from "@/lib/mock/kosta";
+import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 import { hariIniWib } from "@/lib/waktu";
 
 export type HalamanKosta = {
   hariIni: string;
-  namaKos: string;
+  /** Kos yang sedang dibahas Kosta. */
+  workspaceAktif: string;
+  /** Semua kos yang bisa dikelola owner; lebih dari satu = perlu pemilih workspace. */
+  workspaces: WorkspaceRingkas[];
   /** Nomor WhatsApp owner yang tertaut ke Kosta. */
   nomorWa: string;
   pesan: PesanKosta[];
@@ -20,9 +23,19 @@ export type HalamanKosta = {
 export async function getHalamanKosta(): Promise<HalamanKosta> {
   await connection();
   const session = await getWorkspaceSession();
+  const { organization } = session;
   return {
     hariIni: hariIniWib(),
-    namaKos: session.organization.namaKos,
+    workspaceAktif: organization.id,
+    workspaces: [
+      {
+        id: organization.id,
+        namaKos: organization.namaKos,
+        jumlahKamar: organization.jumlahKamar,
+        peran: session.peran,
+      },
+      ...mockWorkspaceLain,
+    ],
     nomorWa: session.user.nomorWa,
     pesan: mockPercakapanKosta,
   };

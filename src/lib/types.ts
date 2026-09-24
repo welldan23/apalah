@@ -195,3 +195,11 @@ export type PesanKosta = {
   teks: string;
   lampiran?: LampiranKosta;
 };
+
+/** Satu kos (workspace) yang bisa dikelola pengguna. */
+export type WorkspaceRingkas = {
+  id: string;
+  namaKos: string;
+  jumlahKamar: number;
+  peran: "owner" | "admin" | "penyewa";
+};

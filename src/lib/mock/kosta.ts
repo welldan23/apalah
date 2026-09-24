@@ -1,7 +1,7 @@
 // Data tiruan (stub) percakapan owner Kos Melati dengan Kosta — tahap frontend.
 // Angka mengikuti data contoh Kos Melati. Diganti riwayat wa_messages saat backend dibangun.
 
-import type { PesanKosta } from "@/lib/types";
+import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 
 const pada = (jam: string) => `2026-09-24T${jam}:00+07:00`;
 
@@ -46,4 +46,10 @@ export const mockPercakapanKosta: PesanKosta[] = [
       ],
     },
   },
+];
+
+/** Kos lain milik owner contoh — untuk mencoba pemilih workspace multi-kos. */
+export const mockWorkspaceLain: WorkspaceRingkas[] = [
+  { id: "org_kos_mawar", namaKos: "Kos Mawar", jumlahKamar: 12, peran: "owner" },
+  { id: "org_griya_asri", namaKos: "Griya Asri", jumlahKamar: 20, peran: "admin" },
 ];
