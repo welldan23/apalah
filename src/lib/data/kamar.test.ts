@@ -5,7 +5,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
-import { getDaftarKamarPenghuni, getPenghuniNonaktif } from "./kamar.ts";
+import { getDaftarKamarPenghuni, getKamarKosong, getPenghuniNonaktif } from "./kamar.ts";
 
 describe("getDaftarKamarPenghuni", () => {
   let db: Db;
@@ -60,5 +60,24 @@ describe("getDaftarKamarPenghuni", () => {
       ],
     );
     assert.deepEqual(await getPenghuniNonaktif(db, "org_lain"), []);
+  });
+
+  it("kamar kosong urut nomor, dengan penghuni terakhir yang keluar", async () => {
+    const kosong = await getKamarKosong(db, "org_kos_melati");
+    assert.deepEqual(
+      kosong.map((k) => [k.nomorKamar, k.tipe, k.hargaSewa, k.kosongSejak, k.penghuniTerakhir]),
+      [
+        ["A07", "Standar", 500_000, "2026-06-30", "Rudi Hartono"],
+        ["A11", "Standar", 500_000, undefined, undefined],
+        ["B05", "KM Dalam", 650_000, "2026-08-31", "Mega Lestari"],
+        ["B13", "KM Dalam", 650_000, undefined, undefined],
+        ["C03", "AC", 800_000, undefined, undefined],
+        ["C10", "AC", 800_000, undefined, undefined],
+      ],
+    );
+    assert.deepEqual(
+      (await getKamarKosong(db, "org_lain")).map((k) => k.nomorKamar),
+      ["Z01"],
+    );
   });
 });

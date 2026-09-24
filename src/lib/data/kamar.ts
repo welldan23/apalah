@@ -1,7 +1,7 @@
 // Daftar kamar beserta penghuni aktifnya — untuk halaman Kamar & Penghuni.
 // Query selalu dibatasi satu organisasi.
 
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import type { RoomStatus } from "@/lib/types";
@@ -40,6 +40,18 @@ export type PenghuniNonaktif = {
   tanggalMasuk: string;
   tanggalKeluar?: string;
   hargaSewa: number;
+};
+
+export type KamarKosong = {
+  id: string;
+  nomorKamar: string;
+  tipe: string;
+  hargaSewa: number;
+  status: "kosong";
+  catatan?: string;
+  /** Tanggal penghuni terakhir keluar; tidak ada bila kamar belum punya riwayat penghuni. */
+  kosongSejak?: string;
+  penghuniTerakhir?: string;
 };
 
 export async function getDaftarKamarPenghuni(db: Db, organizationId: string): Promise<KamarPenghuni[]> {
@@ -123,4 +135,46 @@ export async function getPenghuniNonaktif(db: Db, organizationId: string): Promi
     .where(and(eq(tenants.organizationId, organizationId), eq(tenants.status, "keluar")))
     .orderBy(desc(tenants.tanggalKeluar));
   return baris.map((b) => ({ ...b, tanggalKeluar: b.tanggalKeluar ?? undefined }));
+}
+
+/** Kamar kosong urut nomor, beserta kapan & siapa penghuni terakhir yang keluar. */
+export async function getKamarKosong(db: Db, organizationId: string): Promise<KamarKosong[]> {
+  const kosong = await db
+    .select({
+      id: rooms.id,
+      nomorKamar: rooms.nomorKamar,
+      tipe: rooms.tipe,
+      hargaSewa: rooms.hargaSewa,
+      catatan: rooms.catatan,
+    })
+    .from(rooms)
+    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.status, "kosong")))
+    .orderBy(asc(rooms.nomorKamar));
+  if (kosong.length === 0) return [];
+
+  const riwayat = await db
+    .select({ roomId: tenants.roomId, nama: tenants.nama, tanggalKeluar: tenants.tanggalKeluar })
+    .from(tenants)
+    .where(
+      and(
+        eq(tenants.organizationId, organizationId),
+        eq(tenants.status, "keluar"),
+        isNotNull(tenants.tanggalKeluar),
+        inArray(
+          tenants.roomId,
+          kosong.map((k) => k.id),
+        ),
+      ),
+    )
+    .orderBy(desc(tenants.tanggalKeluar));
+  const terakhir = new Map<string, (typeof riwayat)[number]>();
+  for (const r of riwayat) if (!terakhir.has(r.roomId)) terakhir.set(r.roomId, r);
+
+  return kosong.map((k) => ({
+    ...k,
+    status: "kosong",
+    catatan: k.catatan ?? undefined,
+    kosongSejak: terakhir.get(k.id)?.tanggalKeluar ?? undefined,
+    penghuniTerakhir: terakhir.get(k.id)?.nama,
+  }));
 }

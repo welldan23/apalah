@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "24b03eeeef9accd74df65acc1dca46ef871d7a50",
+  "generatedForCommit": "83b86578582c7015c26f5428a6ab6618ed7191e7",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -124,9 +124,9 @@
     },
     {
       "path": "src/app/(app)/kamar/page.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1637
+      "size": 1756
     },
     {
       "path": "src/app/(app)/kamar/tambah/page.tsx",
@@ -324,17 +324,29 @@
       "path": "src/components/kamar/daftar-kamar.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 13561
+      "size": 14916
+    },
+    {
+      "path": "src/components/kamar/daftar-nonaktif.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1924
     },
     {
       "path": "src/components/kamar/kartu-kamar.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 2806
+      "size": 3500
+    },
+    {
+      "path": "src/components/kamar/keluar-penghuni.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4773
     },
     {
       "path": "src/components/kamar/pindah-kamar.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7684
     },
@@ -628,9 +640,9 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3505
+      "size": 3551
     },
     {
       "path": "src/db/schema.ts",
@@ -640,9 +652,9 @@
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2399
+      "size": 2449
     },
     {
       "path": "src/db/testing.ts",
@@ -694,9 +706,9 @@
     },
     {
       "path": "src/lib/data/halaman-kamar.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 696
+      "size": 899
     },
     {
       "path": "src/lib/data/invoice-publik.test.ts",
@@ -724,15 +736,15 @@
     },
     {
       "path": "src/lib/data/kamar.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1959
+      "size": 2962
     },
     {
       "path": "src/lib/data/kamar.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1870
+      "size": 4036
     },
     {
       "path": "src/lib/data/kos.test.ts",
@@ -874,9 +886,9 @@
     },
     {
       "path": "src/lib/mock/kos-melati.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 6685
+      "size": 7334
     },
     {
       "path": "src/lib/mock/kosta.ts",
@@ -891,6 +903,18 @@
       "size": 585
     },
     {
+      "path": "src/lib/penghuni.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 620
+    },
+    {
+      "path": "src/lib/penghuni.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 574
+    },
+    {
       "path": "src/lib/pesan.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -898,13 +922,13 @@
     },
     {
       "path": "src/lib/pindah-kamar.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 916
     },
     {
       "path": "src/lib/pindah-kamar.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 569
     },

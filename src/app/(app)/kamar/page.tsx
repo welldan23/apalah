@@ -23,7 +23,9 @@ export default async function KamarPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Kamar &amp; Penghuni</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {data.namaKos} · {data.kamar.length} kamar · {terisi} terisi ·{" "}
-            {data.kamar.length - terisi} kosong
+            <Link href="/kamar/kosong" className="font-medium text-primary hover:underline">
+              {data.kamar.length - terisi} kosong
+            </Link>
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

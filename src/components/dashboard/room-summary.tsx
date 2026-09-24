@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   Card,
   CardContent,
@@ -122,7 +124,10 @@ export function RoomSummary({
           {kosong.length > 0 && (
             <p>
               <span className="font-medium text-foreground">Siap ditawarkan:</span>{" "}
-              {kosong.map((k) => k.nomorKamar).join(", ")}
+              {kosong.map((k) => k.nomorKamar).join(", ")} ·{" "}
+              <Link href="/kamar/kosong" className="font-medium text-primary hover:underline">
+                Lihat kamar kosong
+              </Link>
             </p>
           )}
         </div>
