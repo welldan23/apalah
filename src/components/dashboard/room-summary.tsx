@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { ArrowRight, ChevronRight } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -42,6 +45,23 @@ export function RoomSummary({
 }) {
   const persenTerisi = Math.round((kamar.terisi / kamar.total) * 100);
   const kosong = kamar.daftar.filter((k) => k.status === "kosong");
+  const potensiKosong = kosong.reduce((total, k) => total + k.hargaSewa, 0);
+  const ringkasan = [
+    {
+      label: "Terisi",
+      nilai: kamar.terisi,
+      persen: persenTerisi,
+      catatan: "Lihat penghuni",
+      href: "/kamar?status=terisi",
+    },
+    {
+      label: "Kosong",
+      nilai: kamar.kosong,
+      persen: 100 - persenTerisi,
+      catatan: kosong.length > 0 ? `Potensi ${formatRupiahSingkat(potensiKosong)}/bln` : "Semua terisi",
+      href: "/kamar/kosong",
+    },
+  ];
 
   return (
     <Card className="shadow-none">
@@ -50,29 +70,44 @@ export function RoomSummary({
         <CardDescription>
           {namaKos} · {kamar.total} kamar
         </CardDescription>
+        <CardAction>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/kamar">
+              Kelola kamar
+              <ArrowRight data-icon="inline-end" />
+            </Link>
+          </Button>
+        </CardAction>
       </CardHeader>
 
       <CardContent className="@container flex flex-col gap-5">
         <div>
           <dl className="grid grid-cols-2 gap-3">
-            <div>
-              <dt className="text-xs text-muted-foreground">Terisi</dt>
-              <dd className="text-2xl font-semibold tabular-nums">
-                {kamar.terisi}
-                <span className="ml-1 text-sm font-normal text-muted-foreground">
-                  {persenTerisi}%
-                </span>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Kosong</dt>
-              <dd className="text-2xl font-semibold tabular-nums">
-                {kamar.kosong}
-                <span className="ml-1 text-sm font-normal text-muted-foreground">
-                  {100 - persenTerisi}%
-                </span>
-              </dd>
-            </div>
+            {ringkasan.map(({ label, nilai, persen, catatan, href }) => (
+              <div
+                key={label}
+                className="group relative -m-1.5 rounded-lg p-1.5 transition-colors hover:bg-muted"
+              >
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="text-2xl font-semibold tabular-nums">
+                  <Link
+                    href={href}
+                    className="rounded outline-none after:absolute after:inset-0 focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    {nilai}
+                    <span className="sr-only"> kamar {label.toLowerCase()} — lihat daftar</span>
+                  </Link>
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">{persen}%</span>
+                </dd>
+                <dd className="flex items-center gap-0.5 text-xs text-muted-foreground tabular-nums">
+                  {catatan}
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                  />
+                </dd>
+              </div>
+            ))}
           </dl>
           <Progress
             value={persenTerisi}

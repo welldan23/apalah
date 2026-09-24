@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "83b86578582c7015c26f5428a6ab6618ed7191e7",
+  "generatedForCommit": "e53691eee11ee5d54ee1e47c25f2e92ecf172578",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -123,10 +123,16 @@
       "size": 2860
     },
     {
+      "path": "src/app/(app)/kamar/kosong/page.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1167
+    },
+    {
       "path": "src/app/(app)/kamar/page.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 1756
+      "size": 1871
     },
     {
       "path": "src/app/(app)/kamar/tambah/page.tsx",
@@ -310,9 +316,9 @@
     },
     {
       "path": "src/components/dashboard/room-summary.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4616
+      "size": 4807
     },
     {
       "path": "src/components/dashboard/status-filter.ts",
@@ -321,26 +327,32 @@
       "size": 1085
     },
     {
+      "path": "src/components/kamar/daftar-kamar-kosong.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 6709
+    },
+    {
       "path": "src/components/kamar/daftar-kamar.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 14916
     },
     {
       "path": "src/components/kamar/daftar-nonaktif.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1924
     },
     {
       "path": "src/components/kamar/kartu-kamar.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3500
     },
     {
       "path": "src/components/kamar/keluar-penghuni.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4773
     },
@@ -640,7 +652,7 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3551
     },
@@ -652,7 +664,7 @@
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2449
     },
@@ -705,8 +717,14 @@
       "size": 1556
     },
     {
+      "path": "src/lib/data/halaman-kamar-kosong.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 870
+    },
+    {
       "path": "src/lib/data/halaman-kamar.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 899
     },
@@ -738,13 +756,13 @@
       "path": "src/lib/data/kamar.test.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 2962
+      "size": 3752
     },
     {
       "path": "src/lib/data/kamar.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 4036
+      "size": 5705
     },
     {
       "path": "src/lib/data/kos.test.ts",
@@ -867,6 +885,18 @@
       "size": 2944
     },
     {
+      "path": "src/lib/kamar-kosong.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2174
+    },
+    {
+      "path": "src/lib/kamar-kosong.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1853
+    },
+    {
       "path": "src/lib/landing/content.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -886,7 +916,7 @@
     },
     {
       "path": "src/lib/mock/kos-melati.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7334
     },
@@ -904,13 +934,13 @@
     },
     {
       "path": "src/lib/penghuni.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 620
     },
     {
       "path": "src/lib/penghuni.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 574
     },
