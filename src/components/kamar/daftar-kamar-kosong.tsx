@@ -61,7 +61,10 @@ function KartuKamarKosong({
               {hari === 0 ? "Kosong sejak hari ini" : `Kosong ${hari} hari`}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {k.penghuniTerakhir} keluar {formatTanggal(k.kosongSejak!)}
+              {k.penghuniTerakhir}{" "}
+              {k.alasanTerakhir?.startsWith("pindah")
+                ? `${k.alasanTerakhir} pada ${formatTanggal(k.kosongSejak!)}`
+                : `keluar ${formatTanggal(k.kosongSejak!)}`}
             </p>
           </>
         )}

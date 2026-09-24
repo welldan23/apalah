@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "63b4a1caccf15245f262c9512753a6138ed1839f",
+  "generatedForCommit": "fb42f81022db0a748d05185b62760a99d3100382",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -82,9 +82,15 @@
     },
     {
       "path": "drizzle/0005_riwayat_hunian.sql",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "sql",
       "size": 2350
+    },
+    {
+      "path": "drizzle/0006_kamar_aktif.sql",
+      "reason": "new",
+      "language": "sql",
+      "size": 469
     },
     {
       "path": "drizzle/meta/0000_snapshot.json",
@@ -118,15 +124,21 @@
     },
     {
       "path": "drizzle/meta/0005_snapshot.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 49494
+    },
+    {
+      "path": "drizzle/meta/0006_snapshot.json",
+      "reason": "new",
+      "language": "json",
+      "size": 49842
     },
     {
       "path": "drizzle/meta/_journal.json",
       "reason": "changed",
       "language": "json",
-      "size": 924
+      "size": 1063
     },
     {
       "path": "drizzle.config.ts",
@@ -172,9 +184,9 @@
     },
     {
       "path": "src/app/(app)/kamar/kosong/page.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1167
+      "size": 1240
     },
     {
       "path": "src/app/(app)/kamar/page.tsx",
@@ -271,6 +283,18 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1388
+    },
+    {
+      "path": "src/app/api/dashboard/kamar/[id]/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 872
+    },
+    {
+      "path": "src/app/api/dashboard/kamar/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1185
     },
     {
       "path": "src/app/api/dashboard/pemasukan/route.ts",
@@ -436,9 +460,9 @@
     },
     {
       "path": "src/components/kamar/daftar-kamar-kosong.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 6709
+      "size": 11996
     },
     {
       "path": "src/components/kamar/daftar-kamar.tsx",
@@ -478,9 +502,9 @@
     },
     {
       "path": "src/components/kamar/wizard-tambah-kamar.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 14925
+      "size": 15781
     },
     {
       "path": "src/components/kosta/bubble-pesan.tsx",
@@ -616,9 +640,9 @@
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4615
+      "size": 4625
     },
     {
       "path": "src/components/quick-actions/invoice-flow.tsx",
@@ -760,7 +784,7 @@
     },
     {
       "path": "src/db/schema-hunian.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2741
     },
@@ -780,11 +804,11 @@
       "path": "src/db/schema.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 14223
+      "size": 14510
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5606
     },
@@ -813,10 +837,22 @@
       "size": 1767
     },
     {
+      "path": "src/lib/aksi/kamar.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4977
+    },
+    {
+      "path": "src/lib/aksi/kamar.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 5965
+    },
+    {
       "path": "src/lib/aksi/penghuni.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 2742
+      "size": 2839
     },
     {
       "path": "src/lib/aksi/reminder.ts",
@@ -862,9 +898,9 @@
     },
     {
       "path": "src/lib/data/halaman-kamar-kosong.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 870
+      "size": 1073
     },
     {
       "path": "src/lib/data/halaman-kamar.ts",
@@ -904,9 +940,9 @@
     },
     {
       "path": "src/lib/data/kamar.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5705
+      "size": 6398
     },
     {
       "path": "src/lib/data/kos.test.ts",
@@ -916,9 +952,9 @@
     },
     {
       "path": "src/lib/data/kos.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2113
+      "size": 2141
     },
     {
       "path": "src/lib/data/kosta.ts",
@@ -988,9 +1024,9 @@
     },
     {
       "path": "src/lib/data/tambah-kamar.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1296
+      "size": 1480
     },
     {
       "path": "src/lib/draft-aksi.test.ts",
@@ -1126,7 +1162,7 @@
     },
     {
       "path": "src/lib/kosta/tool-aksi.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 9053
     },
@@ -1144,9 +1180,9 @@
     },
     {
       "path": "src/lib/kosta/tool-baca.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 7746
+      "size": 7802
     },
     {
       "path": "src/lib/kosta/workspace.test.ts",

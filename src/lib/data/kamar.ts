@@ -6,7 +6,7 @@ import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { schema, type Db } from "../../db/index.ts";
 import type { RoomStatus } from "@/lib/types";
 
-const { invoices, rooms, tenants } = schema;
+const { invoices, riwayatHunian, rooms, tenants } = schema;
 
 /** Status tagihan yang belum selesai (belum lunas). */
 const STATUS_TERBUKA = ["menunggu", "jatuh_tempo", "perlu_review", "terkirim"] as const;
@@ -52,6 +52,8 @@ export type KamarKosong = {
   /** Tanggal penghuni terakhir keluar; tidak ada bila kamar belum punya riwayat penghuni. */
   kosongSejak?: string;
   penghuniTerakhir?: string;
+  /** Mengapa penghuni terakhir meninggalkan kamar, mis. "keluar" atau "pindah ke C03". */
+  alasanTerakhir?: string;
 };
 
 export async function getDaftarKamarPenghuni(db: Db, organizationId: string): Promise<KamarPenghuni[]> {
@@ -137,7 +139,7 @@ export async function getPenghuniNonaktif(db: Db, organizationId: string): Promi
   return baris.map((b) => ({ ...b, tanggalKeluar: b.tanggalKeluar ?? undefined }));
 }
 
-/** Kamar kosong urut nomor, beserta kapan & siapa penghuni terakhir yang keluar. */
+/** Kamar kosong urut nomor, beserta kapan & siapa penghuni terakhir yang meninggalkannya. */
 export async function getKamarKosong(db: Db, organizationId: string): Promise<KamarKosong[]> {
   const kosong = await db
     .select({
@@ -152,21 +154,27 @@ export async function getKamarKosong(db: Db, organizationId: string): Promise<Ka
     .orderBy(asc(rooms.nomorKamar));
   if (kosong.length === 0) return [];
 
+  // Hunian terakhir yang berakhir (keluar atau pindah) di tiap kamar kosong.
   const riwayat = await db
-    .select({ roomId: tenants.roomId, nama: tenants.nama, tanggalKeluar: tenants.tanggalKeluar })
-    .from(tenants)
+    .select({
+      roomId: riwayatHunian.roomId,
+      nama: tenants.nama,
+      tanggalSelesai: riwayatHunian.tanggalSelesai,
+      alasan: riwayatHunian.alasanSelesai,
+    })
+    .from(riwayatHunian)
+    .innerJoin(tenants, eq(tenants.id, riwayatHunian.tenantId))
     .where(
       and(
-        eq(tenants.organizationId, organizationId),
-        eq(tenants.status, "keluar"),
-        isNotNull(tenants.tanggalKeluar),
+        eq(riwayatHunian.organizationId, organizationId),
+        isNotNull(riwayatHunian.tanggalSelesai),
         inArray(
-          tenants.roomId,
+          riwayatHunian.roomId,
           kosong.map((k) => k.id),
         ),
       ),
     )
-    .orderBy(desc(tenants.tanggalKeluar));
+    .orderBy(desc(riwayatHunian.tanggalSelesai));
   const terakhir = new Map<string, (typeof riwayat)[number]>();
   for (const r of riwayat) if (!terakhir.has(r.roomId)) terakhir.set(r.roomId, r);
 
@@ -174,8 +182,9 @@ export async function getKamarKosong(db: Db, organizationId: string): Promise<Ka
     ...k,
     status: "kosong",
     catatan: k.catatan ?? undefined,
-    kosongSejak: terakhir.get(k.id)?.tanggalKeluar ?? undefined,
+    kosongSejak: terakhir.get(k.id)?.tanggalSelesai ?? undefined,
     penghuniTerakhir: terakhir.get(k.id)?.nama,
+    alasanTerakhir: terakhir.get(k.id)?.alasan ?? undefined,
   }));
 }
 

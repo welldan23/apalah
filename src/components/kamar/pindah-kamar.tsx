@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowRightLeft } from "lucide-react";
 
 import {
-  CatatanSimulasi,
   FieldError,
+  GalatServer,
   PreviewRows,
   SelesaiState,
   SheetActions,
   SheetBody,
+  kirimAksi,
 } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +22,7 @@ import { formatRupiah, formatRupiahSingkat, formatTanggal } from "@/lib/format";
 import { kamarTujuan } from "@/lib/pindah-kamar";
 import { cn } from "@/lib/utils";
 
-type Langkah = "isi" | "preview" | "selesai";
+type Langkah = "isi" | "preview" | "menyimpan" | "selesai";
 type Sewa = "tetap" | "ikut_kamar";
 
 /** Pindah kamar: pilih kamar kosong tujuan, tanggal & sewa → preview → konfirmasi. */
@@ -40,6 +42,8 @@ export function PindahKamarFlow({
   const [tanggal, setTanggal] = useState(hariIni);
   const [sewa, setSewa] = useState<Sewa>("tetap");
   const [galat, setGalat] = useState("");
+  const [galatServer, setGalatServer] = useState<string | null>(null);
+  const router = useRouter();
 
   const penghuni = asal.penghuni;
   const tujuan = pilihan.find((k) => k.id === tujuanId);
@@ -47,6 +51,25 @@ export function PindahKamarFlow({
   const sewaBaru = sewa === "tetap" ? sewaLama : (tujuan?.hargaSewa ?? sewaLama);
 
   if (!penghuni) return null;
+
+  async function konfirmasi() {
+    if (!tujuan) return;
+    setLangkah("menyimpan");
+    setGalatServer(null);
+    try {
+      await kirimAksi("/api/dashboard/aksi/pindah-kamar", {
+        dariRoomId: asal.id,
+        keRoomId: tujuan.id,
+        tanggal,
+        sewa,
+      });
+      setLangkah("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+      setLangkah("preview");
+    }
+  }
 
   if (pilihan.length === 0) {
     return (
@@ -71,12 +94,11 @@ export function PindahKamarFlow({
       <SelesaiState
         judul={`${penghuni.nama} pindah ke kamar ${tujuan?.nomorKamar}`}
         pesan={`Kamar ${asal.nomorKamar} kini kosong. Tagihan berikutnya memakai kamar dan sewa baru.`}
-        catatan="Mode contoh: perpindahan belum benar-benar disimpan ke server."
       />
     );
   }
 
-  if (langkah === "preview" && tujuan) {
+  if ((langkah === "preview" || langkah === "menyimpan") && tujuan) {
     return (
       <>
         <SheetBody>
@@ -103,15 +125,15 @@ export function PindahKamarFlow({
             Tagihan yang sudah terbit tidak berubah. Kamar {asal.nomorKamar} jadi kosong dan siap
             ditawarkan.
           </p>
-          <CatatanSimulasi>Mode contoh: belum tersimpan ke server.</CatatanSimulasi>
+          <GalatServer pesan={galatServer} />
         </SheetBody>
         <SheetActions>
-          <Button size="lg" variant="outline" onClick={() => setLangkah("isi")}>
+          <Button size="lg" variant="outline" disabled={langkah === "menyimpan"} onClick={() => setLangkah("isi")}>
             Ubah
           </Button>
-          <Button size="lg" onClick={() => setLangkah("selesai")}>
+          <Button size="lg" disabled={langkah === "menyimpan"} onClick={konfirmasi}>
             <ArrowRightLeft data-icon="inline-start" />
-            Konfirmasi pindah
+            {langkah === "menyimpan" ? "Menyimpan…" : "Konfirmasi pindah"}
           </Button>
         </SheetActions>
       </>

@@ -1,6 +1,7 @@
-// Aksi cepat "Tambah penghuni": catat penghuni baru di kamar kosong, kamar jadi terisi.
+// Aksi penghuni: tambah penghuni baru di kamar kosong (kamar jadi terisi) dan pindah kamar.
+// Setiap perubahan hunian dicatat di riwayat_hunian.
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { normalisasiNomorWa } from "../nomor-wa.ts";
@@ -66,5 +67,96 @@ export async function tambahPenghuni(db: Db, organizationId: string, input: Inpu
       hargaSewa: input.hargaSewa,
     });
     return { tenantId: penghuni.id, nomorKamar: kamar.nomorKamar };
+  });
+}
+
+export type InputPindahKamar = {
+  dariRoomId: string;
+  keRoomId: string;
+  /** Tanggal pindah (YYYY-MM-DD). */
+  tanggal: string;
+  /** "tetap" = sewa penghuni tidak berubah; "ikut_kamar" = mengikuti harga kamar tujuan. */
+  sewa: "tetap" | "ikut_kamar";
+};
+
+export function bacaInputPindahKamar(body: Record<string, unknown>): InputPindahKamar {
+  const { dariRoomId, keRoomId, tanggal, sewa } = body;
+  if (typeof dariRoomId !== "string" || !dariRoomId) throw new GalatAksi("Pilih kamar asal.");
+  if (typeof keRoomId !== "string" || !keRoomId) throw new GalatAksi("Pilih kamar tujuan.");
+  if (dariRoomId === keRoomId) throw new GalatAksi("Kamar tujuan harus berbeda dari kamar asal.");
+  if (!tanggalValid(tanggal)) throw new GalatAksi("Tanggal pindah tidak valid.");
+  if (sewa !== "tetap" && sewa !== "ikut_kamar") throw new GalatAksi('Pilihan sewa harus "tetap" atau "ikut_kamar".');
+  return { dariRoomId, keRoomId, tanggal, sewa };
+}
+
+/**
+ * Pindahkan penghuni aktif ke kamar kosong dalam satu transaksi: kamar tujuan terisi, kamar asal
+ * kosong, sewa tetap/ikut kamar tujuan, riwayat hunian ditutup & dibuka. Tagihan yang sudah terbit
+ * tidak diubah.
+ */
+export async function pindahKamar(db: Db, organizationId: string, input: InputPindahKamar) {
+  return db.transaction(async (tx) => {
+    const [penghuni] = await tx
+      .select({ id: tenants.id, nama: tenants.nama, hargaSewa: tenants.hargaSewa, nomorKamar: rooms.nomorKamar })
+      .from(tenants)
+      .innerJoin(rooms, eq(rooms.id, tenants.roomId))
+      .where(
+        and(
+          eq(tenants.organizationId, organizationId),
+          eq(tenants.roomId, input.dariRoomId),
+          eq(tenants.status, "aktif"),
+        ),
+      )
+      .for("update");
+    if (!penghuni) throw new GalatAksi("Tidak ada penghuni aktif di kamar asal.", 404);
+
+    const [hunian] = await tx
+      .select({ id: riwayatHunian.id, tanggalMulai: riwayatHunian.tanggalMulai })
+      .from(riwayatHunian)
+      .where(and(eq(riwayatHunian.tenantId, penghuni.id), isNull(riwayatHunian.tanggalSelesai)));
+    if (hunian && input.tanggal < hunian.tanggalMulai) {
+      throw new GalatAksi("Tanggal pindah tidak boleh sebelum tanggal mulai menghuni kamar asal.");
+    }
+
+    // Kunci kamar tujuan: hanya berhasil bila milik kos ini, aktif, dan masih kosong.
+    const [tujuan] = await tx
+      .update(rooms)
+      .set({ status: "terisi" })
+      .where(
+        and(
+          eq(rooms.id, input.keRoomId),
+          eq(rooms.organizationId, organizationId),
+          eq(rooms.status, "kosong"),
+          eq(rooms.aktif, true),
+        ),
+      )
+      .returning({ nomorKamar: rooms.nomorKamar, hargaSewa: rooms.hargaSewa });
+    if (!tujuan) {
+      const [ada] = await tx
+        .select({ nomorKamar: rooms.nomorKamar, aktif: rooms.aktif })
+        .from(rooms)
+        .where(and(eq(rooms.id, input.keRoomId), eq(rooms.organizationId, organizationId)));
+      if (!ada) throw new GalatAksi("Kamar tujuan tidak ditemukan.", 404);
+      throw new GalatAksi(`Kamar ${ada.nomorKamar} ${ada.aktif ? "sudah terisi" : "sedang nonaktif"}.`, 409);
+    }
+
+    const hargaSewa = input.sewa === "ikut_kamar" ? tujuan.hargaSewa : penghuni.hargaSewa;
+    await tx.update(rooms).set({ status: "kosong" }).where(eq(rooms.id, input.dariRoomId));
+    await tx.update(tenants).set({ roomId: input.keRoomId, hargaSewa }).where(eq(tenants.id, penghuni.id));
+    if (hunian) {
+      await tx
+        .update(riwayatHunian)
+        .set({ tanggalSelesai: input.tanggal, alasanSelesai: `pindah ke ${tujuan.nomorKamar}` })
+        .where(eq(riwayatHunian.id, hunian.id));
+    }
+    await tx.insert(riwayatHunian).values({
+      organizationId,
+      tenantId: penghuni.id,
+      roomId: input.keRoomId,
+      tanggalMulai: input.tanggal,
+      hargaSewa,
+    });
+
+    return { nama: penghuni.nama, dari: penghuni.nomorKamar, ke: tujuan.nomorKamar, hargaSewa };
   });
 }
