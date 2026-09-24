@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { BenefitsSection } from "@/components/landing/benefits-section";
 import { CtaSection } from "@/components/landing/cta-section";
+import { DashboardPreviewSection } from "@/components/landing/dashboard-preview-section";
 import { FaqSection } from "@/components/landing/faq-section";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
@@ -18,6 +19,7 @@ export default function LandingPage() {
       <ProblemSection />
       <BenefitsSection />
       <HowItWorksSection />
+      <DashboardPreviewSection />
       <FaqSection />
       <CtaSection />
     </>

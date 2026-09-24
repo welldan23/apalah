@@ -1,7 +1,13 @@
 {
   "repo": "kostera",
-  "generatedForCommit": null,
+  "generatedForCommit": "6f3a5d31428994e93adb74775974525d99edb4e0",
   "files": [
+    {
+      "path": ".claude/skills/karpathy-guidelines/SKILL.md",
+      "reason": "new",
+      "language": "markdown",
+      "size": 2518
+    },
     {
       "path": ".claude/skills/ngodingpakeai/SKILL.md",
       "reason": "needs_summary",
@@ -186,7 +192,7 @@
       "path": "src/components/landing/benefits-section.tsx",
       "reason": "needs_summary",
       "language": "typescript",
-      "size": 1225
+      "size": 4554
     },
     {
       "path": "src/components/landing/cta-section.tsx",
@@ -210,11 +216,11 @@
       "path": "src/components/landing/how-it-works-section.tsx",
       "reason": "needs_summary",
       "language": "typescript",
-      "size": 1225
+      "size": 2112
     },
     {
       "path": "src/components/landing/kosta-chat-mockup.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7188
     },
@@ -390,7 +396,7 @@
       "path": "src/lib/landing/content.ts",
       "reason": "needs_summary",
       "language": "typescript",
-      "size": 6389
+      "size": 6759
     },
     {
       "path": "src/lib/mock/kos-melati.ts",

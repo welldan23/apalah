@@ -6,9 +6,13 @@ import {
   CalendarClock,
   ClipboardList,
   FilePlus2,
+  Send,
   ShieldCheck,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
+
+import type { InvoiceStatus } from "@/lib/types";
 
 export const HERO = {
   eyebrow: "Untuk owner & admin kos",
@@ -181,6 +185,82 @@ export const CARA_KERJA: Langkah[] = [
     hasil: "Status Lunas berubah otomatis saat dana masuk",
   },
 ];
+
+export type BarisPreview = {
+  kamar: string;
+  nama: string;
+  nominal: number;
+  status: InvoiceStatus;
+  /** Keterangan waktu seperti di tabel status bayar dashboard. */
+  keterangan: string;
+};
+
+/** Preview Dashboard Kos di landing — data contoh Kos Melati, bukan data kos mana pun. */
+export const PREVIEW_DASHBOARD = {
+  judul: "Kondisi kos kelihatan dalam satu layar",
+  deskripsi:
+    "Begitu masuk, kamu langsung tahu kamar mana yang kosong, siapa yang perlu ditagih, dan berapa uang yang sudah masuk bulan ini.",
+  sorotan: [
+    "Kamar terisi dan kosong dalam satu pandangan",
+    "Tagihan jatuh tempo selalu di urutan teratas",
+    "Uang masuk bulan ini terhitung sendiri",
+    "Buat tagihan, tambah penghuni, atau kirim reminder dari layar yang sama",
+  ],
+  alamat: "kostera.id/dashboard",
+  sapaan: "Halo, Ratna",
+  namaKos: "Kos Melati",
+  periode: "Periode September 2026",
+  metrik: [
+    { label: "Total kamar", nilai: "40", catatan: "6 masih kosong" },
+    { label: "Terisi", nilai: "34", catatan: "85% hunian" },
+    { label: "Perlu ditagih", nilai: "3", catatan: "Rp1,95jt jatuh tempo" },
+    { label: "Masuk bulan ini", nilai: "Rp12,5jt", catatan: "19 dari 34 lunas" },
+  ],
+  aksi: [
+    { label: "Buat tagihan", icon: FilePlus2 },
+    { label: "Tambah penghuni", icon: UserPlus },
+    { label: "Kirim reminder", icon: Send },
+  ] as { label: string; icon: LucideIcon }[],
+  jumlahTagihan: "34 tagihan",
+  // Urut seperti tabel dashboard: yang perlu ditindak dulu.
+  statusBayar: [
+    {
+      kamar: "A05",
+      nama: "Rizky Ramadhan",
+      nominal: 500_000,
+      status: "jatuh_tempo",
+      keterangan: "Lewat 9 hari",
+    },
+    {
+      kamar: "B06",
+      nama: "Reza Kurniawan",
+      nominal: 650_000,
+      status: "jatuh_tempo",
+      keterangan: "Lewat 6 hari",
+    },
+    {
+      kamar: "C05",
+      nama: "Nadia Safitri",
+      nominal: 800_000,
+      status: "jatuh_tempo",
+      keterangan: "Lewat 4 hari",
+    },
+    {
+      kamar: "A03",
+      nama: "Yoga Saputra",
+      nominal: 500_000,
+      status: "menunggu",
+      keterangan: "2 hari lagi",
+    },
+    {
+      kamar: "B12",
+      nama: "Kevin Wijaya",
+      nominal: 650_000,
+      status: "lunas",
+      keterangan: "Dibayar 20 Sep",
+    },
+  ] as BarisPreview[],
+};
 
 export const FAQ: { tanya: string; jawab: string }[] = [
   {
