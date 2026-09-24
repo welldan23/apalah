@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, Save } from "lucide-react";
+import { CalendarClock, Check, Save } from "lucide-react";
 
-import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
+import { GalatServer, kirimAksi } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +38,8 @@ export function FormTagihanTerjadwal({
   const [pengaturan, setPengaturan] = useState<PengaturanTagihanTerjadwal>(awal);
   const [tersimpan, setTersimpan] = useState<PengaturanTagihanTerjadwal>(awal);
   const [baruDisimpan, setBaruDisimpan] = useState(false);
+  const [menyimpan, setMenyimpan] = useState(false);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
 
   const berubah = JSON.stringify(pengaturan) !== JSON.stringify(tersimpan);
   const berikutnya = terbitBerikutnya(pengaturan.tanggalTerbit, hariIni);
@@ -48,10 +50,23 @@ export function FormTagihanTerjadwal({
     setPengaturan((p) => ({ ...p, ...perubahan }));
   }
 
-  function simpan() {
-    // Tahap frontend: belum tersimpan ke server (lihat catatan di bawah tombol).
-    setTersimpan(pengaturan);
-    setBaruDisimpan(true);
+  async function simpan() {
+    setMenyimpan(true);
+    setGalatServer(null);
+    try {
+      const hasil = await kirimAksi<PengaturanTagihanTerjadwal>(
+        "/api/dashboard/tagihan-terjadwal",
+        pengaturan,
+        "PUT",
+      );
+      setPengaturan(hasil);
+      setTersimpan(hasil);
+      setBaruDisimpan(true);
+    } catch (err) {
+      setGalatServer((err as Error).message);
+    } finally {
+      setMenyimpan(false);
+    }
   }
 
   return (
@@ -213,12 +228,16 @@ export function FormTagihanTerjadwal({
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <GalatServer pesan={galatServer} />
         {baruDisimpan && !berubah && (
-          <CatatanSimulasi>Mode contoh: pengaturan belum benar-benar disimpan ke server.</CatatanSimulasi>
+          <p role="status" className="flex items-center gap-1.5 text-sm text-success">
+            <Check className="size-4" aria-hidden="true" />
+            Pengaturan tersimpan.
+          </p>
         )}
-        <Button size="lg" className="h-11" disabled={!berubah} onClick={simpan}>
+        <Button size="lg" className="h-11" disabled={!berubah || menyimpan} onClick={simpan}>
           <Save data-icon="inline-start" />
-          Simpan pengaturan
+          {menyimpan ? "Menyimpan…" : "Simpan pengaturan"}
         </Button>
       </div>
     </>
