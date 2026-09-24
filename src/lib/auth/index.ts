@@ -45,7 +45,7 @@ export function buatAuth(db: Db, { secret, baseURL, kirimOtp, batasPermintaan }:
         rateLimits: schema.rateLimits,
       },
     }),
-    advanced: { database: { generateId: "uuid" } },
+    advanced: { cookiePrefix: "kostera", database: { generateId: "uuid" } },
     user: {
       modelName: "users",
       fields: { name: "nama", emailVerified: "emailTerverifikasi", image: "foto", ...waktu },

@@ -17,6 +17,20 @@ export function pesanGalatAuth(status: number, code?: string, message?: string) 
   return "Terjadi kesalahan. Coba lagi sebentar lagi.";
 }
 
+/** Galat dari endpoint auth; `kode` = kode galat Better Auth, mis. "INVALID_OTP". */
+export class GalatAuth extends Error {
+  kode?: string;
+  status: number;
+  constructor(pesan: string, status: number, kode?: string) {
+    super(pesan);
+    this.status = status;
+    this.kode = kode;
+  }
+}
+
+/** Kode yang berarti kode OTP sudah tidak bisa dipakai lagi — harus minta kode baru. */
+export const KODE_OTP_HANGUS = ["TOO_MANY_ATTEMPTS", "OTP_EXPIRED", "OTP_NOT_FOUND"];
+
 export async function panggilAuth<T>(path: string, body: unknown): Promise<T> {
   let res: Response;
   try {
@@ -26,9 +40,9 @@ export async function panggilAuth<T>(path: string, body: unknown): Promise<T> {
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error("Tidak bisa terhubung ke server. Cek koneksi internet lalu coba lagi.");
+    throw new GalatAuth("Tidak bisa terhubung ke server. Cek koneksi internet lalu coba lagi.", 0);
   }
   const data = (await res.json().catch(() => ({}))) as { code?: string; message?: string };
-  if (!res.ok) throw new Error(pesanGalatAuth(res.status, data.code, data.message));
+  if (!res.ok) throw new GalatAuth(pesanGalatAuth(res.status, data.code, data.message), res.status, data.code);
   return data as T;
 }

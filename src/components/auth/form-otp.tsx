@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck } from "lucide-react";
 
-import { CatatanSimulasi, FieldError } from "@/components/quick-actions/action-sheet";
+import { FieldError } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { panggilAuth } from "@/lib/auth/klien";
+import { GalatAuth, KODE_OTP_HANGUS, panggilAuth } from "@/lib/auth/klien";
 import { tampilNomorWa } from "@/lib/nomor-wa";
 import {
   bersihkanKodeOtp,
@@ -19,12 +19,12 @@ import {
   PANJANG_OTP,
 } from "@/lib/otp";
 
-// Tahap ini: pengecekan kode belum tersambung ke server; kode ini selalu diterima.
-const KODE_CONTOH = "123456";
-
 type Status = "isi" | "memeriksa" | "berhasil";
 
-/** Isi kode OTP dari WhatsApp: dicek otomatis begitu 6 digit, batas salah, dan kirim ulang setelah jeda. */
+/**
+ * Isi kode OTP dari WhatsApp: dicek ke server begitu 6 digit (POST /api/auth/phone-number/verify →
+ * cookie sesi), batas salah, dan kirim ulang setelah jeda.
+ */
 export function FormOtp({ nomorWa }: { nomorWa: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,20 +52,29 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
     setStatus("memeriksa");
     setGalat(undefined);
     setInfo(undefined);
-    if (nilai === KODE_CONTOH) {
+    try {
+      await panggilAuth("/phone-number/verify", { phoneNumber: nomorWa, code: nilai });
       setStatus("berhasil");
       router.push(`/daftar/workspace?nomor=${nomorWa}`);
       return;
+    } catch (err) {
+      const galat = err as GalatAuth;
+      setKode("");
+      setStatus("isi");
+      if (galat.kode === "INVALID_OTP") {
+        const total = salah + 1;
+        setSalah(total);
+        setGalat(
+          total >= MAKS_PERCOBAAN_OTP
+            ? `Kode salah ${MAKS_PERCOBAAN_OTP} kali. Minta kode baru untuk mencoba lagi.`
+            : `Kode salah. Sisa ${MAKS_PERCOBAAN_OTP - total} percobaan.`,
+        );
+      } else {
+        // Kode hangus (kedaluwarsa / terlalu banyak salah) → kunci sampai minta kode baru.
+        if (galat.kode && KODE_OTP_HANGUS.includes(galat.kode)) setSalah(MAKS_PERCOBAAN_OTP);
+        setGalat(galat.message);
+      }
     }
-    const total = salah + 1;
-    setSalah(total);
-    setKode("");
-    setStatus("isi");
-    setGalat(
-      total >= MAKS_PERCOBAAN_OTP
-        ? `Kode salah ${MAKS_PERCOBAAN_OTP} kali. Minta kode baru untuk mencoba lagi.`
-        : `Kode salah. Sisa ${MAKS_PERCOBAAN_OTP - total} percobaan.`,
-    );
     // Tunggu input aktif lagi sebelum difokuskan.
     requestAnimationFrame(() => inputRef.current?.focus());
   }
@@ -160,8 +169,6 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
           </Button>
         )}
       </div>
-
-      <CatatanSimulasi>Mode contoh: pengecekan kode belum tersambung — pakai kode {KODE_CONTOH}.</CatatanSimulasi>
     </form>
   );
 }
