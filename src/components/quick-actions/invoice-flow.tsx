@@ -1,0 +1,314 @@
+"use client";
+
+import { useState } from "react";
+import { FilePlus2, Search } from "lucide-react";
+
+import {
+  CatatanSimulasi,
+  FieldError,
+  PreviewRows,
+  SelesaiState,
+  SheetActions,
+  SheetBody,
+  simulasiKirim,
+} from "@/components/quick-actions/action-sheet";
+import { RupiahInput } from "@/components/quick-actions/rupiah-input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SheetClose } from "@/components/ui/sheet";
+import {
+  formatPeriode,
+  formatRupiah,
+  formatTanggal,
+  periodeBerikutnya,
+} from "@/lib/format";
+import type { RoomCell } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+type Langkah = "isi" | "preview" | "menyimpan" | "selesai";
+type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal", string>>;
+
+/** Buat Tagihan: pilih kamar, nominal & jatuh tempo → preview → konfirmasi owner. */
+export function InvoiceFlow({
+  periode,
+  kamar,
+}: {
+  /** Periode berjalan (YYYY-MM); default tagihan untuk periode berikutnya. */
+  periode: string;
+  /** Kamar terisi yang bisa ditagih. */
+  kamar: RoomCell[];
+}) {
+  const periodeAwal = periodeBerikutnya(periode);
+  const [langkah, setLangkah] = useState<Langkah>("isi");
+  const [periodeTagihan, setPeriodeTagihan] = useState(periodeAwal);
+  const [jatuhTempo, setJatuhTempo] = useState(`${periodeAwal}-10`);
+  const [dipilih, setDipilih] = useState(() => new Set(kamar.map((k) => k.id)));
+  const [modeNominal, setModeNominal] = useState<"sewa" | "khusus">("sewa");
+  const [nominalKhusus, setNominalKhusus] = useState<number | null>(null);
+  const [cari, setCari] = useState("");
+  const [galat, setGalat] = useState<Galat>({});
+
+  // Galat sebuah field hilang begitu field itu diubah.
+  const bersihkan = (kunci: keyof Galat) =>
+    setGalat((g) => (g[kunci] ? { ...g, [kunci]: undefined } : g));
+
+  const kataKunci = cari.trim().toLowerCase();
+  const tampil = kataKunci
+    ? kamar.filter(
+        (k) =>
+          k.nomorKamar.toLowerCase().includes(kataKunci) ||
+          k.namaPenghuni?.toLowerCase().includes(kataKunci),
+      )
+    : kamar;
+
+  const nominalUntuk = (k: RoomCell) =>
+    modeNominal === "sewa" ? k.hargaSewa : (nominalKhusus ?? 0);
+  const penerima = kamar.filter((k) => dipilih.has(k.id));
+  const total = penerima.reduce((jumlah, k) => jumlah + nominalUntuk(k), 0);
+  const semuaDipilih = dipilih.size === kamar.length;
+
+  function toggle(id: string, cek: boolean) {
+    bersihkan("kamar");
+    setDipilih((lama) => {
+      const baru = new Set(lama);
+      if (cek) baru.add(id);
+      else baru.delete(id);
+      return baru;
+    });
+  }
+
+  function lanjutKePreview() {
+    const g: Galat = {};
+    if (!periodeTagihan) g.periode = "Pilih periode tagihan.";
+    if (!jatuhTempo) g.jatuhTempo = "Isi tanggal jatuh tempo.";
+    if (penerima.length === 0) g.kamar = "Pilih minimal satu kamar.";
+    if (modeNominal === "khusus" && !nominalKhusus) g.nominal = "Isi nominal tagihan.";
+    setGalat(g);
+    if (Object.keys(g).length === 0) setLangkah("preview");
+  }
+
+  async function konfirmasi() {
+    setLangkah("menyimpan");
+    await simulasiKirim();
+    setLangkah("selesai");
+  }
+
+  if (langkah === "selesai") {
+    return (
+      <SelesaiState
+        judul={`${penerima.length} tagihan ${formatPeriode(periodeTagihan)} dibuat`}
+        pesan="Setiap tagihan punya link invoice publik yang bisa dibuka penyewa tanpa login."
+      />
+    );
+  }
+
+  if (langkah === "preview" || langkah === "menyimpan") {
+    return (
+      <>
+        <SheetBody>
+          <PreviewRows
+            rows={[
+              ["Penerima", `${penerima.length} penyewa`],
+              ["Periode", formatPeriode(periodeTagihan)],
+              ["Jatuh tempo", formatTanggal(jatuhTempo)],
+              ["Total nominal", formatRupiah(total)],
+            ]}
+          />
+          <section aria-labelledby="tagihan-penerima">
+            <h3 id="tagihan-penerima" className="mb-2 text-sm font-medium">
+              Rincian per kamar
+            </h3>
+            <ul className="divide-y rounded-lg border bg-card text-sm">
+              {penerima.map((k) => (
+                <li key={k.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium tabular-nums">{k.nomorKamar}</span>
+                    <span className="text-muted-foreground"> · {k.namaPenghuni}</span>
+                  </span>
+                  <span className="shrink-0 font-medium tabular-nums">
+                    {formatRupiah(nominalUntuk(k))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <CatatanSimulasi />
+        </SheetBody>
+        <SheetActions>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => setLangkah("isi")}
+            disabled={langkah === "menyimpan"}
+          >
+            Ubah
+          </Button>
+          <Button size="lg" onClick={konfirmasi} disabled={langkah === "menyimpan"}>
+            <FilePlus2 data-icon="inline-start" />
+            {langkah === "menyimpan"
+              ? "Membuat…"
+              : `Konfirmasi & buat (${penerima.length})`}
+          </Button>
+        </SheetActions>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <SheetBody>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tagihan-periode">Periode</Label>
+            <Input
+              id="tagihan-periode"
+              type="month"
+              className="h-10 bg-card"
+              value={periodeTagihan}
+              onChange={(e) => {
+                bersihkan("periode");
+                setPeriodeTagihan(e.target.value);
+              }}
+              aria-invalid={!!galat.periode}
+              aria-describedby="tagihan-periode-galat"
+            />
+            <FieldError id="tagihan-periode-galat" pesan={galat.periode} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tagihan-jatuh-tempo">Jatuh tempo</Label>
+            <Input
+              id="tagihan-jatuh-tempo"
+              type="date"
+              className="h-10 bg-card"
+              value={jatuhTempo}
+              onChange={(e) => {
+                bersihkan("jatuhTempo");
+                setJatuhTempo(e.target.value);
+              }}
+              aria-invalid={!!galat.jatuhTempo}
+              aria-describedby="tagihan-jatuh-tempo-galat"
+            />
+            <FieldError id="tagihan-jatuh-tempo-galat" pesan={galat.jatuhTempo} />
+          </div>
+        </div>
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-sm font-medium">Nominal</legend>
+          {(
+            [
+              ["sewa", "Sesuai harga sewa kamar"],
+              ["khusus", "Nominal sama untuk semua kamar"],
+            ] as const
+          ).map(([nilai, label]) => (
+            <label
+              key={nilai}
+              className={cn(
+                "flex cursor-pointer items-center gap-2.5 rounded-lg border bg-card px-3 py-2.5 text-sm",
+                modeNominal === nilai && "border-primary/50 bg-accent/40",
+              )}
+            >
+              <input
+                type="radio"
+                name="mode-nominal"
+                value={nilai}
+                checked={modeNominal === nilai}
+                onChange={() => setModeNominal(nilai)}
+                className="size-4 accent-primary"
+              />
+              {label}
+            </label>
+          ))}
+          {modeNominal === "khusus" && (
+            <>
+              <RupiahInput
+                aria-label="Nominal per kamar"
+                placeholder="Contoh: 650.000"
+                value={nominalKhusus}
+                onChange={(nilai) => {
+                  bersihkan("nominal");
+                  setNominalKhusus(nilai);
+                }}
+                aria-invalid={!!galat.nominal}
+                aria-describedby="tagihan-nominal-galat"
+              />
+              <FieldError id="tagihan-nominal-galat" pesan={galat.nominal} />
+            </>
+          )}
+        </fieldset>
+
+        <section aria-labelledby="tagihan-kamar" className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <h3 id="tagihan-kamar" className="text-sm font-medium">
+              Kamar · {dipilih.size} dipilih
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                bersihkan("kamar");
+                setDipilih(semuaDipilih ? new Set() : new Set(kamar.map((k) => k.id)));
+              }}
+            >
+              {semuaDipilih ? "Kosongkan" : "Pilih semua"}
+            </Button>
+          </div>
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              aria-label="Cari kamar atau penghuni"
+              placeholder="Cari kamar atau penghuni"
+              className="h-10 bg-card pl-8"
+              value={cari}
+              onChange={(e) => setCari(e.target.value)}
+            />
+          </div>
+          <FieldError id="tagihan-kamar-galat" pesan={galat.kamar} />
+          <ul className="divide-y rounded-lg border bg-card">
+            {tampil.map((k) => {
+              const id = `tagihan-${k.id}`;
+              return (
+                <li key={k.id}>
+                  <label htmlFor={id} className="flex cursor-pointer items-center gap-3 px-3 py-2">
+                    <Checkbox
+                      id={id}
+                      checked={dipilih.has(k.id)}
+                      onCheckedChange={(cek) => toggle(k.id, cek === true)}
+                    />
+                    <span className="w-9 shrink-0 text-sm font-medium tabular-nums">
+                      {k.nomorKamar}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+                      {k.namaPenghuni}
+                    </span>
+                    <span className="shrink-0 text-sm tabular-nums">
+                      {formatRupiah(nominalUntuk(k))}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+            {tampil.length === 0 && (
+              <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+                Tidak ada kamar yang cocok.
+              </li>
+            )}
+          </ul>
+        </section>
+      </SheetBody>
+
+      <SheetActions>
+        <SheetClose asChild>
+          <Button size="lg" variant="outline">
+            Batal
+          </Button>
+        </SheetClose>
+        <Button size="lg" onClick={lanjutKePreview}>
+          Lihat preview
+        </Button>
+      </SheetActions>
+    </>
+  );
+}

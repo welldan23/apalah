@@ -1,0 +1,420 @@
+{
+  "repo": "kostera",
+  "generatedForCommit": null,
+  "files": [
+    {
+      "path": ".claude/skills/ngodingpakeai/SKILL.md",
+      "reason": "needs_summary",
+      "language": "markdown",
+      "size": 19096
+    },
+    {
+      "path": ".gitignore",
+      "reason": "needs_summary",
+      "language": null,
+      "size": 480
+    },
+    {
+      "path": ".ngodingpakeaiignore",
+      "reason": "needs_summary",
+      "language": null,
+      "size": 269
+    },
+    {
+      "path": "AGENTS.md",
+      "reason": "needs_summary",
+      "language": "markdown",
+      "size": 19529
+    },
+    {
+      "path": "CLAUDE.md",
+      "reason": "needs_summary",
+      "language": "markdown",
+      "size": 11
+    },
+    {
+      "path": "README.md",
+      "reason": "needs_summary",
+      "language": "markdown",
+      "size": 791
+    },
+    {
+      "path": "components.json",
+      "reason": "needs_summary",
+      "language": "json",
+      "size": 521
+    },
+    {
+      "path": "eslint.config.mjs",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 465
+    },
+    {
+      "path": "next.config.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 133
+    },
+    {
+      "path": "package-lock.json",
+      "reason": "needs_summary",
+      "language": "json",
+      "size": 407664
+    },
+    {
+      "path": "package.json",
+      "reason": "needs_summary",
+      "language": "json",
+      "size": 800
+    },
+    {
+      "path": "postcss.config.mjs",
+      "reason": "needs_summary",
+      "language": "javascript",
+      "size": 94
+    },
+    {
+      "path": "src/app/(app)/dashboard/page.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2702
+    },
+    {
+      "path": "src/app/(app)/layout.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 322
+    },
+    {
+      "path": "src/app/(marketing)/layout.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 606
+    },
+    {
+      "path": "src/app/(marketing)/page.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 789
+    },
+    {
+      "path": "src/app/globals.css",
+      "reason": "needs_summary",
+      "language": "css",
+      "size": 5166
+    },
+    {
+      "path": "src/app/layout.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 862
+    },
+    {
+      "path": "src/components/app-shell/app-nav.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3476
+    },
+    {
+      "path": "src/components/app-shell/app-shell.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2040
+    },
+    {
+      "path": "src/components/app-shell/kostera-logo.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 991
+    },
+    {
+      "path": "src/components/app-shell/nav-items.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1308
+    },
+    {
+      "path": "src/components/app-shell/user-avatar.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 562
+    },
+    {
+      "path": "src/components/app-shell/workspace-badge.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1152
+    },
+    {
+      "path": "src/components/dashboard/income-summary.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 5530
+    },
+    {
+      "path": "src/components/dashboard/invoice-status-table.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 9145
+    },
+    {
+      "path": "src/components/dashboard/kos-overview.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3616
+    },
+    {
+      "path": "src/components/dashboard/quick-actions.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2976
+    },
+    {
+      "path": "src/components/dashboard/room-summary.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 4616
+    },
+    {
+      "path": "src/components/dashboard/status-filter.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1085
+    },
+    {
+      "path": "src/components/landing/benefits-section.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1225
+    },
+    {
+      "path": "src/components/landing/cta-section.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1347
+    },
+    {
+      "path": "src/components/landing/faq-section.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1267
+    },
+    {
+      "path": "src/components/landing/hero-section.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3245
+    },
+    {
+      "path": "src/components/landing/how-it-works-section.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1225
+    },
+    {
+      "path": "src/components/landing/kosta-chat-mockup.tsx",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 7188
+    },
+    {
+      "path": "src/components/landing/links.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 388
+    },
+    {
+      "path": "src/components/landing/mobile-menu.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2224
+    },
+    {
+      "path": "src/components/landing/problem-section.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1542
+    },
+    {
+      "path": "src/components/landing/section-heading.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 616
+    },
+    {
+      "path": "src/components/landing/site-footer.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1175
+    },
+    {
+      "path": "src/components/landing/site-header.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1556
+    },
+    {
+      "path": "src/components/quick-actions/action-sheet.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3756
+    },
+    {
+      "path": "src/components/quick-actions/invoice-flow.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 11101
+    },
+    {
+      "path": "src/components/quick-actions/reminder-flow.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 5711
+    },
+    {
+      "path": "src/components/quick-actions/rupiah-input.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1042
+    },
+    {
+      "path": "src/components/quick-actions/tenant-flow.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 8851
+    },
+    {
+      "path": "src/components/status-badge.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2468
+    },
+    {
+      "path": "src/components/ui/avatar.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3088
+    },
+    {
+      "path": "src/components/ui/badge.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1855
+    },
+    {
+      "path": "src/components/ui/button.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3375
+    },
+    {
+      "path": "src/components/ui/card.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2620
+    },
+    {
+      "path": "src/components/ui/checkbox.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1572
+    },
+    {
+      "path": "src/components/ui/input.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 958
+    },
+    {
+      "path": "src/components/ui/label.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 596
+    },
+    {
+      "path": "src/components/ui/progress.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 736
+    },
+    {
+      "path": "src/components/ui/separator.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 634
+    },
+    {
+      "path": "src/components/ui/sheet.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 4561
+    },
+    {
+      "path": "src/components/ui/table.tsx",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2392
+    },
+    {
+      "path": "src/hooks/use-media-query.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 460
+    },
+    {
+      "path": "src/lib/data/dashboard.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 4240
+    },
+    {
+      "path": "src/lib/data/session.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 606
+    },
+    {
+      "path": "src/lib/format.test.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2611
+    },
+    {
+      "path": "src/lib/format.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3171
+    },
+    {
+      "path": "src/lib/landing/content.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 6389
+    },
+    {
+      "path": "src/lib/mock/kos-melati.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 6072
+    },
+    {
+      "path": "src/lib/types.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3383
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 24
+    },
+    {
+      "path": "tsconfig.json",
+      "reason": "needs_summary",
+      "language": "json",
+      "size": 710
+    }
+  ]
+}
