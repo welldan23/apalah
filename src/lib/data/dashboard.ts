@@ -1,15 +1,16 @@
 // Kontrak data halaman Dashboard Kos.
-// Tahap frontend: dihitung dari data tiruan. Tahap backend: ganti isi fungsi ini
-// dengan query database deterministik — bentuk `DashboardData` tetap sama.
+// Kos & kamar sudah dibaca dari database; tagihan & pemasukan masih dari data tiruan
+// sampai lapisan backend-nya selesai — bentuk `DashboardData` tetap sama.
 
 import { connection } from "next/server";
 
+import { getDb } from "@/db";
+import { getRingkasanKos } from "@/lib/data/kos";
+import { getWorkspaceSession } from "@/lib/data/session";
 import {
   MOCK_HARI_INI,
   MOCK_PERIODE,
   mockInvoices,
-  mockOrganization,
-  mockOwner,
   mockPayments,
   mockRooms,
   mockTenants,
@@ -20,7 +21,6 @@ import type {
   InvoiceStatus,
   PaymentRow,
   RekapTagihan,
-  RoomTypeSummary,
 } from "@/lib/types";
 
 // Urutan tampil: yang perlu ditindak dulu, yang sudah beres belakangan.
@@ -46,11 +46,12 @@ export async function getDashboardData(): Promise<DashboardData> {
   // Data dashboard selalu per-request (milik workspace yang sedang masuk), jangan di-prerender.
   await connection();
 
+  const session = await getWorkspaceSession();
+  const ringkasan = await getRingkasanKos(await getDb(), session.organization.id);
+  if (!ringkasan) throw new Error(`Organisasi ${session.organization.id} tidak ditemukan`);
+
   const tenantById = new Map(mockTenants.map((t) => [t.id, t]));
   const roomById = new Map(mockRooms.map((r) => [r.id, r]));
-  const penghuniByRoom = new Map(
-    mockTenants.filter((t) => t.status === "aktif").map((t) => [t.roomId, t]),
-  );
 
   const invoices: InvoiceRow[] = mockInvoices
     .filter((inv) => inv.periode === MOCK_PERIODE)
@@ -61,20 +62,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     }))
     .sort(urutkanInvoice);
 
-  const perTipe = new Map<string, RoomTypeSummary>();
-  for (const room of mockRooms) {
-    const ringkasan = perTipe.get(room.tipe) ?? {
-      tipe: room.tipe,
-      hargaSewa: room.hargaSewa,
-      total: 0,
-      terisi: 0,
-    };
-    ringkasan.total += 1;
-    if (room.status === "terisi") ringkasan.terisi += 1;
-    perTipe.set(room.tipe, ringkasan);
-  }
-
-  const kosong = mockRooms.filter((r) => r.status === "kosong");
   const rekap = (rows: InvoiceRow[]): RekapTagihan => ({
     jumlah: rows.length,
     nominal: rows.reduce((total, inv) => total + inv.nominal, 0),
@@ -102,26 +89,11 @@ export async function getDashboardData(): Promise<DashboardData> {
     .sort((a, b) => b.diverifikasiPada.localeCompare(a.diverifikasiPada));
 
   return {
-    organization: mockOrganization,
-    owner: mockOwner,
+    organization: ringkasan.organization,
+    owner: session.user,
     hariIni: MOCK_HARI_INI,
     periode: MOCK_PERIODE,
-    kamar: {
-      total: mockRooms.length,
-      terisi: mockRooms.length - kosong.length,
-      kosong: kosong.length,
-      perTipe: [...perTipe.values()],
-      daftar: mockRooms
-        .map((room) => ({
-          id: room.id,
-          nomorKamar: room.nomorKamar,
-          tipe: room.tipe,
-          hargaSewa: room.hargaSewa,
-          status: room.status,
-          namaPenghuni: penghuniByRoom.get(room.id)?.nama,
-        }))
-        .sort((a, b) => a.nomorKamar.localeCompare(b.nomorKamar)),
-    },
+    kamar: ringkasan.kamar,
     tagihan: {
       total: rekap(invoices),
       lunas,

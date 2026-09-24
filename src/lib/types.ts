@@ -115,6 +115,21 @@ export type RekapTagihan = {
   nominal: number;
 };
 
+export type RingkasanKamar = {
+  total: number;
+  terisi: number;
+  kosong: number;
+  perTipe: RoomTypeSummary[];
+  /** Semua kamar, urut nomor kamar. */
+  daftar: RoomCell[];
+};
+
+/** Ringkasan Kos & Kamar satu organisasi (endpoint GET /api/dashboard/ringkasan). */
+export type RingkasanKos = {
+  organization: Organization;
+  kamar: RingkasanKamar;
+};
+
 export type DashboardData = {
   organization: Organization;
   owner: Owner;
@@ -122,14 +137,7 @@ export type DashboardData = {
   hariIni: string;
   /** Periode berjalan, format YYYY-MM. */
   periode: string;
-  kamar: {
-    total: number;
-    terisi: number;
-    kosong: number;
-    perTipe: RoomTypeSummary[];
-    /** Semua kamar, urut nomor kamar. */
-    daftar: RoomCell[];
-  };
+  kamar: RingkasanKamar;
   /** Rekap invoice periode berjalan per status. */
   tagihan: {
     total: RekapTagihan;

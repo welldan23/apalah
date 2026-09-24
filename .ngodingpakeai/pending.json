@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "838d6df48d05a42a7a5211576b2972317b258ff5",
+  "generatedForCommit": "3baade0771730ad0724f7868c003dd363ad2fc10",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -16,9 +16,9 @@
     },
     {
       "path": ".gitignore",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": null,
-      "size": 480
+      "size": 529
     },
     {
       "path": ".ngodingpakeaiignore",
@@ -40,15 +40,39 @@
     },
     {
       "path": "README.md",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "markdown",
-      "size": 791
+      "size": 1633
     },
     {
       "path": "components.json",
       "reason": "needs_summary",
       "language": "json",
       "size": 521
+    },
+    {
+      "path": "drizzle/0000_skema_dashboard.sql",
+      "reason": "new",
+      "language": "sql",
+      "size": 6459
+    },
+    {
+      "path": "drizzle/meta/0000_snapshot.json",
+      "reason": "new",
+      "language": "json",
+      "size": 20689
+    },
+    {
+      "path": "drizzle/meta/_journal.json",
+      "reason": "new",
+      "language": "json",
+      "size": 209
+    },
+    {
+      "path": "drizzle.config.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 320
     },
     {
       "path": "eslint.config.mjs",
@@ -64,15 +88,15 @@
     },
     {
       "path": "package-lock.json",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "json",
-      "size": 407664
+      "size": 455948
     },
     {
       "path": "package.json",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "json",
-      "size": 800
+      "size": 1263
     },
     {
       "path": "postcss.config.mjs",
@@ -202,7 +226,7 @@
     },
     {
       "path": "src/components/landing/dashboard-preview-section.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5912
     },
@@ -226,7 +250,7 @@
     },
     {
       "path": "src/components/landing/kosta-chat-mockup.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7248
     },
@@ -238,7 +262,7 @@
     },
     {
       "path": "src/components/landing/mobile-menu.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2232
     },
@@ -256,13 +280,13 @@
     },
     {
       "path": "src/components/landing/site-footer.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1284
     },
     {
       "path": "src/components/landing/site-header.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1666
     },
@@ -367,6 +391,42 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 2392
+    },
+    {
+      "path": "src/db/index.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1991
+    },
+    {
+      "path": "src/db/migrate.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1466
+    },
+    {
+      "path": "src/db/schema.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3505
+    },
+    {
+      "path": "src/db/schema.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 5197
+    },
+    {
+      "path": "src/db/seed.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2333
+    },
+    {
+      "path": "src/db/testing.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 562
     },
     {
       "path": "src/hooks/use-media-query.ts",
