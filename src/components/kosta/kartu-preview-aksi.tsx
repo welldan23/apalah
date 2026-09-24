@@ -1,5 +1,6 @@
 import { CircleCheck, CircleDashed, CircleX, Clock, type LucideIcon } from "lucide-react";
 
+import { KonfirmasiAksi } from "@/components/kosta/konfirmasi-aksi";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
 import { formatPeriode, formatRupiah } from "@/lib/format";
 import type { PreviewAksi, StatusDraftAksi } from "@/lib/types";
@@ -39,7 +40,14 @@ const STATUS: Record<StatusDraftAksi, { label: string; tone: StatusTone; icon: L
 const MAKS_DITAMPILKAN = 5;
 
 /** Kartu preview aksi Kosta: penerima, periode, dan nominal sebelum owner mengonfirmasi. */
-export function KartuPreviewAksi({ preview }: { preview: PreviewAksi }) {
+export function KartuPreviewAksi({
+  preview,
+  onPutuskan,
+}: {
+  preview: PreviewAksi;
+  /** Tanpa handler, kartu hanya tampilan (tanpa tombol Setuju/Batal). */
+  onPutuskan?: (keputusan: "setuju" | "batal") => void;
+}) {
   const status = STATUS[preview.status];
   const tampil = preview.penerima.slice(0, MAKS_DITAMPILKAN);
   const sisa = preview.penerima.length - tampil.length;
@@ -80,7 +88,12 @@ export function KartuPreviewAksi({ preview }: { preview: PreviewAksi }) {
         {sisa > 0 && <li className="px-2.5 py-1.5 text-muted-foreground">+{sisa} penerima lainnya</li>}
       </ul>
 
-      <p className="border-t px-2.5 py-1.5 text-muted-foreground">{status.petunjuk}</p>
+      <p className="border-t px-2.5 py-1.5 text-muted-foreground" aria-live="polite">
+        {status.petunjuk}
+      </p>
+      {preview.status === "menunggu_konfirmasi" && onPutuskan && (
+        <KonfirmasiAksi preview={preview} onPutuskan={onPutuskan} />
+      )}
     </figure>
   );
 }

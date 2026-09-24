@@ -6,15 +6,25 @@ import { ArrowLeftRight, SendHorizontal } from "lucide-react";
 import { BubblePesan } from "@/components/kosta/bubble-pesan";
 import { PemilihWorkspace } from "@/components/kosta/pemilih-workspace";
 import { ActionSheet } from "@/components/quick-actions/action-sheet";
+import { statusSetelah, type KeputusanDraft } from "@/lib/draft-aksi";
 import { formatTanggal } from "@/lib/format";
 import { tampilNomorWa } from "@/lib/nomor-wa";
-import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
+import type { PesanKosta, PreviewAksi, WorkspaceRingkas } from "@/lib/types";
 import { tanggalWib } from "@/lib/waktu";
 
 const JEDA_BALASAN = 1100;
 
 const BALASAN_CONTOH =
   "Mode contoh: Kosta belum tersambung ke layanan AI. Setelah aktif, pertanyaanmu dijawab dengan angka langsung dari database kos.";
+
+const CATATAN_CONTOH = "(Mode contoh: belum benar-benar dijalankan.)";
+
+function pesanSelesai(preview: PreviewAksi) {
+  const jumlah = preview.penerima.length;
+  return preview.aksi === "reminder"
+    ? `Reminder terkirim ke ${jumlah} penyewa dan tercatat di riwayat reminder. ${CATATAN_CONTOH}`
+    : `${jumlah} tagihan dibuat, masing-masing dengan link invoice untuk penyewa. ${CATATAN_CONTOH}`;
+}
 
 function labelTanggal(tanggal: string, hariIni: string) {
   return tanggal === hariIni ? "Hari ini" : formatTanggal(tanggal);
@@ -57,9 +67,47 @@ export function ChatKosta({
   const [draf, setDraf] = useState("");
   const [mengetik, setMengetik] = useState(false);
   const bawahRef = useRef<HTMLLIElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  const tambahPesan = (dari: PesanKosta["dari"], teks: string) =>
+    setPesan((p) => [...p, { id: crypto.randomUUID(), dari, waktu: new Date().toISOString(), teks }]);
+
+  /** Balasan Kosta setelah jeda "mengetik". */
+  function balasKosta(teks: string, sebelumBalas?: () => void) {
+    setMengetik(true);
+    timers.current.push(
+      setTimeout(() => {
+        setMengetik(false);
+        sebelumBalas?.();
+        tambahPesan("kosta", teks);
+      }, JEDA_BALASAN),
+    );
+  }
+
+  const ubahStatusDraft = (pesanId: string, keputusan: KeputusanDraft) =>
+    setPesan((p) =>
+      p.map((m) => {
+        if (m.id !== pesanId || m.lampiran?.jenis !== "preview_aksi") return m;
+        const status = statusSetelah(m.lampiran.status, keputusan);
+        return status ? { ...m, lampiran: { ...m.lampiran, status } } : m;
+      }),
+    );
+
+  function putuskan(pesanId: string, keputusan: "setuju" | "batal") {
+    const lampiran = pesan.find((m) => m.id === pesanId)?.lampiran;
+    if (lampiran?.jenis !== "preview_aksi" || !statusSetelah(lampiran.status, keputusan)) return;
+
+    ubahStatusDraft(pesanId, keputusan);
+    if (keputusan === "batal") {
+      tambahPesan("owner", "Batal");
+      balasKosta("Oke, dibatalkan. Tidak ada yang dikirim atau diubah.");
+    } else {
+      tambahPesan("owner", lampiran.aksi === "reminder" ? "Setuju, kirim" : "Setuju, buat");
+      balasKosta(pesanSelesai(lampiran), () => ubahStatusDraft(pesanId, "selesai"));
+    }
+  }
   // Selalu tampilkan pesan terbaru.
   useEffect(() => {
     bawahRef.current?.scrollIntoView({ block: "end" });
@@ -69,34 +117,19 @@ export function ChatKosta({
     e.preventDefault();
     const teks = draf.trim();
     if (!teks || mengetik) return;
-    setPesan((p) => [
-      ...p,
-      { id: crypto.randomUUID(), dari: "owner", waktu: new Date().toISOString(), teks },
-    ]);
+    tambahPesan("owner", teks);
     setDraf("");
-    setMengetik(true);
-    timer.current = setTimeout(() => {
-      setMengetik(false);
-      setPesan((p) => [
-        ...p,
-        { id: crypto.randomUUID(), dari: "kosta", waktu: new Date().toISOString(), teks: BALASAN_CONTOH },
-      ]);
-    }, JEDA_BALASAN);
+    balasKosta(BALASAN_CONTOH);
   }
 
   function gantiKos(ws: WorkspaceRingkas) {
     setPilihKosTerbuka(false);
     if (ws.id === aktifId) return;
     setAktifId(ws.id);
-    setPesan((p) => [
-      ...p,
-      {
-        id: crypto.randomUUID(),
-        dari: "kosta",
-        waktu: new Date().toISOString(),
-        teks: `Oke, sekarang aku bantu untuk ${ws.namaKos} (${ws.jumlahKamar} kamar). Data kos lain tidak ikut dibaca.`,
-      },
-    ]);
+    tambahPesan(
+      "kosta",
+      `Oke, sekarang aku bantu untuk ${ws.namaKos} (${ws.jumlahKamar} kamar). Data kos lain tidak ikut dibaca.`,
+    );
   }
 
   // Kelompokkan per tanggal WIB untuk pemisah "Hari ini" / tanggal.
@@ -160,7 +193,11 @@ export function ChatKosta({
               <time dateTime={tanggal}>{labelTanggal(tanggal, hariIni)}</time>
             </li>
             {pesan.map((p) => (
-              <BubblePesan key={p.id} pesan={p} />
+              <BubblePesan
+                key={p.id}
+                pesan={p}
+                onPutuskan={mengetik ? undefined : (keputusan) => putuskan(p.id, keputusan)}
+              />
             ))}
           </Fragment>
         ))}

@@ -5,8 +5,12 @@ import { formatJam, formatRupiah } from "@/lib/format";
 import type { LampiranKosta, PesanKosta } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function Lampiran({ lampiran }: { lampiran: LampiranKosta }) {
-  if (lampiran.jenis === "preview_aksi") return <KartuPreviewAksi preview={lampiran} />;
+type OnPutuskan = (keputusan: "setuju" | "batal") => void;
+
+function Lampiran({ lampiran, onPutuskan }: { lampiran: LampiranKosta; onPutuskan?: OnPutuskan }) {
+  if (lampiran.jenis === "preview_aksi") {
+    return <KartuPreviewAksi preview={lampiran} onPutuskan={onPutuskan} />;
+  }
   if (lampiran.jenis === "daftar_tagihan") {
     return (
       <figure className="mt-2 overflow-hidden rounded-lg border bg-background/70 text-xs">
@@ -48,7 +52,14 @@ function Lampiran({ lampiran }: { lampiran: LampiranKosta }) {
 }
 
 /** Bubble satu pesan Kosta/owner; lampiran data ditampilkan dengan format Rupiah. */
-export function BubblePesan({ pesan }: { pesan: PesanKosta }) {
+export function BubblePesan({
+  pesan,
+  onPutuskan,
+}: {
+  pesan: PesanKosta;
+  /** Keputusan owner atas preview aksi di pesan ini. */
+  onPutuskan?: OnPutuskan;
+}) {
   const dariOwner = pesan.dari === "owner";
   return (
     <li className={cn("flex", dariOwner ? "justify-end" : "justify-start")}>
@@ -63,7 +74,7 @@ export function BubblePesan({ pesan }: { pesan: PesanKosta }) {
       >
         <span className="sr-only">{dariOwner ? "Kamu: " : "Kosta: "}</span>
         {pesan.teks}
-        {pesan.lampiran && <Lampiran lampiran={pesan.lampiran} />}
+        {pesan.lampiran && <Lampiran lampiran={pesan.lampiran} onPutuskan={onPutuskan} />}
         <span className="mt-1 flex items-center justify-end gap-1 text-[0.7rem] text-muted-foreground">
           <time dateTime={pesan.waktu}>{formatJam(pesan.waktu)}</time>
           {dariOwner && <CheckCheck className="size-3.5 text-primary" aria-label="Terkirim" />}

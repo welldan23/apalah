@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "9f8c0399a0283dbefd06743227ab5769c344053d",
+  "generatedForCommit": "d8aba076ef019e2c3cdcf2769194b876b24de73c",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -304,19 +304,25 @@
     },
     {
       "path": "src/components/kosta/bubble-pesan.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3100
+      "size": 3263
     },
     {
       "path": "src/components/kosta/chat-kosta.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7088
     },
     {
-      "path": "src/components/kosta/pemilih-workspace.tsx",
+      "path": "src/components/kosta/kartu-preview-aksi.tsx",
       "reason": "new",
+      "language": "typescript",
+      "size": 3127
+    },
+    {
+      "path": "src/components/kosta/pemilih-workspace.tsx",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1893
     },
@@ -646,7 +652,7 @@
     },
     {
       "path": "src/lib/data/kosta.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1360
     },
@@ -732,7 +738,7 @@
       "path": "src/lib/mock/kosta.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 2191
+      "size": 2858
     },
     {
       "path": "src/lib/nomor-wa.ts",
@@ -768,7 +774,7 @@
       "path": "src/lib/types.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 4830
+      "size": 5348
     },
     {
       "path": "src/lib/utils.ts",
