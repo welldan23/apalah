@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "9fb62d1e58d252b0fa1f13701adc1ef89ef2cb7e",
+  "generatedForCommit": "b30124958abb69b2dec65a1b93f35d6f41e412f7",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -75,6 +75,12 @@
       "size": 4004
     },
     {
+      "path": "drizzle/0004_webhook_pembayaran.sql",
+      "reason": "new",
+      "language": "sql",
+      "size": 1138
+    },
+    {
       "path": "drizzle/meta/0000_snapshot.json",
       "reason": "needs_summary",
       "language": "json",
@@ -99,10 +105,16 @@
       "size": 41767
     },
     {
-      "path": "drizzle/meta/_journal.json",
-      "reason": "needs_summary",
+      "path": "drizzle/meta/0004_snapshot.json",
+      "reason": "new",
       "language": "json",
-      "size": 636
+      "size": 44739
+    },
+    {
+      "path": "drizzle/meta/_journal.json",
+      "reason": "changed",
+      "language": "json",
+      "size": 782
     },
     {
       "path": "drizzle.config.ts",
@@ -280,13 +292,13 @@
     },
     {
       "path": "src/app/api/kosta/pesan/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1444
     },
     {
       "path": "src/app/api/kosta/workspace/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1374
     },
@@ -298,7 +310,7 @@
     },
     {
       "path": "src/app/api/webhook/whatsapp/route.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2447
     },
@@ -460,7 +472,7 @@
     },
     {
       "path": "src/components/kosta/chat-kosta.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 11424
     },
@@ -736,21 +748,21 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5617
+      "size": 6605
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 11907
+      "size": 12802
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5130
+      "size": 5203
     },
     {
       "path": "src/db/testing.ts",
@@ -886,7 +898,7 @@
     },
     {
       "path": "src/lib/data/kosta.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1449
     },
@@ -1006,13 +1018,13 @@
     },
     {
       "path": "src/lib/kosta/deps.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 519
     },
     {
       "path": "src/lib/kosta/draft.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6508
     },
@@ -1024,7 +1036,7 @@
     },
     {
       "path": "src/lib/kosta/format-balasan.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1900
     },
@@ -1048,19 +1060,19 @@
     },
     {
       "path": "src/lib/kosta/proses-pesan.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4621
     },
     {
       "path": "src/lib/kosta/proses-pesan.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6960
     },
     {
       "path": "src/lib/kosta/riwayat.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3436
     },
@@ -1102,13 +1114,13 @@
     },
     {
       "path": "src/lib/kosta/tool-baca.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5721
     },
     {
       "path": "src/lib/kosta/tool-baca.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7746
     },
