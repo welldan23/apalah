@@ -130,6 +130,28 @@ export type RingkasanKos = {
   kamar: RingkasanKamar;
 };
 
+export type RekapTagihanPerStatus = {
+  total: RekapTagihan;
+  lunas: RekapTagihan;
+  menunggu: RekapTagihan;
+  jatuhTempo: RekapTagihan;
+};
+
+export type Pemasukan = {
+  /** Total pembayaran valid yang masuk di periode berjalan. */
+  bulanIni: number;
+  /** Jumlah pembayaran valid di periode berjalan. */
+  jumlahPembayaran: number;
+  /** Pembayaran valid terbaru, paling baru di atas. */
+  terakhir: PaymentRow[];
+};
+
+/** Rekap pemasukan satu periode (endpoint GET /api/dashboard/pemasukan). */
+export type RekapPemasukan = {
+  tagihan: RekapTagihanPerStatus;
+  pemasukan: Pemasukan;
+};
+
 export type DashboardData = {
   organization: Organization;
   owner: Owner;
@@ -139,20 +161,8 @@ export type DashboardData = {
   periode: string;
   kamar: RingkasanKamar;
   /** Rekap invoice periode berjalan per status. */
-  tagihan: {
-    total: RekapTagihan;
-    lunas: RekapTagihan;
-    menunggu: RekapTagihan;
-    jatuhTempo: RekapTagihan;
-  };
-  pemasukan: {
-    /** Total pembayaran valid yang masuk di periode berjalan. */
-    bulanIni: number;
-    /** Jumlah pembayaran valid di periode berjalan. */
-    jumlahPembayaran: number;
-    /** Pembayaran valid terbaru, paling baru di atas. */
-    terakhir: PaymentRow[];
-  };
+  tagihan: RekapTagihanPerStatus;
+  pemasukan: Pemasukan;
   /** Invoice periode berjalan, urut dari yang paling perlu ditindak. */
   invoices: InvoiceRow[];
 };

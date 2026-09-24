@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "558675ebcecf5a4be9b69c04031d5cfe70b22e08",
+  "generatedForCommit": "149579fea557ce058dc24458625c7d1aac8cb05b",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -82,7 +82,7 @@
     },
     {
       "path": "next.config.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 217
     },
@@ -129,8 +129,14 @@
       "size": 1092
     },
     {
-      "path": "src/app/api/dashboard/ringkasan/route.ts",
+      "path": "src/app/api/dashboard/invoices/route.ts",
       "reason": "new",
+      "language": "typescript",
+      "size": 1237
+    },
+    {
+      "path": "src/app/api/dashboard/ringkasan/route.ts",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 538
     },
@@ -444,17 +450,29 @@
       "path": "src/lib/data/dashboard.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 3534
+      "size": 2772
+    },
+    {
+      "path": "src/lib/data/invoice.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4176
+    },
+    {
+      "path": "src/lib/data/invoice.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2085
     },
     {
       "path": "src/lib/data/kos.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2991
     },
     {
       "path": "src/lib/data/kos.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1995
     },
@@ -490,7 +508,7 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3589
     },
@@ -499,6 +517,18 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 24
+    },
+    {
+      "path": "src/lib/waktu.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 719
+    },
+    {
+      "path": "src/lib/waktu.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 793
     },
     {
       "path": "tsconfig.json",
