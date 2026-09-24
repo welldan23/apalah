@@ -22,6 +22,13 @@
       "when": 1790268366006,
       "tag": "0002_tagihan_terjadwal",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790270903406,
+      "tag": "0003_kosta_percakapan",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,7 @@ import {
   mockRooms,
   mockTenants,
 } from "../lib/mock/kos-melati.ts";
+import { mockPercakapanKosta } from "../lib/mock/kosta.ts";
 import { getDb, tutupDb, type Db } from "./index.ts";
 import * as schema from "./schema.ts";
 
@@ -63,6 +64,39 @@ export async function isiDataContoh(db: Db) {
     await tx.insert(schema.payments).values(
       mockPayments.map((p) => ({ ...p, diverifikasiPada: new Date(p.diverifikasiPada) })),
     );
+
+    // Percakapan owner dengan Kosta, berakhir dengan preview pengingat yang menunggu konfirmasi.
+    const percakapan = { id: "wac_owner_kos_melati", organizationId: mockOrganization.id };
+    await tx.insert(schema.waConversations).values({
+      ...percakapan,
+      nomorWa: mockOwner.nomorWa,
+      userId: mockOwner.id,
+      terakhirPesanPada: new Date(mockPercakapanKosta.at(-1)!.waktu),
+    });
+    await tx.insert(schema.waMessages).values(
+      mockPercakapanKosta.map((p) => ({
+        id: `msg_${p.id}`,
+        conversationId: percakapan.id,
+        organizationId: percakapan.organizationId,
+        arah: p.dari === "owner" ? ("masuk" as const) : ("keluar" as const),
+        isi: p.teks,
+        lampiran: p.lampiran ?? null,
+        dibuatPada: new Date(p.waktu),
+      })),
+    );
+    const pesanPreview = mockPercakapanKosta.findLast((p) => p.lampiran?.jenis === "preview_aksi");
+    if (pesanPreview?.lampiran?.jenis === "preview_aksi") {
+      const { aksi, periode, penerima, total } = pesanPreview.lampiran;
+      await tx.insert(schema.actionDrafts).values({
+        id: `draft_${aksi}_${periode}`,
+        organizationId: percakapan.organizationId,
+        userId: mockOwner.id,
+        conversationId: percakapan.id,
+        jenisAksi: aksi,
+        ringkasanPreview: { aksi, periode, penerima, total },
+        dibuatPada: new Date(pesanPreview.waktu),
+      });
+    }
   });
   return true;
 }

@@ -7,14 +7,18 @@ import {
   boolean,
   check,
   date,
+  foreignKey,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+import type { LampiranKosta, PreviewAksi } from "@/lib/types";
 
 const id = () =>
   text()
@@ -42,6 +46,14 @@ export const statusPembayaranEnum = pgEnum("status_pembayaran", [
 ]);
 export const statusReminderEnum = pgEnum("status_reminder", ["terkirim", "gagal"]);
 export const aturanJatuhTempoEnum = pgEnum("aturan_jatuh_tempo", ["tanggal_masuk", "tanggal_tetap"]);
+export const arahPesanEnum = pgEnum("arah_pesan", ["masuk", "keluar"]);
+export const jenisAksiEnum = pgEnum("jenis_aksi", ["reminder", "tagihan"]);
+export const statusDraftAksiEnum = pgEnum("status_draft_aksi", [
+  "menunggu_konfirmasi",
+  "disetujui",
+  "dibatalkan",
+  "dijalankan",
+]);
 
 export const users = pgTable("users", {
   id: id(),
@@ -245,4 +257,101 @@ export const reminders = pgTable(
     terkirimPada: waktu().notNull().defaultNow(),
   },
   (t) => [index("reminders_invoice").on(t.invoiceId)],
+);
+
+/**
+ * Percakapan WhatsApp dengan Kosta — satu per nomor WA. `userId` kosong = nomor belum tertaut/terverifikasi
+ * (tidak boleh membaca data kos mana pun). `organizationId` = kos yang sedang dibahas (workspace aktif);
+ * FK gabungan ke members menjamin kos itu memang milik/dikelola pengguna tersebut.
+ */
+export const waConversations = pgTable(
+  "wa_conversations",
+  {
+    id: id(),
+    nomorWa: text().notNull().unique("wa_conversations_nomor_wa_unik"),
+    userId: text().references(() => users.id, { onDelete: "cascade" }),
+    organizationId: text(),
+    terakhirPesanPada: waktu(),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    // Di migrasi: ON DELETE SET NULL ("organization_id") — keluar dari kos hanya mengosongkan
+    // workspace aktif, tautan nomor ke pengguna tetap.
+    foreignKey({
+      name: "wa_conversations_workspace_anggota_fk",
+      columns: [t.organizationId, t.userId],
+      foreignColumns: [members.organizationId, members.userId],
+    }).onDelete("set null"),
+    check("wa_conversations_workspace_butuh_user", sql`${t.organizationId} is null or ${t.userId} is not null`),
+  ],
+);
+
+/** Isi percakapan. Angka di `lampiran` selalu dari database, bukan buatan AI. */
+export const waMessages = pgTable(
+  "wa_messages",
+  {
+    id: id(),
+    conversationId: text()
+      .notNull()
+      .references(() => waConversations.id, { onDelete: "cascade" }),
+    /** Kos yang dibahas saat pesan ini diproses. */
+    organizationId: text().references(() => organizations.id, { onDelete: "set null" }),
+    arah: arahPesanEnum().notNull(),
+    isi: text().notNull(),
+    /** Hasil parsing pesan masuk, mis. "lihat_tunggakan". */
+    intent: text(),
+    lampiran: jsonb().$type<LampiranKosta>(),
+    /** ID pesan dari provider WhatsApp — mencegah webhook yang sama tercatat dua kali. */
+    idPesanProvider: text().unique("wa_messages_id_provider_unik"),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [index("wa_messages_percakapan_waktu").on(t.conversationId, t.dibuatPada)],
+);
+
+/** Draft aksi Kosta (ubah data / kirim massal) yang menunggu konfirmasi owner. */
+export const actionDrafts = pgTable(
+  "action_drafts",
+  {
+    id: id(),
+    organizationId: text().notNull(),
+    userId: text().notNull(),
+    conversationId: text().references(() => waConversations.id, { onDelete: "set null" }),
+    jenisAksi: jenisAksiEnum().notNull(),
+    /** Penerima, periode, nominal yang ditampilkan ke owner saat minta konfirmasi. */
+    ringkasanPreview: jsonb().$type<Omit<PreviewAksi, "status">>().notNull(),
+    status: statusDraftAksiEnum().notNull().default("menunggu_konfirmasi"),
+    dibuatPada: waktu().notNull().defaultNow(),
+    dikonfirmasiPada: waktu(),
+  },
+  (t) => [
+    // Draft hanya bisa dibuat oleh anggota kos tersebut.
+    foreignKey({
+      name: "action_drafts_anggota_fk",
+      columns: [t.organizationId, t.userId],
+      foreignColumns: [members.organizationId, members.userId],
+    }).onDelete("cascade"),
+    index("action_drafts_organisasi_status").on(t.organizationId, t.status),
+    check(
+      "action_drafts_waktu_konfirmasi",
+      sql`(${t.status} = 'menunggu_konfirmasi') = (${t.dikonfirmasiPada} is null)`,
+    ),
+  ],
+);
+
+/** Kode OTP untuk memverifikasi & menautkan nomor WhatsApp. Hanya hash kode yang disimpan. */
+export const verifikasiWa = pgTable(
+  "verifikasi_wa",
+  {
+    id: id(),
+    nomorWa: text().notNull(),
+    kodeHash: text().notNull(),
+    kedaluwarsaPada: waktu().notNull(),
+    percobaan: integer().notNull().default(0),
+    terverifikasiPada: waktu(),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    index("verifikasi_wa_nomor").on(t.nomorWa, t.dibuatPada),
+    check("verifikasi_wa_percobaan", sql`${t.percobaan} between 0 and 10`),
+  ],
 );

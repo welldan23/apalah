@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "b878ab7bad512cce154b31fadaa64765e62dd8f9",
+  "generatedForCommit": "701e2901b926b44352ee4dba3800a69870e08b2f",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -195,10 +195,16 @@
       "size": 1479
     },
     {
-      "path": "src/app/api/cron/tagihan-terjadwal/route.ts",
-      "reason": "needs_summary",
+      "path": "src/app/api/cron/harian/route.ts",
+      "reason": "new",
       "language": "typescript",
-      "size": 830
+      "size": 1199
+    },
+    {
+      "path": "src/app/api/dashboard/aksi/kirim-tagihan/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1036
     },
     {
       "path": "src/app/api/dashboard/aksi/penghuni/route.ts",
@@ -211,6 +217,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 979
+    },
+    {
+      "path": "src/app/api/dashboard/aksi/status-tagihan/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 946
     },
     {
       "path": "src/app/api/dashboard/aksi/tagihan/route.ts",
@@ -244,7 +256,7 @@
     },
     {
       "path": "src/app/api/invoice/[token]/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 902
     },
@@ -532,9 +544,9 @@
     },
     {
       "path": "src/components/pembayaran/detail-tagihan.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4908
+      "size": 8422
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
@@ -735,6 +747,18 @@
       "size": 3460
     },
     {
+      "path": "src/lib/aksi/status-tagihan.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 6769
+    },
+    {
+      "path": "src/lib/aksi/status-tagihan.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 7232
+    },
+    {
       "path": "src/lib/aksi/tagihan-terjadwal.test.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -772,7 +796,7 @@
     },
     {
       "path": "src/lib/data/invoice-publik.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2967
     },
@@ -987,6 +1011,12 @@
       "size": 574
     },
     {
+      "path": "src/lib/penjadwal/jatuh-tempo.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 726
+    },
+    {
       "path": "src/lib/penjadwal/otorisasi.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -1000,15 +1030,15 @@
     },
     {
       "path": "src/lib/penjadwal/tagihan-terjadwal.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3120
+      "size": 3109
     },
     {
       "path": "src/lib/pesan.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 884
+      "size": 1370
     },
     {
       "path": "src/lib/pindah-kamar.test.ts",
@@ -1102,9 +1132,9 @@
     },
     {
       "path": "vercel.json",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "json",
-      "size": 139
+      "size": 128
     }
   ]
 }
