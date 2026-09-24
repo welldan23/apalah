@@ -1,4 +1,4 @@
-// Penjadwal tagihan terjadwal — dijalankan harian oleh cron (GET /api/cron/tagihan-terjadwal).
+// Penjadwal tagihan terjadwal — dijalankan harian oleh cron (GET /api/cron/harian).
 // Untuk tiap kos yang mengaktifkan tagihan terjadwal, tagihan periode bulan berjalan diterbitkan
 // begitu tanggal terbitnya tiba. Aman dijalankan berulang: penghuni yang sudah punya tagihan di
 // periode itu dilewati, dan hari yang terlewat (cron mati) disusul pada jalan berikutnya.

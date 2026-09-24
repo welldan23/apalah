@@ -1,14 +1,104 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, ExternalLink, TriangleAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, CircleCheck, Copy, ExternalLink, Send, TriangleAlert } from "lucide-react";
 
+import { GalatServer, kirimAksi } from "@/components/quick-actions/action-sheet";
 import { InvoiceStatusBadge, PaymentStatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import type { TagihanPembayaran } from "@/lib/data/pembayaran";
 import { formatPeriode, formatRupiah, formatTanggal, formatWaktu } from "@/lib/format";
 import { keteranganWaktu } from "@/lib/invoice";
 import { cn } from "@/lib/utils";
+
+type Aksi = "kirim" | "diperiksa";
+
+const AKSI: Record<Aksi, { tombol: string; konfirmasi: (t: TagihanPembayaran) => string; ikon: typeof Send }> = {
+  kirim: {
+    tombol: "Kirim ke WhatsApp",
+    konfirmasi: (t) =>
+      `Kirim tagihan ${formatRupiah(t.nominal)} beserta link invoice ke WhatsApp ${t.namaPenghuni} (kamar ${t.nomorKamar})?`,
+    ikon: Send,
+  },
+  diperiksa: {
+    tombol: "Selesai diperiksa",
+    konfirmasi: () =>
+      "Tagihan kembali Menunggu pembayaran (atau Jatuh tempo bila tanggalnya sudah lewat). Pembayaran yang tidak cocok tetap tercatat di riwayat.",
+    ikon: CircleCheck,
+  },
+};
+
+/** Aksi owner untuk satu tagihan, selalu lewat konfirmasi: kirim ke penyewa atau tandai sudah diperiksa. */
+function AksiTagihan({ t }: { t: TagihanPembayaran }) {
+  const router = useRouter();
+  const aksi: Aksi | null =
+    t.status === "perlu_review" ? "diperiksa" : ["draft", "menunggu", "terkirim"].includes(t.status) ? "kirim" : null;
+  const [langkah, setLangkah] = useState<"awal" | "konfirmasi" | "menyimpan" | "selesai">("awal");
+  const [pesan, setPesan] = useState("");
+  const [galat, setGalat] = useState<string | null>(null);
+  if (!aksi) return null;
+  const { tombol, konfirmasi, ikon: Ikon } = AKSI[aksi];
+
+  async function jalankan() {
+    setLangkah("menyimpan");
+    setGalat(null);
+    try {
+      if (aksi === "kirim") {
+        const hasil = await kirimAksi<{ terkirim: number; simulasi: boolean }>(
+          "/api/dashboard/aksi/kirim-tagihan",
+          { invoiceIds: [t.id] },
+        );
+        if (hasil.terkirim === 0) throw new Error("Pesan gagal terkirim. Periksa nomor WhatsApp penyewa lalu coba lagi.");
+        setPesan(
+          `Tagihan terkirim ke WhatsApp ${t.namaPenghuni}.${hasil.simulasi ? " (Mode pengembangan: pesan hanya dicatat, belum benar-benar dikirim.)" : ""}`,
+        );
+      } else {
+        await kirimAksi("/api/dashboard/aksi/status-tagihan", { invoiceIds: [t.id], status: "menunggu" });
+        setPesan("Tagihan ditandai sudah diperiksa.");
+      }
+      setLangkah("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalat((err as Error).message);
+      setLangkah("konfirmasi");
+    }
+  }
+
+  if (langkah === "selesai") {
+    return (
+      <p role="status" className="flex items-start gap-2 rounded-lg bg-success-soft px-3 py-2.5 text-sm text-success">
+        <Check className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        {pesan}
+      </p>
+    );
+  }
+
+  if (langkah === "awal") {
+    return (
+      <Button size="lg" className="h-11" onClick={() => setLangkah("konfirmasi")}>
+        <Ikon data-icon="inline-start" />
+        {tombol}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border bg-muted/50 p-3">
+      <p className="text-sm">{konfirmasi(t)}</p>
+      <GalatServer pesan={galat} />
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" size="lg" className="h-11" disabled={langkah === "menyimpan"} onClick={() => setLangkah("awal")}>
+          Batal
+        </Button>
+        <Button size="lg" className="h-11" disabled={langkah === "menyimpan"} onClick={jalankan}>
+          <Ikon data-icon="inline-start" />
+          {langkah === "menyimpan" ? "Memproses…" : aksi === "kirim" ? "Kirim" : "Ya, sudah"}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /** Detail satu tagihan: rincian, uang diterima & selisih, riwayat pembayaran, dan link invoice. */
 export function DetailTagihan({ tagihan: t, hariIni }: { tagihan: TagihanPembayaran; hariIni: string }) {
@@ -99,6 +189,8 @@ export function DetailTagihan({ tagihan: t, hariIni }: { tagihan: TagihanPembaya
           </ul>
         )}
       </section>
+
+      <AksiTagihan t={t} />
 
       <div className="flex gap-2">
         <Button asChild variant="outline" size="lg" className="h-11 flex-1">
