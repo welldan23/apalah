@@ -37,6 +37,8 @@ describe("getInvoicePublik", () => {
       status: "jatuh_tempo",
       diterbitkanPada: "2026-09-11",
       dibayarPada: undefined,
+      pembayaran: [],
+      sudahDiterima: 0,
     });
   });
 
@@ -67,6 +69,36 @@ describe("getInvoicePublik", () => {
     const inv = await getInvoicePublik(db, "demo-a01-2026-09");
     assert.equal(inv?.status, "lunas");
     assert.equal(inv?.dibayarPada, "2026-09-02");
+  });
+
+  it("riwayat pembayaran & uang yang sudah masuk (yang diproses gateway belum dihitung)", async () => {
+    const lunas = await getInvoicePublik(db, "demo-a01-2026-09");
+    assert.ok(lunas);
+    assert.deepEqual(
+      lunas.pembayaran.map((p) => [p.nominal, p.status]),
+      [[lunas.nominal, "valid"]],
+    );
+    assert.equal(lunas.sudahDiterima, lunas.nominal);
+
+    // Grace (C09) membayar Rp750.000 untuk tagihan Rp800.000 → diperiksa pemilik kos.
+    const kurang = await getInvoicePublik(db, "demo-c09-2026-09");
+    assert.deepEqual(kurang?.pembayaran, [{ waktu: "2026-09-23T12:42:00.000Z", metode: "QRIS", nominal: 750_000, status: "tidak_cocok" }]);
+    assert.deepEqual([kurang?.nominal, kurang?.sudahDiterima], [800_000, 750_000]);
+
+    await db.insert(schema.payments).values({
+      invoiceId: "inv_2026-09_C09",
+      nominalDibayar: 50_000,
+      metode: "VA BCA",
+      provider: "midtrans",
+      referensiProvider: "uji-pending-c09",
+      status: "pending",
+    });
+    const denganPending = await getInvoicePublik(db, "demo-c09-2026-09");
+    assert.deepEqual(denganPending?.pembayaran.map((p) => p.status), ["tidak_cocok", "pending"]);
+    assert.equal(denganPending?.sudahDiterima, 750_000);
+
+    const belum = await getInvoicePublik(db, "demo-a05-2026-09");
+    assert.deepEqual([belum?.pembayaran, belum?.sudahDiterima], [[], 0]);
   });
 
   it("token baru acak, unik, dan lolos validasi format", () => {

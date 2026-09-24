@@ -7,7 +7,16 @@ import { schema, type Db } from "../../db/index.ts";
 import { tanggalWib } from "../waktu.ts";
 import type { InvoiceStatus } from "@/lib/types";
 
-const { invoiceItems, invoices, organizations, rooms, tenants, users } = schema;
+const { invoiceItems, invoices, organizations, payments, rooms, tenants, users } = schema;
+
+export type PembayaranPublik = {
+  /** ISO datetime pembayaran dicatat. */
+  waktu: string;
+  metode: string;
+  nominal: number;
+  /** pending = diproses gateway; valid = diterima; tidak_cocok = nominal beda, diperiksa pemilik kos. */
+  status: "pending" | "valid" | "tidak_cocok";
+};
 
 export type InvoicePublik = {
   nomorInvoice: string;
@@ -26,6 +35,10 @@ export type InvoicePublik = {
   status: InvoiceStatus;
   diterbitkanPada: string;
   dibayarPada?: string;
+  /** Riwayat pembayaran tagihan ini, terlama di atas. */
+  pembayaran: PembayaranPublik[];
+  /** Uang yang sudah masuk (diterima + sedang diperiksa) — sama dengan dasar pencocokan nominal. */
+  sudahDiterima: number;
 };
 
 /** Token link invoice: base64url acak (atau token contoh "demo-…"). */
@@ -67,11 +80,20 @@ export async function getInvoicePublik(db: Db, token: string): Promise<InvoicePu
     .where(eq(invoices.tokenPublik, token))
     .orderBy(sql`${invoiceItems.label} <> 'Sewa kamar'`, asc(invoiceItems.label));
 
+  const bayar = await db
+    .select({ waktu: payments.dibuatPada, metode: payments.metode, nominal: payments.nominalDibayar, status: payments.status })
+    .from(payments)
+    .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
+    .where(eq(invoices.tokenPublik, token))
+    .orderBy(asc(payments.dibuatPada));
+
   return {
     ...inv,
     rincian: rincian.length > 0 ? rincian : [{ label: "Sewa kamar", nominal: inv.nominal }],
     nomorInvoice: `INV-${inv.periode.replace("-", "")}-${inv.nomorKamar}`,
     diterbitkanPada: tanggalWib(inv.diterbitkanPada),
     dibayarPada: inv.dibayarPada ? tanggalWib(inv.dibayarPada) : undefined,
+    pembayaran: bayar.map((b) => ({ ...b, waktu: b.waktu.toISOString() })),
+    sudahDiterima: bayar.filter((b) => b.status !== "pending").reduce((total, b) => total + b.nominal, 0),
   };
 }
