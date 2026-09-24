@@ -110,15 +110,24 @@ describe("prosesNotifikasiPembayaran", () => {
     assert.equal((await invoice("inv_2026-09_A06")).status, "lunas");
   });
 
-  it("nominal tidak cocok → Perlu review, bukan Lunas", async () => {
+  it("kurang bayar → Perlu review, bukan Lunas", async () => {
     const hasil = await proses(notif("inv_2026-09_A08", "trx-A08", "settlement", 450_000));
-    assert.deepEqual(hasil, { duplikat: false, hasil: "perlu_review: nominal tidak cocok", invoiceId: "inv_2026-09_A08", statusInvoice: "perlu_review" });
+    assert.deepEqual(hasil, { duplikat: false, hasil: "perlu_review: kurang Rp50.000", invoiceId: "inv_2026-09_A08", statusInvoice: "perlu_review" });
     assert.equal((await bayar("trx-A08"))[0].status, "tidak_cocok");
   });
 
-  it("bayar ganda untuk invoice yang sudah lunas → Perlu review", async () => {
+  it("pelunasan kekurangan → total pas, Lunas, pembayaran sebelumnya ikut sah", async () => {
+    // C09: sudah masuk Rp750.000 (tidak cocok) dari tagihan Rp800.000.
+    const hasil = await proses(notif("inv_2026-09_C09~2", "trx-C09-sisa", "settlement", 50_000));
+    assert.equal(hasil.duplikat === false && hasil.hasil, "lunas");
+    assert.equal((await invoice("inv_2026-09_C09")).status, "lunas");
+    const semua = await db.select().from(schema.payments).where(eq(schema.payments.invoiceId, "inv_2026-09_C09"));
+    assert.deepEqual(semua.map((p) => p.status).sort(), ["valid", "valid"]);
+  });
+
+  it("bayar ganda untuk invoice yang sudah lunas → Perlu review (lebih bayar)", async () => {
     const hasil = await proses(notif("inv_2026-09_A03~2", "trx-A03-lagi", "settlement", 500_000));
-    assert.equal(hasil.duplikat === false && hasil.hasil, "perlu_review: pembayaran ganda");
+    assert.equal(hasil.duplikat === false && hasil.hasil, "perlu_review: lebih Rp500.000");
     assert.equal((await invoice("inv_2026-09_A03")).status, "perlu_review");
   });
 

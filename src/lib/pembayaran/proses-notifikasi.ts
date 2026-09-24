@@ -1,11 +1,13 @@
 // Pemrosesan notifikasi payment gateway — SATU-SATUNYA jalur yang boleh membuat invoice Lunas.
 // Idempoten: setiap event dicatat di webhook_events; event yang sama tidak diproses dua kali.
-// Nominal dicocokkan secara deterministik: cocok → Lunas; tidak cocok / bayar ganda → Perlu review.
+// Nominal dicocokkan lewat cocokkanNominal (total uang diterima vs tagihan): cocok → Lunas;
+// kurang/lebih/bayar ganda → Perlu review.
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import type { NotifikasiPembayaran } from "./midtrans.ts";
+import { cocokkanNominal, ringkasKeputusan } from "./pencocokan.ts";
 
 const { invoices, payments, webhookEvents } = schema;
 
@@ -62,13 +64,24 @@ export async function prosesNotifikasiPembayaran(db: Db, n: NotifikasiPembayaran
       return selesai("pending", { invoiceId: inv.id, statusInvoice: inv.status });
     }
 
-    // Berhasil: bandingkan nominal; invoice yang sudah lunas berarti pembayaran ganda.
+    // Berhasil: bandingkan total uang diterima (termasuk pembayaran sebelumnya) dengan tagihan.
     if (lama && lama.status !== "pending") return selesai("diabaikan: transaksi sudah tercatat", { invoiceId: inv.id });
-    const cocok = n.nominal === inv.nominal && inv.status !== "lunas";
+    const [{ diterima }] = await tx
+      .select({ diterima: sql<number>`coalesce(sum(${payments.nominalDibayar}), 0)`.mapWith(Number) })
+      .from(payments)
+      .where(
+        and(
+          eq(payments.invoiceId, inv.id),
+          inArray(payments.status, ["valid", "tidak_cocok"]),
+          ne(payments.referensiProvider, n.referensi),
+        ),
+      );
+    const keputusan = cocokkanNominal({ nominalTagihan: inv.nominal, sudahDiterima: diterima, nominalBayar: n.nominal });
+    const cocok = keputusan.alasan === "cocok";
     const dataBayar = {
       nominalDibayar: n.nominal,
       metode: n.metode,
-      status: cocok ? ("valid" as const) : ("tidak_cocok" as const),
+      status: keputusan.statusPembayaran,
       diverifikasiPada: n.waktu,
       webhookEventId: event.id,
     };
@@ -83,12 +96,17 @@ export async function prosesNotifikasiPembayaran(db: Db, n: NotifikasiPembayaran
       });
     }
 
-    const statusInvoice = cocok ? "lunas" : "perlu_review";
+    if (cocok) {
+      // Total sudah pas: pembayaran sebagian sebelumnya ikut dianggap sah.
+      await tx
+        .update(payments)
+        .set({ status: "valid" })
+        .where(and(eq(payments.invoiceId, inv.id), eq(payments.status, "tidak_cocok")));
+    }
     await tx
       .update(invoices)
       .set(cocok ? { status: "lunas", dibayarPada: n.waktu } : { status: "perlu_review" })
       .where(eq(invoices.id, inv.id));
-    const hasil = cocok ? "lunas" : inv.status === "lunas" ? "perlu_review: pembayaran ganda" : "perlu_review: nominal tidak cocok";
-    return selesai(hasil, { invoiceId: inv.id, statusInvoice });
+    return selesai(ringkasKeputusan(keputusan), { invoiceId: inv.id, statusInvoice: keputusan.statusInvoice });
   });
 }

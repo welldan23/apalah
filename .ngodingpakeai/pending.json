@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "b30124958abb69b2dec65a1b93f35d6f41e412f7",
+  "generatedForCommit": "40d64962337bffb1607061545007471f7bb81a2f",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -76,7 +76,7 @@
     },
     {
       "path": "drizzle/0004_webhook_pembayaran.sql",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "sql",
       "size": 1138
     },
@@ -106,13 +106,13 @@
     },
     {
       "path": "drizzle/meta/0004_snapshot.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 44739
     },
     {
       "path": "drizzle/meta/_journal.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 782
     },
@@ -307,6 +307,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 316
+    },
+    {
+      "path": "src/app/api/webhook/pembayaran/midtrans/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1391
     },
     {
       "path": "src/app/api/webhook/whatsapp/route.ts",
@@ -748,19 +754,19 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6605
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 12802
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5203
     },
@@ -1171,6 +1177,24 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 585
+    },
+    {
+      "path": "src/lib/pembayaran/midtrans.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3736
+    },
+    {
+      "path": "src/lib/pembayaran/pembayaran.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 6779
+    },
+    {
+      "path": "src/lib/pembayaran/proses-notifikasi.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3957
     },
     {
       "path": "src/lib/penghuni.test.ts",
