@@ -25,12 +25,13 @@ export async function getHalamanKosta(): Promise<HalamanKosta> {
   await connection();
   const session = await getWorkspaceSession();
   const db = await getDb();
-  const { organization } = session;
+  const percakapan = await getPercakapanPengguna(db, session.user.nomorWa);
   return {
     hariIni: hariIniWib(),
-    workspaceAktif: organization.id,
+    // Kos yang sedang dibahas di percakapan (sama dengan di WhatsApp), atau kos sesi.
+    workspaceAktif: percakapan.organizationId ?? session.organization.id,
     workspaces: await daftarWorkspace(db, session.user.id),
     nomorWa: session.user.nomorWa,
-    pesan: (await getPercakapanPengguna(db, session.user.nomorWa)).pesan,
+    pesan: percakapan.pesan,
   };
 }

@@ -12,11 +12,6 @@ import { tampilNomorWa } from "@/lib/nomor-wa";
 import { labelHari, ringkasRiwayat, tanggalPesan } from "@/lib/riwayat-kosta";
 import type { PesanKosta, StatusDraftAksi, WorkspaceRingkas } from "@/lib/types";
 
-const JEDA_BALASAN = 1100;
-
-const BALASAN_CONTOH =
-  "Mode contoh: Kosta belum tersambung ke layanan AI. Setelah aktif, pertanyaanmu dijawab dengan angka langsung dari database kos.";
-
 function IndikatorMengetik() {
   return (
     <li className="flex justify-start" aria-label="Kosta sedang mengetik">
@@ -55,9 +50,6 @@ export function ChatKosta({
   const [draf, setDraf] = useState("");
   const [mengetik, setMengetik] = useState(false);
   const listRef = useRef<HTMLOListElement>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const pesanLokal = (dari: PesanKosta["dari"], teks: string): PesanKosta => ({
     id: crypto.randomUUID(),
@@ -67,15 +59,16 @@ export function ChatKosta({
   });
   const tambahPesan = (dari: PesanKosta["dari"], teks: string) => setPesan((p) => [...p, pesanLokal(dari, teks)]);
 
-  /** Balasan Kosta setelah jeda "mengetik". */
-  function balasKosta(teks: string) {
+  /** Kirim ke server; selama menunggu tampil indikator mengetik. Galat jadi pesan Kosta. */
+  async function keServer<T>(url: string, body: unknown, berhasil: (data: T) => void) {
     setMengetik(true);
-    timers.current.push(
-      setTimeout(() => {
-        setMengetik(false);
-        tambahPesan("kosta", teks);
-      }, JEDA_BALASAN),
-    );
+    try {
+      berhasil(await kirimAksi<T>(url, body));
+    } catch (err) {
+      tambahPesan("kosta", `Maaf, pesanmu belum terproses: ${(err as Error).message}`);
+    } finally {
+      setMengetik(false);
+    }
   }
 
   const aturStatusDraft = (daftar: PesanKosta[], pesanId: string, status: StatusDraftAksi) =>
@@ -119,19 +112,33 @@ export function ChatKosta({
     e.preventDefault();
     const teks = draf.trim();
     if (!teks || mengetik) return;
-    tambahPesan("owner", teks);
+    const sementara = pesanLokal("owner", teks);
+    setPesan((p) => [...p, sementara]);
     setDraf("");
-    balasKosta(BALASAN_CONTOH);
+    // Pesan owner & balasan Kosta tersimpan di riwayat server — ganti pesan sementara dengan versi server.
+    void keServer<{ pesan: PesanKosta[] }>("/api/kosta/pesan", { teks }, (data) =>
+      setPesan((p) => {
+        // Preview baru menggantikan preview lama yang belum diputuskan (sama seperti di server).
+        const adaPreviewBaru = data.pesan.some((m) => m.lampiran?.jenis === "preview_aksi");
+        const lama = p
+          .filter((m) => m.id !== sementara.id)
+          .map((m) =>
+            adaPreviewBaru && m.lampiran?.jenis === "preview_aksi" && m.lampiran.status === "menunggu_konfirmasi"
+              ? { ...m, lampiran: { ...m.lampiran, status: "dibatalkan" as const } }
+              : m,
+          );
+        return [...lama, ...data.pesan];
+      }),
+    );
   }
 
   function gantiKos(ws: WorkspaceRingkas) {
     setPilihKosTerbuka(false);
-    if (ws.id === aktifId) return;
-    setAktifId(ws.id);
-    tambahPesan(
-      "kosta",
-      `Oke, sekarang aku bantu untuk ${ws.namaKos} (${ws.jumlahKamar} kamar). Data kos lain tidak ikut dibaca.`,
-    );
+    if (ws.id === aktifId || mengetik) return;
+    void keServer<{ pesan: PesanKosta }>("/api/kosta/workspace", { organizationId: ws.id }, (data) => {
+      setAktifId(ws.id);
+      setPesan((p) => [...p, data.pesan]);
+    });
   }
 
   function lompatKe(tanggal: string) {

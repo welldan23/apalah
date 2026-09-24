@@ -129,6 +129,6 @@ describe("alur preview → konfirmasi aksi Kosta", () => {
     const baru = await catatPesan(db, { conversationId: PEMILIK.conversationId, organizationId: ORG, arah: "keluar", isi: "Siap." });
     assert.equal(baru.dari, "kosta");
     assert.equal((await getPercakapanPengguna(db, "6281234567890")).pesan.at(-1)?.teks, "Siap.");
-    assert.deepEqual(await getPercakapanPengguna(db, "6289999999999"), { conversationId: null, pesan: [] });
+    assert.deepEqual(await getPercakapanPengguna(db, "6289999999999"), { conversationId: null, organizationId: null, pesan: [] });
   });
 });

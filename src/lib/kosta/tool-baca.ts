@@ -1,12 +1,13 @@
 // Tool baca Kosta: menjawab pertanyaan owner dengan angka langsung dari database (bukan dari AI).
 // Setiap tool mengembalikan teks singkat + lampiran terstruktur untuk ditampilkan/dikirim.
 
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { getKamarKosong } from "../data/kamar.ts";
 import { getRekapPemasukan } from "../data/pemasukan.ts";
-import { formatPeriode, formatRupiah, formatTanggal, selisihHari } from "../format.ts";
+import { formatPeriode, formatRupiah, formatTanggal, formatTanggalPendek, selisihHari } from "../format.ts";
+import { tanggalWib } from "../waktu.ts";
 import { hariKosong } from "../kamar-kosong.ts";
 import type { LampiranKosta } from "@/lib/types";
 
@@ -139,4 +140,52 @@ export async function toolRekapPemasukan(
     teks: `Ini rekap pemasukan ${p === hariIni.slice(0, 7) ? "bulan berjalan" : formatPeriode(p)}, dihitung dari pembayaran yang sudah terverifikasi.`,
     lampiran: { jenis: "rekap", judul: `Pemasukan ${formatPeriode(p)}`, baris },
   };
+}
+
+/** Status tagihan satu kamar di satu periode (bawaan bulan berjalan), mis. "A03 sudah bayar belum?". */
+export async function toolCekKamar(
+  db: Db,
+  organizationId: string,
+  { nomorKamar, periode, hariIni }: { nomorKamar: string; periode?: string; hariIni: string },
+): Promise<BalasanKosta> {
+  const p = periode ?? hariIni.slice(0, 7);
+  const [kamar] = await db
+    .select({ id: rooms.id, nomorKamar: rooms.nomorKamar, status: rooms.status })
+    .from(rooms)
+    .where(and(eq(rooms.organizationId, organizationId), sql`upper(${rooms.nomorKamar}) = ${nomorKamar.toUpperCase()}`));
+  if (!kamar) return { teks: `Kamar ${nomorKamar} tidak ditemukan di kos ini.` };
+
+  const [inv] = await db
+    .select({
+      nominal: invoices.nominal,
+      jatuhTempo: invoices.jatuhTempo,
+      status: invoices.status,
+      dibayarPada: invoices.dibayarPada,
+      nama: tenants.nama,
+    })
+    .from(invoices)
+    .innerJoin(tenants, eq(tenants.id, invoices.tenantId))
+    .where(and(eq(invoices.organizationId, organizationId), eq(invoices.roomId, kamar.id), eq(invoices.periode, p)));
+  if (!inv) {
+    return {
+      teks:
+        kamar.status === "kosong"
+          ? `Kamar ${kamar.nomorKamar} sedang kosong, jadi tidak ada tagihan ${formatPeriode(p)}.`
+          : `Belum ada tagihan kamar ${kamar.nomorKamar} untuk ${formatPeriode(p)}.`,
+    };
+  }
+
+  const siapa = `Tagihan ${kamar.nomorKamar} (${inv.nama}) ${formatPeriode(p)} sebesar ${formatRupiah(inv.nominal)}`;
+  switch (inv.status) {
+    case "lunas":
+      return { teks: `Sudah. ${siapa} lunas${inv.dibayarPada ? `, dibayar ${formatTanggal(tanggalWib(inv.dibayarPada))}` : ""}.` };
+    case "jatuh_tempo":
+      return {
+        teks: `Belum. ${siapa} sudah lewat jatuh tempo ${selisihHari(inv.jatuhTempo, hariIni)} hari (${formatTanggalPendek(inv.jatuhTempo)}).`,
+      };
+    case "perlu_review":
+      return { teks: `Sudah ada pembayaran masuk, tapi nominalnya belum cocok dengan ${siapa.charAt(0).toLowerCase()}${siapa.slice(1)}. Periksa di menu Pembayaran.` };
+    default:
+      return { teks: `Belum. ${siapa} masih menunggu pembayaran, jatuh tempo ${formatTanggalPendek(inv.jatuhTempo)}.` };
+  }
 }

@@ -7,7 +7,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
-import { toolKamarKosong, toolRekapPemasukan, toolTunggakan } from "./tool-baca.ts";
+import { toolCekKamar, toolKamarKosong, toolRekapPemasukan, toolTunggakan } from "./tool-baca.ts";
 
 const ORG = "org_kos_melati";
 const HARI_INI = "2026-09-24";
@@ -43,6 +43,17 @@ describe("tool baca Kosta", () => {
       teks: "Belum ada tagihan maupun pembayaran untuk Oktober 2026.",
     });
     assert.equal((await toolRekapPemasukan(db, "org_kos_mawar", { hariIni: HARI_INI })).lampiran, undefined);
+  });
+
+  it("cek kamar: menunggu, lunas, jatuh tempo, perlu review, kosong, tidak ada", async () => {
+    const cek = async (nomorKamar: string, periode?: string) => (await toolCekKamar(db, ORG, { nomorKamar, periode, hariIni: HARI_INI })).teks;
+    assert.equal(await cek("A03"), "Belum. Tagihan A03 (Yoga Saputra) September 2026 sebesar Rp500.000 masih menunggu pembayaran, jatuh tempo 26 Sep.");
+    assert.equal(await cek("a01"), "Sudah. Tagihan A01 (Dimas Pratama) September 2026 sebesar Rp500.000 lunas, dibayar 2 Sep 2026.");
+    assert.equal(await cek("A05"), "Belum. Tagihan A05 (Rizky Ramadhan) September 2026 sebesar Rp500.000 sudah lewat jatuh tempo 9 hari (15 Sep).");
+    assert.match(await cek("C09"), /^Sudah ada pembayaran masuk, tapi nominalnya belum cocok dengan tagihan C09/);
+    assert.equal(await cek("A07"), "Kamar A07 sedang kosong, jadi tidak ada tagihan September 2026.");
+    assert.equal(await cek("A01", "2026-10"), "Belum ada tagihan kamar A01 untuk Oktober 2026.");
+    assert.equal(await cek("Z99"), "Kamar Z99 tidak ditemukan di kos ini.");
   });
 
   it("tunggakan: paling lama telat di atas, lengkap dengan total", async () => {

@@ -18,13 +18,23 @@ const kePesanKosta = (m: BarisPesan): PesanKosta => ({
   ...(m.lampiran ? { lampiran: m.lampiran } : {}),
 });
 
+/** Percakapan milik nomor WA pengguna (dibuat bila belum ada) — dipakai chat Kosta dari web. */
+export async function pastikanPercakapan(db: Db, nomorWa: string) {
+  await db.insert(waConversations).values({ nomorWa }).onConflictDoNothing({ target: waConversations.nomorWa });
+  const [percakapan] = await db
+    .select({ id: waConversations.id, organizationId: waConversations.organizationId })
+    .from(waConversations)
+    .where(eq(waConversations.nomorWa, nomorWa));
+  return percakapan;
+}
+
 /** Percakapan milik nomor WA pengguna; kosong bila belum pernah chat. */
 export async function getPercakapanPengguna(db: Db, nomorWa: string) {
   const [percakapan] = await db
-    .select({ id: waConversations.id })
+    .select({ id: waConversations.id, organizationId: waConversations.organizationId })
     .from(waConversations)
     .where(eq(waConversations.nomorWa, nomorWa));
-  if (!percakapan) return { conversationId: null, pesan: [] as PesanKosta[] };
+  if (!percakapan) return { conversationId: null, organizationId: null, pesan: [] as PesanKosta[] };
 
   const baris = await db
     .select()
@@ -51,7 +61,7 @@ export async function getPercakapanPengguna(db: Db, nomorWa: string) {
     const status = p.lampiran?.jenis === "preview_aksi" && p.lampiran.draftId ? statusDraft.get(p.lampiran.draftId) : undefined;
     return status && p.lampiran?.jenis === "preview_aksi" ? { ...p, lampiran: { ...p.lampiran, status } } : p;
   });
-  return { conversationId: percakapan.id, pesan };
+  return { conversationId: percakapan.id, organizationId: percakapan.organizationId, pesan };
 }
 
 /** Catat satu pesan di percakapan (mis. keputusan owner dari web & balasan Kosta). */

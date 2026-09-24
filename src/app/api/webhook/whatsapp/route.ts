@@ -1,11 +1,14 @@
 // Webhook pesan masuk WhatsApp untuk Kosta.
 // POST: payload WAHA atau Meta Cloud API, wajib bertanda tangan HMAC (WHATSAPP_WEBHOOK_SECRET).
-//       Pesan teks disimpan ke percakapan per nomor; balasan 200 agar provider tidak mengirim ulang.
+//       Pesan teks disimpan ke percakapan per nomor, langsung dibalas 200 agar provider tidak mengirim
+//       ulang; Kosta memproses & membalas lewat WhatsApp setelah respons terkirim (after).
 // GET:  verifikasi langganan webhook Meta (WHATSAPP_VERIFY_TOKEN).
 
-import type { NextRequest } from "next/server";
+import { after, type NextRequest } from "next/server";
 
 import { getDb } from "@/db";
+import { getDepsKosta } from "@/lib/kosta/deps";
+import { prosesPesanKosta } from "@/lib/kosta/proses-pesan";
 import { simpanPesanMasuk } from "@/lib/kosta/terima-pesan";
 import { bacaPesanMasuk, tandaTanganValid, tantanganMeta } from "@/lib/whatsapp/webhook";
 
@@ -29,7 +32,21 @@ export async function POST(request: Request) {
   }
 
   const pesan = bacaPesanMasuk(body);
-  const baru = await simpanPesanMasuk(await getDb(), pesan);
+  const db = await getDb();
+  const baru = await simpanPesanMasuk(db, pesan);
+  if (baru.length > 0) {
+    after(async () => {
+      try {
+        const deps = getDepsKosta(request);
+        // Berurutan supaya balasan sampai sesuai urutan pesan.
+        for (const p of baru) {
+          await prosesPesanKosta(db, { conversationId: p.conversationId, messageId: p.messageId, teks: p.teks, saluran: "whatsapp" }, deps);
+        }
+      } catch (err) {
+        console.error("Gagal memproses pesan WhatsApp:", err);
+      }
+    });
+  }
   return Response.json({ diterima: pesan.length, baru: baru.length });
 }
 

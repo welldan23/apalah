@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "63fa764b310214583f65138561ca50525aa1c52f",
+  "generatedForCommit": "f7a5bf20769165cc6108dd3637fe0b0b13d77a26",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -1002,17 +1002,17 @@
       "path": "src/lib/kosta/draft.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 13667
+      "size": 13856
     },
     {
       "path": "src/lib/kosta/intent.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5508
     },
     {
       "path": "src/lib/kosta/intent.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 10970
     },
@@ -1056,13 +1056,13 @@
       "path": "src/lib/kosta/tool-aksi.test.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 6489
+      "size": 9024
     },
     {
       "path": "src/lib/kosta/tool-aksi.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 3038
+      "size": 5938
     },
     {
       "path": "src/lib/kosta/tool-baca.test.ts",
