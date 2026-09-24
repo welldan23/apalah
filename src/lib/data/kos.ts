@@ -36,7 +36,7 @@ export async function getRingkasanKos(
     })
     .from(rooms)
     .leftJoin(tenants, and(eq(tenants.roomId, rooms.id), eq(tenants.status, "aktif")))
-    .where(eq(rooms.organizationId, organizationId))
+    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.aktif, true)))
     .orderBy(asc(rooms.nomorKamar));
 
   const daftar = baris.map(({ namaPenghuni, hargaSewaPenghuni, ...kamar }) => ({

@@ -144,7 +144,7 @@ export function FieldError({ id, pesan }: { id: string; pesan?: string }) {
 }
 
 /** POST JSON ke endpoint aksi cepat; galat dari server dilempar sebagai Error berpesan. */
-export async function kirimAksi<T>(url: string, body: unknown, method: "POST" | "PUT" = "POST"): Promise<T> {
+export async function kirimAksi<T>(url: string, body: unknown, method: "POST" | "PUT" | "PATCH" = "POST"): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, {

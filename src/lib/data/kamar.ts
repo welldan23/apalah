@@ -71,7 +71,7 @@ export async function getDaftarKamarPenghuni(db: Db, organizationId: string): Pr
     })
     .from(rooms)
     .leftJoin(tenants, and(eq(tenants.roomId, rooms.id), eq(tenants.status, "aktif")))
-    .where(eq(rooms.organizationId, organizationId))
+    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.aktif, true)))
     .orderBy(asc(rooms.nomorKamar));
 
   const penghuniIds = baris.flatMap((b) => (b.penghuniId ? [b.penghuniId] : []));
@@ -148,7 +148,7 @@ export async function getKamarKosong(db: Db, organizationId: string): Promise<Ka
       catatan: rooms.catatan,
     })
     .from(rooms)
-    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.status, "kosong")))
+    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.status, "kosong"), eq(rooms.aktif, true)))
     .orderBy(asc(rooms.nomorKamar));
   if (kosong.length === 0) return [];
 
@@ -177,4 +177,16 @@ export async function getKamarKosong(db: Db, organizationId: string): Promise<Ka
     kosongSejak: terakhir.get(k.id)?.tanggalKeluar ?? undefined,
     penghuniTerakhir: terakhir.get(k.id)?.nama,
   }));
+}
+
+export type KamarNonaktif = { id: string; nomorKamar: string; tipe: string; hargaSewa: number; catatan?: string };
+
+/** Kamar yang dinonaktifkan (mis. renovasi), urut nomor. */
+export async function getKamarNonaktif(db: Db, organizationId: string): Promise<KamarNonaktif[]> {
+  const baris = await db
+    .select({ id: rooms.id, nomorKamar: rooms.nomorKamar, tipe: rooms.tipe, hargaSewa: rooms.hargaSewa, catatan: rooms.catatan })
+    .from(rooms)
+    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.aktif, false)))
+    .orderBy(asc(rooms.nomorKamar));
+  return baris.map((k) => ({ ...k, catatan: k.catatan ?? undefined }));
 }

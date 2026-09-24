@@ -31,7 +31,7 @@ export function bacaInputTambahPenghuni(body: Record<string, unknown>): InputTam
 
 export async function tambahPenghuni(db: Db, organizationId: string, input: InputTambahPenghuni) {
   return db.transaction(async (tx) => {
-    // Kunci kamar: hanya berhasil bila kamar milik kos ini dan masih kosong.
+    // Kunci kamar: hanya berhasil bila kamar milik kos ini, aktif, dan masih kosong.
     const [kamar] = await tx
       .update(rooms)
       .set({ status: "terisi" })
@@ -40,18 +40,18 @@ export async function tambahPenghuni(db: Db, organizationId: string, input: Inpu
           eq(rooms.id, input.roomId),
           eq(rooms.organizationId, organizationId),
           eq(rooms.status, "kosong"),
+          eq(rooms.aktif, true),
         ),
       )
       .returning({ nomorKamar: rooms.nomorKamar });
 
     if (!kamar) {
       const [ada] = await tx
-        .select({ nomorKamar: rooms.nomorKamar })
+        .select({ nomorKamar: rooms.nomorKamar, aktif: rooms.aktif })
         .from(rooms)
         .where(and(eq(rooms.id, input.roomId), eq(rooms.organizationId, organizationId)));
-      throw ada
-        ? new GalatAksi(`Kamar ${ada.nomorKamar} sudah terisi.`, 409)
-        : new GalatAksi("Kamar tidak ditemukan.", 404);
+      if (!ada) throw new GalatAksi("Kamar tidak ditemukan.", 404);
+      throw new GalatAksi(`Kamar ${ada.nomorKamar} ${ada.aktif ? "sudah terisi" : "sedang nonaktif"}.`, 409);
     }
 
     const [penghuni] = await tx

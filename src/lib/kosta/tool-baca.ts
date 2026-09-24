@@ -80,7 +80,11 @@ export async function toolKamarKosong(
 ): Promise<BalasanKosta> {
   const kamar = await getKamarKosong(db, organizationId);
   if (kamar.length === 0) {
-    const [ada] = await db.select({ id: rooms.id }).from(rooms).where(eq(rooms.organizationId, organizationId)).limit(1);
+    const [ada] = await db
+      .select({ id: rooms.id })
+      .from(rooms)
+      .where(and(eq(rooms.organizationId, organizationId), eq(rooms.aktif, true)))
+      .limit(1);
     return {
       teks: ada
         ? "Semua kamar sudah terisi. Tidak ada kamar kosong saat ini."

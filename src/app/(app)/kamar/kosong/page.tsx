@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-import { DaftarKamarKosong } from "@/components/kamar/daftar-kamar-kosong";
+import { DaftarKamarKosong, DaftarKamarNonaktif } from "@/components/kamar/daftar-kamar-kosong";
 import { getHalamanKamarKosong } from "@/lib/data/halaman-kamar-kosong";
 
 export const metadata: Metadata = {
@@ -28,6 +28,7 @@ export default async function KamarKosongPage() {
         </p>
       </header>
       <DaftarKamarKosong kamar={data.kamar} hariIni={data.hariIni} />
+      <DaftarKamarNonaktif kamar={data.nonaktif} />
     </div>
   );
 }

@@ -75,7 +75,7 @@ export const organizations = pgTable(
       .references(() => users.id),
     dibuatPada: waktu().notNull().defaultNow(),
   },
-  (t) => [check("organizations_jumlah_kamar_positif", sql`${t.jumlahKamar} > 0`)],
+  (t) => [check("organizations_jumlah_kamar_tidak_negatif", sql`${t.jumlahKamar} >= 0`)],
 );
 
 export const members = pgTable(
@@ -107,10 +107,14 @@ export const rooms = pgTable(
     hargaSewa: integer().notNull(),
     status: statusKamarEnum().notNull().default("kosong"),
     catatan: text(),
+    /** false = dinonaktifkan (mis. renovasi): tidak dihitung, tidak bisa diisi; riwayat tetap ada. */
+    aktif: boolean().notNull().default(true),
   },
   (t) => [
     uniqueIndex("rooms_organisasi_nomor_unik").on(t.organizationId, t.nomorKamar),
     check("rooms_harga_sewa_positif", sql`${t.hargaSewa} > 0`),
+    // Hanya kamar kosong yang boleh dinonaktifkan.
+    check("rooms_nonaktif_kosong", sql`${t.aktif} or ${t.status} = 'kosong'`),
   ],
 );
 

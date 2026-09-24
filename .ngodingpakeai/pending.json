@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "b1c22fdb1c593a3145f4441276b6767b9a4d030f",
+  "generatedForCommit": "63b4a1caccf15245f262c9512753a6138ed1839f",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -81,6 +81,12 @@
       "size": 1138
     },
     {
+      "path": "drizzle/0005_riwayat_hunian.sql",
+      "reason": "new",
+      "language": "sql",
+      "size": 2350
+    },
+    {
       "path": "drizzle/meta/0000_snapshot.json",
       "reason": "needs_summary",
       "language": "json",
@@ -111,10 +117,16 @@
       "size": 44739
     },
     {
-      "path": "drizzle/meta/_journal.json",
-      "reason": "needs_summary",
+      "path": "drizzle/meta/0005_snapshot.json",
+      "reason": "new",
       "language": "json",
-      "size": 782
+      "size": 49494
+    },
+    {
+      "path": "drizzle/meta/_journal.json",
+      "reason": "changed",
+      "language": "json",
+      "size": 924
     },
     {
       "path": "drizzle.config.ts",
@@ -310,7 +322,7 @@
     },
     {
       "path": "src/app/api/webhook/pembayaran/midtrans/route.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2530
     },
@@ -747,6 +759,12 @@
       "size": 1466
     },
     {
+      "path": "src/db/schema-hunian.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2741
+    },
+    {
       "path": "src/db/schema-kosta.test.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -760,15 +778,15 @@
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 12802
+      "size": 14223
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5203
+      "size": 5606
     },
     {
       "path": "src/db/testing.ts",
@@ -796,9 +814,9 @@
     },
     {
       "path": "src/lib/aksi/penghuni.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2522
+      "size": 2742
     },
     {
       "path": "src/lib/aksi/reminder.ts",
@@ -1108,9 +1126,9 @@
     },
     {
       "path": "src/lib/kosta/tool-aksi.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 9024
+      "size": 9053
     },
     {
       "path": "src/lib/kosta/tool-aksi.ts",
@@ -1192,13 +1210,13 @@
     },
     {
       "path": "src/lib/pembayaran/notifikasi-review.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2940
     },
     {
       "path": "src/lib/pembayaran/pembayaran.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 10750
     },

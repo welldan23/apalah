@@ -43,6 +43,13 @@
       "when": 1790273811678,
       "tag": "0005_riwayat_hunian",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790274183365,
+      "tag": "0006_kamar_aktif",
+      "breakpoints": true
     }
   ]
 }

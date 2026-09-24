@@ -2,13 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { UserPlus } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Ban, RotateCcw, UserPlus } from "lucide-react";
 
 import { SheetTambahPenghuni } from "@/components/kamar/tambah-penghuni";
+import {
+  ActionSheet,
+  GalatServer,
+  SheetActions,
+  SheetBody,
+  kirimAksi,
+} from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { KamarKosong } from "@/lib/data/kamar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SheetClose } from "@/components/ui/sheet";
+import type { KamarKosong, KamarNonaktif } from "@/lib/data/kamar";
 import { formatRupiah, formatRupiahSingkat, formatTanggal } from "@/lib/format";
 import { hariKosong, parseUrutKosong, PILIHAN_URUT_KOSONG, saringKamarKosong } from "@/lib/kamar-kosong";
 import { cn } from "@/lib/utils";
@@ -20,10 +30,12 @@ function KartuKamarKosong({
   kamar: k,
   hariIni,
   onIsi,
+  onNonaktifkan,
 }: {
   kamar: KamarKosong;
   hariIni: string;
   onIsi: () => void;
+  onNonaktifkan: () => void;
 }) {
   const hari = hariKosong(k.kosongSejak, hariIni);
 
@@ -55,24 +67,151 @@ function KartuKamarKosong({
         )}
         {k.catatan && <p className="mt-1 text-xs text-muted-foreground italic">{k.catatan}</p>}
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-11 shrink-0 bg-card sm:h-9"
-        aria-haspopup="dialog"
-        aria-label={`Isi kamar ${k.nomorKamar}`}
-        onClick={onIsi}
-      >
-        <UserPlus data-icon="inline-start" />
-        Isi kamar
-      </Button>
+      <div className="flex shrink-0 flex-col gap-1 sm:flex-row">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-11 bg-card sm:h-9 sm:flex-1"
+          aria-haspopup="dialog"
+          aria-label={`Isi kamar ${k.nomorKamar}`}
+          onClick={onIsi}
+        >
+          <UserPlus data-icon="inline-start" />
+          Isi kamar
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 text-muted-foreground"
+          aria-haspopup="dialog"
+          aria-label={`Nonaktifkan kamar ${k.nomorKamar}`}
+          onClick={onNonaktifkan}
+        >
+          <Ban data-icon="inline-start" />
+          Nonaktifkan
+        </Button>
+      </div>
     </article>
+  );
+}
+
+/** Konfirmasi nonaktifkan kamar kosong (mis. renovasi) — kamar tidak dihitung & tidak bisa diisi. */
+function NonaktifkanKamarFlow({ kamar, onSelesai }: { kamar: KamarKosong; onSelesai: () => void }) {
+  const router = useRouter();
+  const [catatan, setCatatan] = useState("");
+  const [menyimpan, setMenyimpan] = useState(false);
+  const [galat, setGalat] = useState<string | null>(null);
+
+  async function simpan() {
+    setMenyimpan(true);
+    setGalat(null);
+    try {
+      await kirimAksi(`/api/dashboard/kamar/${kamar.id}`, { aktif: false, ...(catatan.trim() ? { catatan } : {}) }, "PATCH");
+      router.refresh();
+      onSelesai();
+    } catch (err) {
+      setGalat((err as Error).message);
+      setMenyimpan(false);
+    }
+  }
+
+  return (
+    <>
+      <SheetBody>
+        <p className="text-sm">
+          Kamar <span className="font-semibold">{kamar.nomorKamar}</span> ({kamar.tipe}) tidak lagi dihitung di
+          ringkasan, tidak ditawarkan, dan tidak bisa diisi penghuni sampai diaktifkan lagi. Riwayatnya tetap
+          tersimpan.
+        </p>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="nonaktif-catatan">Alasan (opsional)</Label>
+          <Input
+            id="nonaktif-catatan"
+            className="h-10 bg-card"
+            placeholder="Mis. Renovasi kamar mandi"
+            maxLength={200}
+            value={catatan}
+            onChange={(e) => setCatatan(e.target.value)}
+          />
+        </div>
+        <GalatServer pesan={galat} />
+      </SheetBody>
+      <SheetActions>
+        <SheetClose asChild>
+          <Button size="lg" variant="outline" disabled={menyimpan}>
+            Batal
+          </Button>
+        </SheetClose>
+        <Button size="lg" disabled={menyimpan} onClick={simpan}>
+          <Ban data-icon="inline-start" />
+          {menyimpan ? "Menyimpan…" : "Nonaktifkan"}
+        </Button>
+      </SheetActions>
+    </>
+  );
+}
+
+/** Kamar yang dinonaktifkan, bisa diaktifkan lagi. */
+export function DaftarKamarNonaktif({ kamar }: { kamar: KamarNonaktif[] }) {
+  const router = useRouter();
+  const [memproses, setMemproses] = useState<string | null>(null);
+  const [galat, setGalat] = useState<string | null>(null);
+  if (kamar.length === 0) return null;
+
+  async function aktifkan(id: string) {
+    setMemproses(id);
+    setGalat(null);
+    try {
+      await kirimAksi(`/api/dashboard/kamar/${id}`, { aktif: true }, "PATCH");
+      router.refresh();
+    } catch (err) {
+      setGalat((err as Error).message);
+    } finally {
+      setMemproses(null);
+    }
+  }
+
+  return (
+    <details className="rounded-xl border bg-card">
+      <summary className="flex min-h-11 cursor-pointer items-center px-4 text-sm font-medium">
+        Kamar nonaktif<span className="ml-1.5 font-normal text-muted-foreground">· {kamar.length}</span>
+      </summary>
+      <ul className="divide-y border-t">
+        {kamar.map((k) => (
+          <li key={k.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium tabular-nums">
+                {k.nomorKamar} <span className="font-normal text-muted-foreground">· {k.tipe}</span>
+              </p>
+              {k.catatan && <p className="truncate text-xs text-muted-foreground">{k.catatan}</p>}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 shrink-0"
+              disabled={memproses !== null}
+              aria-label={`Aktifkan lagi kamar ${k.nomorKamar}`}
+              onClick={() => aktifkan(k.id)}
+            >
+              <RotateCcw data-icon="inline-start" />
+              {memproses === k.id ? "Memproses…" : "Aktifkan lagi"}
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {galat && (
+        <div className="border-t p-3">
+          <GalatServer pesan={galat} />
+        </div>
+      )}
+    </details>
   );
 }
 
 /** Kamar kosong yang siap ditawarkan: saring per tipe & urutkan (tersimpan di URL). */
 export function DaftarKamarKosong({ kamar, hariIni }: { kamar: KamarKosong[]; hariIni: string }) {
   const [isiKamar, setIsiKamar] = useState<string | null>(null);
+  const [nonaktifkan, setNonaktifkan] = useState<KamarKosong | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -157,10 +296,24 @@ export function DaftarKamarKosong({ kamar, hariIni }: { kamar: KamarKosong[]; ha
       <ul className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-3">
         {tersaring.map((k) => (
           <li key={k.id}>
-            <KartuKamarKosong kamar={k} hariIni={hariIni} onIsi={() => setIsiKamar(k.id)} />
+            <KartuKamarKosong
+              kamar={k}
+              hariIni={hariIni}
+              onIsi={() => setIsiKamar(k.id)}
+              onNonaktifkan={() => setNonaktifkan(k)}
+            />
           </li>
         ))}
       </ul>
+
+      <ActionSheet
+        open={nonaktifkan !== null}
+        onOpenChange={(buka) => !buka && setNonaktifkan(null)}
+        title="Nonaktifkan kamar"
+        description="Untuk kamar yang sedang tidak disewakan, mis. renovasi."
+      >
+        {nonaktifkan && <NonaktifkanKamarFlow kamar={nonaktifkan} onSelesai={() => setNonaktifkan(null)} />}
+      </ActionSheet>
 
       <SheetTambahPenghuni
         open={isiKamar !== null}

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Building2, CircleCheck, Plus, Trash2 } from "lucide-react";
 
-import { CatatanSimulasi, FieldError, PreviewRows } from "@/components/quick-actions/action-sheet";
+import { FieldError, GalatServer, PreviewRows, kirimAksi } from "@/components/quick-actions/action-sheet";
 import { RupiahInput } from "@/components/quick-actions/rupiah-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +36,10 @@ export function WizardTambahKamar({ namaKos, nomorKamarAda, tipeAda }: HalamanTa
   );
   const [galatKos, setGalatKos] = useState("");
   const [cekRencana, setCekRencana] = useState(false);
+  const [menyimpan, setMenyimpan] = useState(false);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
+  const [hasil, setHasil] = useState<{ namaKos: string; nomorKamar: string[] } | null>(null);
+  const router = useRouter();
 
   const nomorAda = tujuan === "kos_ini" ? nomorKamarAda : [];
   const galatBaris = periksaRencana(rencana);
@@ -68,19 +73,36 @@ export function WizardTambahKamar({ namaKos, nomorKamarAda, tipeAda }: HalamanTa
     if (rencanaValid) setLangkah(3);
   }
 
-  if (langkah === "selesai") {
+  async function simpan() {
+    setMenyimpan(true);
+    setGalatServer(null);
+    try {
+      const data = await kirimAksi<{ namaKos: string; nomorKamar: string[] }>("/api/dashboard/kamar", {
+        rencana,
+        ...(tujuan === "kos_baru" ? { kosBaru: { namaKos: namaKosBaru, alamat: alamatBaru } } : {}),
+      });
+      setHasil(data);
+      setLangkah("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+    } finally {
+      setMenyimpan(false);
+    }
+  }
+
+  if (langkah === "selesai" && hasil) {
     return (
       <Card className="items-center gap-3 px-4 py-10 text-center shadow-none">
         <span className="grid size-12 place-items-center rounded-full bg-success-soft text-success">
           <CircleCheck className="size-6" />
         </span>
         <p className="text-lg font-semibold">
-          {kamarBaru.length} kamar ditambahkan ke {namaTujuan}
+          {hasil.nomorKamar.length} kamar ditambahkan ke {hasil.namaKos}
         </p>
         <p className="text-sm text-muted-foreground">
-          Kamar baru berstatus kosong dan langsung bisa diisi penghuni.
+          Kamar {rentang(hasil.nomorKamar)} berstatus kosong dan langsung bisa diisi penghuni.
         </p>
-        <CatatanSimulasi>Mode contoh: kamar belum benar-benar disimpan ke server.</CatatanSimulasi>
         <Button asChild size="lg" className="mt-2 h-11">
           <Link href="/kamar">Kembali ke daftar kamar</Link>
         </Button>
@@ -338,12 +360,13 @@ export function WizardTambahKamar({ namaKos, nomorKamarAda, tipeAda }: HalamanTa
             <p className="text-xs text-muted-foreground">
               Semua kamar baru berstatus kosong. Tagihan baru dibuat setelah kamar diisi penghuni.
             </p>
+            <GalatServer pesan={galatServer} />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="lg" className="h-11" onClick={() => setLangkah(2)}>
+              <Button variant="outline" size="lg" className="h-11" disabled={menyimpan} onClick={() => setLangkah(2)}>
                 Ubah
               </Button>
-              <Button size="lg" className="h-11" onClick={() => setLangkah("selesai")}>
-                Konfirmasi &amp; simpan ({kamarBaru.length})
+              <Button size="lg" className="h-11" disabled={menyimpan} onClick={simpan}>
+                {menyimpan ? "Menyimpan…" : `Konfirmasi & simpan (${kamarBaru.length})`}
               </Button>
             </div>
           </CardContent>
