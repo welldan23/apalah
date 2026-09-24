@@ -46,6 +46,25 @@ export const mockPercakapanKosta: PesanKosta[] = [
       ],
     },
   },
+  { id: "m7", dari: "owner", waktu: pada("08:10"), teks: "Siapkan reminder buat yang menunggak" },
+  {
+    id: "m8",
+    dari: "kosta",
+    waktu: pada("08:10"),
+    teks: "Ini preview pengingatnya. Belum ada pesan yang dikirim sampai kamu konfirmasi.",
+    lampiran: {
+      jenis: "preview_aksi",
+      aksi: "reminder",
+      periode: "2026-09",
+      penerima: [
+        { nomorKamar: "A05", nama: "Rizky Ramadhan", nominal: 500_000 },
+        { nomorKamar: "B06", nama: "Reza Kurniawan", nominal: 650_000 },
+        { nomorKamar: "C05", nama: "Nadia Safitri", nominal: 800_000 },
+      ],
+      total: 1_950_000,
+      status: "menunggu_konfirmasi",
+    },
+  },
 ];
 
 /** Kos lain milik owner contoh — untuk mencoba pemilih workspace multi-kos. */

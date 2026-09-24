@@ -1,10 +1,12 @@
 import { CheckCheck } from "lucide-react";
 
+import { KartuPreviewAksi } from "@/components/kosta/kartu-preview-aksi";
 import { formatJam, formatRupiah } from "@/lib/format";
 import type { LampiranKosta, PesanKosta } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function Lampiran({ lampiran }: { lampiran: LampiranKosta }) {
+  if (lampiran.jenis === "preview_aksi") return <KartuPreviewAksi preview={lampiran} />;
   if (lampiran.jenis === "daftar_tagihan") {
     return (
       <figure className="mt-2 overflow-hidden rounded-lg border bg-background/70 text-xs">

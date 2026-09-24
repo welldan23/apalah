@@ -184,7 +184,21 @@ export type LampiranKosta =
       jenis: "rekap";
       judul: string;
       baris: { label: string; nominal: number; catatan?: string }[];
-    };
+    }
+  | ({ jenis: "preview_aksi" } & PreviewAksi);
+
+/** Status draft aksi Kosta (tabel action_drafts). */
+export type StatusDraftAksi = "menunggu_konfirmasi" | "disetujui" | "dibatalkan" | "dijalankan";
+
+/** Preview aksi yang mengubah data / kirim massal — wajib dikonfirmasi owner dulu. */
+export type PreviewAksi = {
+  aksi: "reminder" | "tagihan";
+  /** Periode tagihan, YYYY-MM. */
+  periode: string;
+  penerima: { nomorKamar: string; nama: string; nominal: number }[];
+  total: number;
+  status: StatusDraftAksi;
+};
 
 /** Satu pesan di percakapan owner dengan Kosta (WhatsApp). */
 export type PesanKosta = {
