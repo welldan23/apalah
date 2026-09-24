@@ -16,7 +16,10 @@ export function SiteFooter() {
           <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
             {NAV_LANDING.map(({ href, label }) => (
               <li key={href}>
-                <a href={href} className="text-muted-foreground hover:text-foreground">
+                <a
+                  href={href}
+                  className="-mx-2 inline-flex min-h-11 items-center px-2 text-muted-foreground hover:text-foreground md:min-h-0"
+                >
                   {label}
                 </a>
               </li>

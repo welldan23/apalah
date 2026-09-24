@@ -67,14 +67,14 @@ function BingkaiDashboard() {
           </ul>
 
           <div className="rounded-xl border bg-card">
-            <div className="flex items-baseline justify-between gap-2 border-b px-4 py-3">
+            <div className="flex items-baseline justify-between gap-2 border-b px-3 py-3 sm:px-4">
               <p className="text-sm font-semibold">Status bayar</p>
               <p className="text-xs text-muted-foreground">{jumlahTagihan}</p>
             </div>
             <ul className="divide-y">
               {statusBayar.map(({ kamar, nama, nominal, status, keterangan }) => (
-                <li key={kamar} className="flex items-center gap-3 px-4 py-2.5">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-xs font-semibold tabular-nums">
+                <li key={kamar} className="flex items-center gap-2.5 px-3 py-2.5 sm:gap-3 sm:px-4">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-xs font-semibold tabular-nums sm:size-9">
                     {kamar}
                   </span>
                   <div className="min-w-0 flex-1">

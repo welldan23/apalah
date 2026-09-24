@@ -187,7 +187,7 @@ export function KostaChatMockup({ className }: { className?: string }) {
           type="button"
           onClick={putarUlang}
           disabled={memutar}
-          className="inline-flex items-center gap-1 rounded font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+          className="relative inline-flex items-center gap-1 rounded font-medium text-primary underline-offset-4 outline-none after:absolute after:-inset-x-2 after:-inset-y-3.5 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
         >
           <RotateCcw className="size-3.5" aria-hidden="true" />
           Putar ulang

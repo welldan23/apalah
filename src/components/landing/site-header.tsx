@@ -9,7 +9,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
-        <Link href="/" aria-label="Kostera, ke beranda">
+        <Link href="/" aria-label="Kostera, ke beranda" className="flex min-h-11 items-center">
           <KosteraLogo />
         </Link>
 
@@ -32,7 +32,7 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="lg" className="hidden md:inline-flex">
             <Link href={HREF_MASUK}>Masuk</Link>
           </Button>
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="relative after:absolute after:inset-x-0 after:-inset-y-1.5">
             <Link href={HREF_MULAI}>Mulai gratis</Link>
           </Button>
           <MobileMenu />

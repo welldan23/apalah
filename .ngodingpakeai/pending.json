@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "26acd74d3325224dd70b9086ff3f975a1711ee57",
+  "generatedForCommit": "fd367ef2d27a7955cf83c14330b62efcd34c1a1f",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -100,9 +100,9 @@
     },
     {
       "path": "src/app/(marketing)/page.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 913
+      "size": 1092
     },
     {
       "path": "src/app/globals.css",
@@ -196,9 +196,9 @@
     },
     {
       "path": "src/components/landing/cta-section.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1347
+      "size": 1572
     },
     {
       "path": "src/components/landing/dashboard-preview-section.tsx",
@@ -208,7 +208,7 @@
     },
     {
       "path": "src/components/landing/faq-section.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1397
     },
@@ -232,9 +232,9 @@
     },
     {
       "path": "src/components/landing/links.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 388
+      "size": 457
     },
     {
       "path": "src/components/landing/mobile-menu.tsx",
@@ -400,9 +400,9 @@
     },
     {
       "path": "src/lib/landing/content.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 9102
+      "size": 9453
     },
     {
       "path": "src/lib/mock/kos-melati.ts",
