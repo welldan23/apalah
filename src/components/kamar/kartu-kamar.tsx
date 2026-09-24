@@ -1,4 +1,4 @@
-import { UserPlus } from "lucide-react";
+import { ArrowRightLeft, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { KamarPenghuni } from "@/lib/data/kamar";
@@ -9,10 +9,13 @@ import { cn } from "@/lib/utils";
 export function KartuKamar({
   kamar,
   onIsi,
+  onPindah,
 }: {
   kamar: KamarPenghuni;
   /** Buka form tambah penghuni untuk kamar kosong ini. */
   onIsi?: () => void;
+  /** Buka form pindah kamar untuk penghuni kamar ini. */
+  onPindah?: () => void;
 }) {
   const kosong = kamar.status === "kosong";
   const sewa = kamar.penghuni?.hargaSewa ?? kamar.hargaSewa;
@@ -60,6 +63,19 @@ export function KartuKamar({
         >
           <UserPlus data-icon="inline-start" />
           Isi kamar
+        </Button>
+      )}
+      {!kosong && onPindah && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9"
+          aria-haspopup="dialog"
+          aria-label={`Pindahkan ${kamar.penghuni?.nama ?? "penghuni"} dari kamar ${kamar.nomorKamar}`}
+          onClick={onPindah}
+        >
+          <ArrowRightLeft data-icon="inline-start" />
+          Pindah
         </Button>
       )}
     </article>

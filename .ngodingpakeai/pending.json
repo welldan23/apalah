@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "700895e24b99a9151cb91d4db36696a728e289fb",
+  "generatedForCommit": "4fe3a5b094271323956fbc08aa585bd1c0a9d65a",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -126,11 +126,11 @@
       "path": "src/app/(app)/kamar/page.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 1335
+      "size": 1637
     },
     {
       "path": "src/app/(app)/kamar/tambah/page.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1120
     },
@@ -322,19 +322,25 @@
     },
     {
       "path": "src/components/kamar/daftar-kamar.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 10999
+      "size": 11997
     },
     {
       "path": "src/components/kamar/kartu-kamar.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1769
+      "size": 2301
+    },
+    {
+      "path": "src/components/kamar/tambah-penghuni.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1558
     },
     {
       "path": "src/components/kamar/wizard-tambah-kamar.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 14925
     },
@@ -496,9 +502,9 @@
     },
     {
       "path": "src/components/quick-actions/tenant-flow.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 8954
+      "size": 9252
     },
     {
       "path": "src/components/status-badge.tsx",
@@ -802,7 +808,7 @@
     },
     {
       "path": "src/lib/data/tambah-kamar.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1296
     },
@@ -886,13 +892,13 @@
     },
     {
       "path": "src/lib/rencana-kamar.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2093
     },
     {
       "path": "src/lib/rencana-kamar.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2196
     },

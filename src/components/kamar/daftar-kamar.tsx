@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutGrid, List, Search, UserPlus } from "lucide-react";
+import { ArrowRightLeft, LayoutGrid, List, Search, UserPlus } from "lucide-react";
 
 import { KartuKamar } from "@/components/kamar/kartu-kamar";
+import { PindahKamarFlow } from "@/components/kamar/pindah-kamar";
 import { SheetTambahPenghuni } from "@/components/kamar/tambah-penghuni";
+import { ActionSheet } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,7 +38,15 @@ const parseFilter = (v: string | null): FilterKamar =>
 type Tampilan = "kartu" | "daftar";
 
 /** Kartu kamar dikelompokkan per tipe, lengkap dengan harga & hunian tiap tipe. */
-function GridKamar({ kamar, onIsi }: { kamar: KamarPenghuni[]; onIsi: (roomId: string) => void }) {
+function GridKamar({
+  kamar,
+  onIsi,
+  onPindah,
+}: {
+  kamar: KamarPenghuni[];
+  onIsi: (roomId: string) => void;
+  onPindah: (kamar: KamarPenghuni) => void;
+}) {
   const perTipe = new Map<string, KamarPenghuni[]>();
   for (const k of kamar) perTipe.set(k.tipe, [...(perTipe.get(k.tipe) ?? []), k]);
 
@@ -59,7 +69,7 @@ function GridKamar({ kamar, onIsi }: { kamar: KamarPenghuni[]; onIsi: (roomId: s
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {daftar.map((k) => (
               <li key={k.id}>
-                <KartuKamar kamar={k} onIsi={() => onIsi(k.id)} />
+                <KartuKamar kamar={k} onIsi={() => onIsi(k.id)} onPindah={() => onPindah(k)} />
               </li>
             ))}
           </ul>
@@ -103,6 +113,7 @@ function Sewa({ kamar }: { kamar: KamarPenghuni }) {
 /** Daftar kamar & penghuni: saring terisi/kosong dan cari kamar/penghuni (tersimpan di URL). */
 export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIni: string }) {
   const [isiKamar, setIsiKamar] = useState<string | null>(null);
+  const [pindahDari, setPindahDari] = useState<KamarPenghuni | null>(null);
   const kamarKosong = kamar.filter((k) => k.status === "kosong");
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -203,7 +214,7 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
           Tidak ada kamar yang cocok{kataKunci ? ` dengan “${cari.trim()}”` : ""}.
         </p>
       ) : tampilan === "kartu" ? (
-        <GridKamar kamar={tersaring} onIsi={setIsiKamar} />
+        <GridKamar kamar={tersaring} onIsi={setIsiKamar} onPindah={setPindahDari} />
       ) : (
         <>
           {/* Mobile: kartu */}
@@ -240,7 +251,10 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
                 <TableHead>Status</TableHead>
                 <TableHead>Penghuni</TableHead>
                 <TableHead>Masuk</TableHead>
-                <TableHead className="pr-4 text-right">Sewa/bulan</TableHead>
+                <TableHead className="text-right">Sewa/bulan</TableHead>
+                <TableHead className="pr-4">
+                  <span className="sr-only">Aksi</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -262,6 +276,17 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
                         </span>
                       </>
                     ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {k.penghuni ? formatTanggal(k.penghuni.tanggalMasuk) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Sewa kamar={k} />
+                  </TableCell>
+                  <TableCell className="pr-4 text-right">
+                    {k.status === "kosong" ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -272,13 +297,18 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
                         <UserPlus data-icon="inline-start" />
                         Isi kamar
                       </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-haspopup="dialog"
+                        aria-label={`Pindahkan ${k.penghuni?.nama ?? "penghuni"} dari kamar ${k.nomorKamar}`}
+                        onClick={() => setPindahDari(k)}
+                      >
+                        <ArrowRightLeft data-icon="inline-start" />
+                        Pindah
+                      </Button>
                     )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {k.penghuni ? formatTanggal(k.penghuni.tanggalMasuk) : "—"}
-                  </TableCell>
-                  <TableCell className="pr-4 text-right">
-                    <Sewa kamar={k} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -286,6 +316,15 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
           </Table>
         </>
       )}
+
+      <ActionSheet
+        open={pindahDari !== null}
+        onOpenChange={(buka) => !buka && setPindahDari(null)}
+        title="Pindah kamar"
+        description="Pindahkan penghuni ke kamar kosong. Cek preview sebelum menyimpan."
+      >
+        {pindahDari && <PindahKamarFlow asal={pindahDari} semuaKamar={kamar} hariIni={hariIni} />}
+      </ActionSheet>
 
       <SheetTambahPenghuni
         open={isiKamar !== null}
