@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CircleCheck, Clock, Eye, MessageCircle, Wallet } from "lucide-react";
+import { CircleCheck, Clock, Eye, MessageCircle, Wallet, Wrench } from "lucide-react";
 
 import { KosteraLogo } from "@/components/app-shell/kostera-logo";
 import { InvoiceStatusBadge, StatusBadge } from "@/components/status-badge";
@@ -195,6 +195,17 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
           </Button>
         </section>
       )}
+
+      <Link
+        href={`/invoice/${token}/tiket`}
+        className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 text-sm transition-colors hover:border-primary/40"
+      >
+        <span>
+          <span className="block font-medium">Ada masalah di kamar?</span>
+          <span className="block text-xs text-muted-foreground">Buat tiket keluhan atau permintaan perbaikan</span>
+        </span>
+        <Wrench className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </Link>
 
       <p className="mt-auto pt-4 text-center text-xs text-muted-foreground">
         Tagihan ini dikirim lewat Kostera. Status Lunas hanya berubah saat pembayaran terverifikasi.
