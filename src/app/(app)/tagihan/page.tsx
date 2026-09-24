@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { CalendarClock } from "lucide-react";
 
 import { BuatTagihan } from "@/components/tagihan/buat-tagihan";
 import { DaftarInvoice } from "@/components/tagihan/daftar-invoice";
 import { PeriodeNav } from "@/components/tagihan/periode-nav";
+import { Button } from "@/components/ui/button";
 import { getHalamanTagihan } from "@/lib/data/tagihan";
 import { formatPeriode, formatRupiah } from "@/lib/format";
 
@@ -27,12 +30,20 @@ export default async function TagihanPage({ searchParams }: PageProps<"/tagihan"
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} />
-          <BuatTagihan
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="lg" className="h-10">
+              <Link href="/tagihan/terjadwal">
+                <CalendarClock data-icon="inline-start" />
+                Terjadwal
+              </Link>
+            </Button>
+            <BuatTagihan
             periode={data.periode}
             periodeBerjalan={data.periodeBerjalan}
             hariIni={data.hariIni}
             kamar={data.kamarTerisi}
-          />
+            />
+          </div>
         </div>
       </header>
 

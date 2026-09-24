@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "f3d471414bea5b15878a1fdd93acaf6dd3e58c38",
+  "generatedForCommit": "c54757b30ceb7ed4612c497f362222bf033fc68f",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -132,7 +132,7 @@
       "path": "src/app/(app)/tagihan/page.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 1687
+      "size": 1722
     },
     {
       "path": "src/app/(marketing)/layout.tsx",
@@ -268,9 +268,9 @@
     },
     {
       "path": "src/components/dashboard/quick-actions.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2976
+      "size": 3032
     },
     {
       "path": "src/components/dashboard/room-summary.tsx",
@@ -372,7 +372,7 @@
       "path": "src/components/quick-actions/invoice-flow.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 13972
+      "size": 15011
     },
     {
       "path": "src/components/quick-actions/reminder-flow.tsx",
@@ -406,9 +406,9 @@
     },
     {
       "path": "src/components/tagihan/buat-tagihan.tsx",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1458
+      "size": 1554
     },
     {
       "path": "src/components/tagihan/daftar-invoice.tsx",
@@ -610,7 +610,7 @@
     },
     {
       "path": "src/lib/data/tagihan.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1537
     },
@@ -628,15 +628,15 @@
     },
     {
       "path": "src/lib/invoice.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2488
+      "size": 3160
     },
     {
       "path": "src/lib/invoice.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2246
+      "size": 2944
     },
     {
       "path": "src/lib/landing/content.ts",
