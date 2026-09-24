@@ -3,11 +3,16 @@ import {
   BellRing,
   LayoutDashboard,
   MessageCircleMore,
+  MessageSquareWarning,
   ReceiptText,
   Settings,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+
+import type { WorkspaceRingkas } from "@/lib/types";
+
+export type Peran = WorkspaceRingkas["peran"];
 
 export type NavItem = {
   href: string;
@@ -19,14 +24,25 @@ export type NavItem = {
   siap: boolean;
   /** Tampil di bottom nav mobile. */
   mobile: boolean;
+  /** Peran yang melihat menu ini. */
+  peran: Peran[];
 };
 
+// Owner akses penuh; admin mengelola operasional organisasinya (tanpa Pengaturan);
+// penyewa hanya tagihannya sendiri & tiket (portal penyewa, Fase 4).
+const PENGELOLA: Peran[] = ["owner", "admin"];
+
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", labelPendek: "Beranda", icon: LayoutDashboard, siap: true, mobile: true },
-  { href: "/tagihan", label: "Tagihan & Invoice", labelPendek: "Tagihan", icon: ReceiptText, siap: true, mobile: true },
-  { href: "/kamar", label: "Kamar & Penghuni", labelPendek: "Kamar", icon: BedDouble, siap: true, mobile: true },
-  { href: "/pembayaran", label: "Pembayaran", labelPendek: "Bayar", icon: Wallet, siap: true, mobile: true },
-  { href: "/reminder", label: "Reminder", labelPendek: "Reminder", icon: BellRing, siap: true, mobile: false },
-  { href: "/kosta", label: "Chat Kosta", labelPendek: "Kosta", icon: MessageCircleMore, siap: true, mobile: true },
-  { href: "/pengaturan", label: "Pengaturan", labelPendek: "Atur", icon: Settings, siap: false, mobile: false },
+  { href: "/dashboard", label: "Dashboard", labelPendek: "Beranda", icon: LayoutDashboard, siap: true, mobile: true, peran: PENGELOLA },
+  { href: "/tagihan", label: "Tagihan & Invoice", labelPendek: "Tagihan", icon: ReceiptText, siap: true, mobile: true, peran: PENGELOLA },
+  { href: "/kamar", label: "Kamar & Penghuni", labelPendek: "Kamar", icon: BedDouble, siap: true, mobile: true, peran: PENGELOLA },
+  { href: "/pembayaran", label: "Pembayaran", labelPendek: "Bayar", icon: Wallet, siap: true, mobile: true, peran: PENGELOLA },
+  { href: "/reminder", label: "Reminder", labelPendek: "Reminder", icon: BellRing, siap: true, mobile: false, peran: PENGELOLA },
+  { href: "/kosta", label: "Chat Kosta", labelPendek: "Kosta", icon: MessageCircleMore, siap: true, mobile: true, peran: PENGELOLA },
+  { href: "/pengaturan", label: "Pengaturan", labelPendek: "Atur", icon: Settings, siap: false, mobile: false, peran: ["owner"] },
+  { href: "/tagihan-saya", label: "Tagihan saya", labelPendek: "Tagihan", icon: ReceiptText, siap: false, mobile: true, peran: ["penyewa"] },
+  { href: "/tiket", label: "Tiket keluhan", labelPendek: "Tiket", icon: MessageSquareWarning, siap: false, mobile: true, peran: ["penyewa"] },
 ];
+
+/** Menu yang terlihat oleh sebuah peran, urut seperti NAV_ITEMS. */
+export const navUntukPeran = (peran: Peran) => NAV_ITEMS.filter((item) => item.peran.includes(peran));

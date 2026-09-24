@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { NAV_ITEMS } from "@/components/app-shell/nav-items";
+import { navUntukPeran, type Peran } from "@/components/app-shell/nav-items";
 import { cn } from "@/lib/utils";
 
 function useIsActive() {
@@ -11,13 +11,13 @@ function useIsActive() {
   return (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Navigasi vertikal di sidebar desktop. */
-export function SidebarNav() {
+/** Navigasi vertikal di sidebar desktop — hanya menu untuk peran pengguna. */
+export function SidebarNav({ peran }: { peran: Peran }) {
   const isActive = useIsActive();
 
   return (
     <nav aria-label="Navigasi utama" className="flex flex-col gap-0.5">
-      {NAV_ITEMS.map(({ href, label, icon: Icon, siap }) => {
+      {navUntukPeran(peran).map(({ href, label, icon: Icon, siap }) => {
         const active = isActive(href);
         const kelas = cn(
           "flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-colors",
@@ -58,17 +58,18 @@ export function SidebarNav() {
   );
 }
 
-/** Bottom nav mobile (disembunyikan di layar lebar). */
-export function MobileNav() {
+/** Bottom nav mobile (disembunyikan di layar lebar) — hanya menu untuk peran pengguna. */
+export function MobileNav({ peran }: { peran: Peran }) {
   const isActive = useIsActive();
+  const items = navUntukPeran(peran).filter((item) => item.mobile);
 
   return (
     <nav
       aria-label="Navigasi utama"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-5">
-        {NAV_ITEMS.filter((item) => item.mobile).map(
+      <ul className="mx-auto grid max-w-md" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+        {items.map(
           ({ href, labelPendek, icon: Icon, siap }) => {
             const active = isActive(href);
             const isi = (

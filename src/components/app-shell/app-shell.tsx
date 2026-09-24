@@ -28,7 +28,7 @@ export function AppShell({
           <KosteraLogo />
         </Link>
         <WorkspaceBadge organization={organization} />
-        <SidebarNav />
+        <SidebarNav peran={peran} />
         <div className="mt-auto flex items-center gap-2.5 rounded-lg px-2 py-1.5">
           <UserAvatar nama={user.nama} />
           <div className="min-w-0 leading-tight">
@@ -54,7 +54,7 @@ export function AppShell({
         </main>
       </div>
 
-      <MobileNav />
+      <MobileNav peran={peran} />
     </div>
   );
 }
