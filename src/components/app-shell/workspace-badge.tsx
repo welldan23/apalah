@@ -1,9 +1,10 @@
-import { Building2 } from "lucide-react";
+import Link from "next/link";
+import { Building2, ChevronsUpDown } from "lucide-react";
 
 import type { Organization } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-/** Nama kos yang sedang dikelola. Pemilihan workspace menyusul (Fase 3). */
+/** Nama kos yang sedang dikelola; ketuk untuk pindah kos (halaman Pilih kos). */
 export function WorkspaceBadge({
   organization,
   compact = false,
@@ -15,10 +16,12 @@ export function WorkspaceBadge({
   className?: string;
 }) {
   return (
-    <div
+    <Link
+      href="/pilih-kos"
+      aria-label={`${organization.namaKos}, ${organization.jumlahKamar} kamar — ganti kos`}
       className={cn(
-        "flex min-w-0 items-center gap-2",
-        compact ? "text-right" : "rounded-lg border bg-card px-2.5 py-1.5",
+        "flex min-h-11 min-w-0 items-center gap-2 rounded-lg transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        compact ? "text-right" : "border bg-card px-2.5 py-1.5 hover:border-primary/40",
         className,
       )}
     >
@@ -35,6 +38,7 @@ export function WorkspaceBadge({
           {organization.jumlahKamar} kamar
         </span>
       </span>
-    </div>
+      {!compact && <ChevronsUpDown className="ml-auto size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
+    </Link>
   );
 }
