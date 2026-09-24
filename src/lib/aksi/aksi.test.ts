@@ -191,7 +191,7 @@ describe("aksi cepat dashboard", () => {
         return pesan.teks.includes("kamar B06") ? { ok: false, galat: "nomor tidak aktif" } : { ok: true };
       },
     };
-    const opsi = { baseUrl: "https://kostera.id" };
+    const opsi = { baseUrl: "https://kostera.id", hariIni: "2026-09-24" };
 
     it("mengirim pesan berisi nominal & link invoice, lalu mencatat riwayat", async () => {
       const ids = ["inv_2026-09_A05", "inv_2026-09_B06", "inv_2026-09_C05"];
@@ -216,8 +216,14 @@ describe("aksi cepat dashboard", () => {
       assert.ok(riwayat.every((r) => r.jenis === "manual" && r.organizationId === ORG));
     });
 
-    it("hanya tagihan jatuh tempo milik kos ini yang bisa diingatkan", async () => {
-      await gagalDengan(kirimReminder(db, ORG, { invoiceIds: ["inv_2026-09_A03"] }, wa, opsi), 409);
+    it("tagihan yang belum jatuh tempo juga bisa diingatkan, dengan pesan sebelum jatuh tempo", async () => {
+      const hasil = await kirimReminder(db, ORG, { invoiceIds: ["inv_2026-09_A03"] }, wa, opsi);
+      assert.deepEqual(hasil, { terkirim: 1, gagal: [], simulasi: false });
+      assert.match(terkirim.at(-1)!.teks, /^Halo Yoga, pengingat dari Kos Melati: .* jatuh tempo 26 Sep 2026 \(2 hari lagi\)/);
+    });
+
+    it("hanya tagihan belum dibayar milik kos ini yang bisa diingatkan", async () => {
+      await gagalDengan(kirimReminder(db, ORG, { invoiceIds: ["inv_2026-09_A01"] }, wa, opsi), 409);
       await gagalDengan(kirimReminder(db, "org_lain", { invoiceIds: ["inv_2026-09_A05"] }, wa, opsi), 404);
     });
   });

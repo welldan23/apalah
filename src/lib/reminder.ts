@@ -15,6 +15,9 @@ export const JADWAL_BAWAAN: JadwalPengingat[] = [
   { offsetHari: 3, jam: "09:00", aktif: true },
 ];
 
+/** Status tagihan yang boleh diingatkan: sudah dikirim ke penyewa dan belum dibayar. */
+export const STATUS_BISA_DIINGATKAN = ["menunggu", "terkirim", "jatuh_tempo"] as const;
+
 /** Jenis pesan di tabel reminders yang BUKAN pengingat bayar. */
 export const JENIS_BUKAN_PENGINGAT = ["tagihan", "konfirmasi_lunas"] as const;
 

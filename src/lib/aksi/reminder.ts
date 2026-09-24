@@ -1,14 +1,13 @@
-// Aksi cepat "Kirim reminder": kirim pengingat WhatsApp untuk tagihan jatuh tempo yang
-// dipilih owner (setelah preview), lalu catat setiap kiriman di riwayat reminder.
-
-import { and, eq, inArray } from "drizzle-orm";
+// Aksi cepat "Kirim reminder": kirim pengingat WhatsApp untuk tagihan belum dibayar yang dipilih
+// owner (setelah preview), lalu catat setiap kiriman di riwayat reminder.
 
 import { schema, type Db } from "../../db/index.ts";
-import { pesanReminder } from "../pesan.ts";
+import { hariIniWib } from "../waktu.ts";
 import { kirimAman, type HasilKirim, type PengirimWhatsApp } from "../whatsapp/index.ts";
 import { GalatAksi } from "./galat.ts";
+import { susunPesanReminder, type PesanReminder } from "./pesan-reminder.ts";
 
-const { invoices, organizations, reminders, rooms, tenants } = schema;
+const { reminders } = schema;
 
 export type InputKirimReminder = { invoiceIds: string[] };
 
@@ -38,53 +37,21 @@ export async function kirimReminder(
   organizationId: string,
   input: InputKirimReminder,
   wa: PengirimWhatsApp,
-  { baseUrl }: { baseUrl: string },
+  { baseUrl, hariIni = hariIniWib() }: { baseUrl: string; hariIni?: string },
 ): Promise<HasilKirimReminder> {
-  const [kos] = await db
-    .select({ namaKos: organizations.namaKos })
-    .from(organizations)
-    .where(eq(organizations.id, organizationId));
-  if (!kos) throw new GalatAksi("Kos tidak ditemukan.", 404);
-
-  const tagihan = await db
-    .select({
-      id: invoices.id,
-      tenantId: invoices.tenantId,
-      periode: invoices.periode,
-      nominal: invoices.nominal,
-      jatuhTempo: invoices.jatuhTempo,
-      status: invoices.status,
-      tokenPublik: invoices.tokenPublik,
-      namaPenghuni: tenants.nama,
-      nomorWa: tenants.nomorWa,
-      nomorKamar: rooms.nomorKamar,
-    })
-    .from(invoices)
-    .innerJoin(tenants, eq(tenants.id, invoices.tenantId))
-    .innerJoin(rooms, eq(rooms.id, invoices.roomId))
-    .where(and(eq(invoices.organizationId, organizationId), inArray(invoices.id, input.invoiceIds)));
-
-  if (tagihan.length !== input.invoiceIds.length) {
-    throw new GalatAksi("Sebagian tagihan tidak ditemukan.", 404);
-  }
-  const bukanJatuhTempo = tagihan.filter((t) => t.status !== "jatuh_tempo");
-  if (bukanJatuhTempo.length > 0) {
-    const kamar = bukanJatuhTempo.map((t) => t.nomorKamar).join(", ");
-    throw new GalatAksi(`Hanya tagihan jatuh tempo yang bisa diingatkan (kamar ${kamar}).`, 409);
-  }
+  const pesan = await susunPesanReminder(db, organizationId, input.invoiceIds, { baseUrl, hariIni });
 
   // Dikirim satu per satu supaya tidak membanjiri provider WhatsApp.
-  const hasil: { t: (typeof tagihan)[number]; kirim: HasilKirim }[] = [];
-  for (const t of tagihan) {
-    const teks = pesanReminder(t, kos.namaKos, `${baseUrl}/invoice/${t.tokenPublik}`);
-    hasil.push({ t, kirim: await kirimAman(wa, { ke: t.nomorWa, teks }) });
+  const hasil: { p: PesanReminder; kirim: HasilKirim }[] = [];
+  for (const p of pesan) {
+    hasil.push({ p, kirim: await kirimAman(wa, { ke: p.nomorWa, teks: p.teks }) });
   }
 
   await db.insert(reminders).values(
-    hasil.map(({ t, kirim }) => ({
+    hasil.map(({ p, kirim }) => ({
       organizationId,
-      invoiceId: t.id,
-      tenantId: t.tenantId,
+      invoiceId: p.invoiceId,
+      tenantId: p.tenantId,
       jenis: "manual",
       kanal: "whatsapp",
       status: kirim.ok ? ("terkirim" as const) : ("gagal" as const),
@@ -94,7 +61,7 @@ export async function kirimReminder(
 
   return {
     terkirim: hasil.filter((h) => h.kirim.ok).length,
-    gagal: hasil.filter((h) => !h.kirim.ok).map((h) => h.t.nomorKamar),
+    gagal: hasil.filter((h) => !h.kirim.ok).map((h) => h.p.nomorKamar),
     simulasi: wa.simulasi,
   };
 }
