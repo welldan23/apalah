@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "fd367ef2d27a7955cf83c14330b62efcd34c1a1f",
+  "generatedForCommit": "838d6df48d05a42a7a5211576b2972317b258ff5",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -100,7 +100,7 @@
     },
     {
       "path": "src/app/(marketing)/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1092
     },
@@ -196,15 +196,15 @@
     },
     {
       "path": "src/components/landing/cta-section.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1572
     },
     {
       "path": "src/components/landing/dashboard-preview-section.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5875
+      "size": 5912
     },
     {
       "path": "src/components/landing/faq-section.tsx",
@@ -226,21 +226,21 @@
     },
     {
       "path": "src/components/landing/kosta-chat-mockup.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 7188
+      "size": 7248
     },
     {
       "path": "src/components/landing/links.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 457
     },
     {
       "path": "src/components/landing/mobile-menu.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2224
+      "size": 2232
     },
     {
       "path": "src/components/landing/problem-section.tsx",
@@ -256,15 +256,15 @@
     },
     {
       "path": "src/components/landing/site-footer.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1175
+      "size": 1284
     },
     {
       "path": "src/components/landing/site-header.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1556
+      "size": 1666
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
@@ -400,7 +400,7 @@
     },
     {
       "path": "src/lib/landing/content.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 9453
     },
