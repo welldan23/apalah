@@ -57,6 +57,9 @@ export async function isiDataContoh(db: Db) {
         dibayarPada: dibayarPada.get(inv.id) ?? null,
       })),
     );
+    await tx.insert(schema.invoiceItems).values(
+      mockInvoices.map((inv) => ({ invoiceId: inv.id, label: "Sewa kamar", nominal: inv.nominal })),
+    );
     await tx.insert(schema.payments).values(
       mockPayments.map((p) => ({ ...p, diverifikasiPada: new Date(p.diverifikasiPada) })),
     );

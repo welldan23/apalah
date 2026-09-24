@@ -15,6 +15,13 @@
       "when": 1790260848116,
       "tag": "0001_aksi_cepat",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790268366006,
+      "tag": "0002_tagihan_terjadwal",
+      "breakpoints": true
     }
   ]
 }

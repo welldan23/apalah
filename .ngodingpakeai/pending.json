@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "e53691eee11ee5d54ee1e47c25f2e92ecf172578",
+  "generatedForCommit": "7304f8a52a75d74d9d4625f94dc64d5c0e43eff0",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -124,13 +124,13 @@
     },
     {
       "path": "src/app/(app)/kamar/kosong/page.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1167
     },
     {
       "path": "src/app/(app)/kamar/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1871
     },
@@ -318,7 +318,7 @@
       "path": "src/components/dashboard/room-summary.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 4807
+      "size": 6163
     },
     {
       "path": "src/components/dashboard/status-filter.ts",
@@ -328,7 +328,7 @@
     },
     {
       "path": "src/components/kamar/daftar-kamar-kosong.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6709
     },
@@ -718,7 +718,7 @@
     },
     {
       "path": "src/lib/data/halaman-kamar-kosong.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 870
     },
@@ -754,13 +754,13 @@
     },
     {
       "path": "src/lib/data/kamar.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3752
     },
     {
       "path": "src/lib/data/kamar.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5705
     },
@@ -886,13 +886,13 @@
     },
     {
       "path": "src/lib/kamar-kosong.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2174
     },
     {
       "path": "src/lib/kamar-kosong.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1853
     },

@@ -9,7 +9,7 @@ import * as schema from "./schema.ts";
 import { isiDataContoh } from "./seed.ts";
 import { buatDbUji } from "./testing.ts";
 
-describe("skema & migrasi dashboard", () => {
+describe("skema & migrasi", () => {
   let db: Db;
   let tutup: () => Promise<void>;
 
@@ -42,6 +42,16 @@ describe("skema & migrasi dashboard", () => {
       .from(schema.invoices)
       .where(eq(schema.invoices.status, "jatuh_tempo"));
     assert.equal(jatuhTempo.length, 3);
+  });
+
+  it("tiap invoice contoh punya rincian yang totalnya sama dengan nominal", async () => {
+    const selisih = await db
+      .select({ id: schema.invoices.id })
+      .from(schema.invoices)
+      .leftJoin(schema.invoiceItems, eq(schema.invoiceItems.invoiceId, schema.invoices.id))
+      .groupBy(schema.invoices.id, schema.invoices.nominal)
+      .having(sql`coalesce(sum(${schema.invoiceItems.nominal}), 0) <> ${schema.invoices.nominal}`);
+    assert.deepEqual(selisih, []);
   });
 
   it("seed aman diulang", async () => {
@@ -89,6 +99,44 @@ describe("skema & migrasi dashboard", () => {
       await ditolakOleh(
         db.insert(schema.tenants).values({ ...t, id: crypto.randomUUID(), nama: "Penghuni Kedua" }),
         "tenants_kamar_aktif_unik",
+      );
+    });
+
+    it("nominal rincian invoice harus positif", async () => {
+      const [inv] = await db.select().from(schema.invoices).limit(1);
+      await ditolakOleh(
+        db.insert(schema.invoiceItems).values({ invoiceId: inv.id, label: "Diskon", nominal: -50_000 }),
+        "invoice_items_nominal_positif",
+      );
+    });
+
+    it("tagihan terjadwal: tanggal terbit 1–28", async () => {
+      await ditolakOleh(
+        db.insert(schema.invoiceSchedules).values({ organizationId: "org_kos_melati", tanggalTerbit: 31 }),
+        "invoice_schedules_tanggal_terbit",
+      );
+    });
+
+    it("tagihan terjadwal: tanggal jatuh tempo hanya & wajib untuk aturan tanggal tetap", async () => {
+      await ditolakOleh(
+        db.insert(schema.invoiceSchedules).values({ organizationId: "org_kos_melati", aturanJatuhTempo: "tanggal_tetap" }),
+        "invoice_schedules_tanggal_jatuh_tempo",
+      );
+      await ditolakOleh(
+        db.insert(schema.invoiceSchedules).values({ organizationId: "org_kos_melati", tanggalJatuhTempo: 10 }),
+        "invoice_schedules_tanggal_jatuh_tempo",
+      );
+    });
+
+    it("tagihan terjadwal: satu pengaturan per kos", async () => {
+      await db.insert(schema.invoiceSchedules).values({
+        organizationId: "org_kos_melati",
+        aturanJatuhTempo: "tanggal_tetap",
+        tanggalJatuhTempo: 10,
+      });
+      await ditolakOleh(
+        db.insert(schema.invoiceSchedules).values({ organizationId: "org_kos_melati" }),
+        "invoice_schedules_organisasi_unik",
       );
     });
 

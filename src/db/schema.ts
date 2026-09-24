@@ -41,6 +41,7 @@ export const statusPembayaranEnum = pgEnum("status_pembayaran", [
   "tidak_cocok",
 ]);
 export const statusReminderEnum = pgEnum("status_reminder", ["terkirim", "gagal"]);
+export const aturanJatuhTempoEnum = pgEnum("aturan_jatuh_tempo", ["tanggal_masuk", "tanggal_tetap"]);
 
 export const users = pgTable("users", {
   id: id(),
@@ -155,6 +156,51 @@ export const invoices = pgTable(
     uniqueIndex("invoices_penghuni_periode_unik").on(t.tenantId, t.periode),
     check("invoices_nominal_positif", sql`${t.nominal} > 0`),
     check("invoices_format_periode", sql`${t.periode} ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'`),
+  ],
+);
+
+/** Rincian komponen tagihan (Sewa, Listrik, Air…); totalnya sama dengan nominal invoice. */
+export const invoiceItems = pgTable(
+  "invoice_items",
+  {
+    id: id(),
+    invoiceId: text()
+      .notNull()
+      .references(() => invoices.id, { onDelete: "cascade" }),
+    label: text().notNull(),
+    nominal: integer().notNull(),
+  },
+  (t) => [
+    index("invoice_items_invoice").on(t.invoiceId),
+    check("invoice_items_nominal_positif", sql`${t.nominal} > 0`),
+  ],
+);
+
+/** Pengaturan tagihan terjadwal bulanan — paling banyak satu baris per organisasi. */
+export const invoiceSchedules = pgTable(
+  "invoice_schedules",
+  {
+    id: id(),
+    organizationId: text()
+      .notNull()
+      .unique("invoice_schedules_organisasi_unik")
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    aktif: boolean().notNull().default(false),
+    /** Tanggal terbit tiap bulan (WIB). */
+    tanggalTerbit: integer().notNull().default(1),
+    aturanJatuhTempo: aturanJatuhTempoEnum().notNull().default("tanggal_masuk"),
+    /** Hanya untuk aturan tanggal_tetap. */
+    tanggalJatuhTempo: integer(),
+    diperbaruiPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    check("invoice_schedules_tanggal_terbit", sql`${t.tanggalTerbit} between 1 and 28`),
+    check(
+      "invoice_schedules_tanggal_jatuh_tempo",
+      sql`(${t.aturanJatuhTempo} = 'tanggal_masuk' and ${t.tanggalJatuhTempo} is null)
+        or (${t.aturanJatuhTempo} = 'tanggal_tetap' and ${t.tanggalJatuhTempo} is not null
+          and ${t.tanggalJatuhTempo} between 1 and 28)`,
+    ),
   ],
 );
 
