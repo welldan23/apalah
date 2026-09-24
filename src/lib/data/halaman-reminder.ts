@@ -53,3 +53,11 @@ export async function getHalamanReminder(): Promise<HalamanReminder> {
     riwayat,
   };
 }
+
+export type HalamanJadwalPengingat = Pick<HalamanReminder, "hariIni" | "otomatisAktif" | "jadwal" | "antrian">;
+
+/** Halaman Jadwal pengingat: jadwal (tahap frontend: bawaan) + antrian 7 hari untuk tiap jadwal. */
+export async function getHalamanJadwalPengingat(): Promise<HalamanJadwalPengingat> {
+  const { hariIni, otomatisAktif, jadwal, antrian } = await getHalamanReminder();
+  return { hariIni, otomatisAktif, jadwal, antrian };
+}

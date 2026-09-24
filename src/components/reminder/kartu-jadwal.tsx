@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 
 import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { HalamanReminder } from "@/lib/data/halaman-reminder";
 import { keteranganJadwal, labelJadwal } from "@/lib/reminder";
 import { cn } from "@/lib/utils";
@@ -18,6 +20,11 @@ export function KartuJadwal({ jadwal, otomatisAktif }: Pick<HalamanReminder, "ja
         <CardDescription>
           {otomatisAktif ? "Aktif — dikirim ke penyewa yang belum bayar." : "Nonaktif — pengingat hanya dikirim manual."}
         </CardDescription>
+        <CardAction>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/reminder/jadwal">Atur</Link>
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <ul className="divide-y rounded-lg border">
