@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "3e0f507d32f076a74bffdcecbbc949ba92bb6a8a",
+  "generatedForCommit": "2271f03c10a63e6ebc023d865801af590f39bd3e",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -64,7 +64,7 @@
     },
     {
       "path": "drizzle/0002_tagihan_terjadwal.sql",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "sql",
       "size": 2103
     },
@@ -82,13 +82,13 @@
     },
     {
       "path": "drizzle/meta/0002_snapshot.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 29527
     },
     {
       "path": "drizzle/meta/_journal.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 492
     },
@@ -208,9 +208,9 @@
     },
     {
       "path": "src/app/api/dashboard/aksi/tagihan/route.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 805
+      "size": 872
     },
     {
       "path": "src/app/api/dashboard/invoices/route.ts",
@@ -244,9 +244,9 @@
     },
     {
       "path": "src/app/invoice/[token]/page.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5937
+      "size": 5999
     },
     {
       "path": "src/app/layout.tsx",
@@ -526,9 +526,9 @@
     },
     {
       "path": "src/components/quick-actions/invoice-flow.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 15035
+      "size": 18449
     },
     {
       "path": "src/components/quick-actions/reminder-flow.tsx",
@@ -664,19 +664,19 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5547
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7764
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2606
     },
@@ -694,9 +694,9 @@
     },
     {
       "path": "src/lib/aksi/aksi.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 7119
+      "size": 9436
     },
     {
       "path": "src/lib/aksi/galat.ts",
@@ -718,9 +718,9 @@
     },
     {
       "path": "src/lib/aksi/tagihan.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3602
+      "size": 5494
     },
     {
       "path": "src/lib/data/dashboard.ts",
@@ -742,15 +742,15 @@
     },
     {
       "path": "src/lib/data/invoice-publik.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1677
+      "size": 2701
     },
     {
       "path": "src/lib/data/invoice-publik.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2228
+      "size": 2791
     },
     {
       "path": "src/lib/data/invoice.test.ts",

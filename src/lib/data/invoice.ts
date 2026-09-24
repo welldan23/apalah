@@ -1,10 +1,11 @@
 // Daftar invoice dari database — dipakai tabel Status Bayar di Dashboard Kos dan
 // endpoint GET /api/dashboard/invoices. Query selalu dibatasi satu organisasi.
 
-import { and, eq, getTableColumns } from "drizzle-orm";
+import { and, eq, getTableColumns, ilike, or } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import { tanggalWib } from "../waktu.ts";
+import { PILIHAN_URUT, type UrutInvoice } from "../invoice.ts";
+import { periodeValid, tanggalWib } from "../waktu.ts";
 import type { InvoiceRow, InvoiceStatus } from "@/lib/types";
 
 const { invoices, rooms, tenants } = schema;
@@ -34,13 +35,15 @@ function urutkanInvoice(a: InvoiceRow, b: InvoiceRow) {
 
 /**
  * Invoice satu periode (YYYY-MM) — atau semua periode bila `periode` kosong — opsional disaring
- * satu status, urut dari yang paling perlu ditindak.
+ * satu status dan kata kunci (nama penghuni / nomor kamar), urut dari yang paling perlu ditindak.
  */
 export async function getDaftarInvoice(
   db: Db,
   organizationId: string,
-  { periode, status }: { periode?: string; status?: InvoiceStatus },
+  { periode, status, cari }: { periode?: string; status?: InvoiceStatus; cari?: string },
 ): Promise<InvoiceRow[]> {
+  // Wildcard LIKE dari pengguna dianggap huruf biasa.
+  const pola = cari?.trim() ? `%${cari.trim().replace(/[\\%_]/g, "\\$&")}%` : undefined;
   const baris = await db
     .select({
       ...getTableColumns(invoices),
@@ -55,6 +58,7 @@ export async function getDaftarInvoice(
         eq(invoices.organizationId, organizationId),
         periode ? eq(invoices.periode, periode) : undefined,
         status ? eq(invoices.status, status) : undefined,
+        pola ? or(ilike(tenants.nama, pola), ilike(rooms.nomorKamar, pola)) : undefined,
       ),
     );
 
@@ -65,4 +69,42 @@ export async function getDaftarInvoice(
       dibayarPada: inv.dibayarPada ? tanggalWib(inv.dibayarPada) : undefined,
     }))
     .sort(urutkanInvoice);
+}
+
+export type FilterDaftarInvoice = {
+  /** "semua" = semua periode. */
+  periode: string;
+  status: InvoiceStatus | "semua";
+  q: string;
+  urut: UrutInvoice;
+};
+
+const MAKS_KATA_KUNCI = 100;
+
+/**
+ * Baca query `?periode=&status=&q=&urut=` endpoint daftar invoice. Periode kosong = periode
+ * berjalan; nilai yang tidak dikenal ditolak dengan pesan galat.
+ */
+export function bacaFilterDaftarInvoice(
+  params: URLSearchParams,
+  periodeBerjalan: string,
+): { filter: FilterDaftarInvoice } | { galat: string } {
+  const periode = params.get("periode") || periodeBerjalan;
+  const status = params.get("status") || "semua";
+  const q = (params.get("q") ?? "").trim();
+  const urut = params.get("urut") || "prioritas";
+
+  if (periode !== "semua" && !periodeValid(periode)) {
+    return { galat: "Periode harus berformat YYYY-MM atau \"semua\"." };
+  }
+  if (status !== "semua" && !isInvoiceStatus(status)) {
+    return { galat: `Status tidak dikenal: ${status}` };
+  }
+  if (q.length > MAKS_KATA_KUNCI) {
+    return { galat: `Kata kunci maksimal ${MAKS_KATA_KUNCI} karakter.` };
+  }
+  if (!PILIHAN_URUT.some((u) => u.value === urut)) {
+    return { galat: `Urutan tidak dikenal: ${urut}` };
+  }
+  return { filter: { periode, status, q, urut: urut as UrutInvoice } };
 }

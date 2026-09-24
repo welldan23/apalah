@@ -5,7 +5,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
-import { getDaftarInvoice, isInvoiceStatus } from "./invoice.ts";
+import { bacaFilterDaftarInvoice, getDaftarInvoice, isInvoiceStatus } from "./invoice.ts";
 
 const ORG = "org_kos_melati";
 const SEP = "2026-09";
@@ -103,10 +103,53 @@ describe("getDaftarInvoice", () => {
     assert.equal((await getDaftarInvoice(db, ORG, { periode: "2026-10" })).length, 0);
   });
 
+  it("cari nama penghuni atau nomor kamar, tidak peka huruf besar/kecil", async () => {
+    const cari = async (kata: string, periode: string | undefined = SEP) =>
+      (await getDaftarInvoice(db, ORG, { periode, cari: kata })).map((inv) => inv.nomorKamar).sort();
+    assert.deepEqual(await cari("rizky"), ["A05"]);
+    assert.deepEqual(await cari("  RAMADHAN "), ["A05", "B16"]); // Rizky Ramadhan, Tiara Ramadhani
+    assert.deepEqual(await cari("a0"), ["A01", "A02", "A03", "A04", "A05", "A06", "A08", "A09"]);
+    // Semua periode.
+    assert.deepEqual(await cari("Rizky", undefined), ["A05"]);
+    // Kata kunci kosong = tanpa saringan.
+    assert.equal((await cari("   ")).length, 34);
+  });
+
+  it("wildcard LIKE di kata kunci dianggap huruf biasa", async () => {
+    const hitung = async (kata: string) => (await getDaftarInvoice(db, ORG, { periode: SEP, cari: kata })).length;
+    assert.equal(await hitung("%"), 0);
+    assert.equal(await hitung("_"), 0);
+    assert.equal(await hitung("\\"), 0);
+  });
+
+  it("cari tidak menembus kos lain", async () => {
+    assert.deepEqual(await getDaftarInvoice(db, ORG, { periode: SEP, cari: "Kos Lain" }), []);
+  });
+
   it("isInvoiceStatus hanya menerima status yang dikenal", () => {
     assert.equal(isInvoiceStatus("lunas"), true);
     assert.equal(isInvoiceStatus("perlu_review"), true);
     assert.equal(isInvoiceStatus("semua"), false);
     assert.equal(isInvoiceStatus("LUNAS"), false);
+  });
+});
+
+describe("bacaFilterDaftarInvoice", () => {
+  const baca = (query: string) => bacaFilterDaftarInvoice(new URLSearchParams(query), SEP);
+
+  it("bawaan: periode berjalan, semua status, urut prioritas", () => {
+    assert.deepEqual(baca(""), { filter: { periode: SEP, status: "semua", q: "", urut: "prioritas" } });
+  });
+
+  it("membaca semua parameter", () => {
+    assert.deepEqual(baca("periode=semua&status=lunas&q=%20dimas%20&urut=nominal"), {
+      filter: { periode: "semua", status: "lunas", q: "dimas", urut: "nominal" },
+    });
+  });
+
+  it("menolak nilai yang tidak dikenal", () => {
+    for (const query of ["periode=2026-13", "status=bayar", "urut=acak", `q=${"x".repeat(101)}`]) {
+      assert.ok("galat" in baca(query), query);
+    }
   });
 });
