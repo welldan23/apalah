@@ -61,6 +61,11 @@ describe("penjadwal pengingat otomatis", () => {
     assert.match(teks("A10"), /jatuh tempo hari ini/);
     assert.match(teks("B15"), /sudah lewat jatuh tempo \(24 Sep 2026\)/);
     assert.match(teks("B15"), /\nhttps:\/\/kostera\.id\/invoice\/demo-b15-2026-09$/);
+    // Template resmi ikut dikirim untuk provider WhatsApp Cloud API.
+    assert.deepEqual(
+      terkirim.map((p) => p.template?.nama).sort(),
+      ["kostera_pengingat_lewat", "kostera_pengingat_sebelum", "kostera_pengingat_sebelum", "kostera_pengingat_sebelum"],
+    );
     assert.deepEqual(await logPutaran(MINGGU_0905), [
       "A10 H terkirim null",
       "A12 H-3 terkirim null",

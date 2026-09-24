@@ -5,8 +5,9 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import { pesanPengingat } from "../pesan.ts";
+import { pesanPengingat, templatePengingat } from "../pesan.ts";
 import { STATUS_BISA_DIINGATKAN } from "../reminder.ts";
+import type { TemplateWhatsApp } from "../whatsapp/index.ts";
 import { GalatAksi } from "./galat.ts";
 
 const { invoices, organizations, rooms, tenants } = schema;
@@ -19,6 +20,8 @@ export type PesanReminder = {
   /** Tujuan WhatsApp (format 62…). */
   nomorWa: string;
   teks: string;
+  /** Versi template resmi (WhatsApp Cloud API) dari pesan yang sama. */
+  template: TemplateWhatsApp;
 };
 
 /**
@@ -73,5 +76,6 @@ export async function susunPesanReminder(
     namaPenghuni: t.namaPenghuni,
     nomorWa: t.nomorWa,
     teks: pesanPengingat(t, kos.namaKos, hariIni, `${baseUrl}/invoice/${t.tokenPublik}`),
+    template: templatePengingat(t, kos.namaKos, hariIni, t.tokenPublik),
   }));
 }

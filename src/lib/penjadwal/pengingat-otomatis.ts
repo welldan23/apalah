@@ -147,7 +147,7 @@ export async function kirimPengingatOtomatis(
         .returning({ id: reminders.id });
       if (!klaim) continue;
 
-      const kirim = await kirimAman(wa, { ke: p.nomorWa, teks: p.teks });
+      const kirim = await kirimAman(wa, { ke: p.nomorWa, teks: p.teks, template: p.template });
       await db
         .update(reminders)
         .set({ status: kirim.ok ? "terkirim" : "gagal", galat: kirim.ok ? null : kirim.galat })

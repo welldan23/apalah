@@ -32,6 +32,9 @@ describe("service penyusun pesan reminder", () => {
     assert.match(h.teks, /jatuh tempo hari ini\. /);
     const [lewat] = await susun(["inv_2026-09_A05"], "2026-09-18");
     assert.match(lewat.teks, /^Halo Rizky, ini pengingat dari Kos Melati\. .* sudah lewat jatuh tempo \(15 Sep 2026\)\./);
+    // Versi template resmi untuk WhatsApp Cloud API: tombol ke invoice yang sama.
+    assert.deepEqual([h3.template.nama, lewat.template.nama], ["kostera_pengingat_sebelum", "kostera_pengingat_lewat"]);
+    assert.equal(lewat.template.tombolUrl, "demo-a05-2026-09");
   });
 
   it("data penerima dari database, urut nomor kamar", async () => {

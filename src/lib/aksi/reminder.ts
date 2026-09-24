@@ -44,7 +44,7 @@ export async function kirimReminder(
   // Dikirim satu per satu supaya tidak membanjiri provider WhatsApp.
   const hasil: { p: PesanReminder; kirim: HasilKirim }[] = [];
   for (const p of pesan) {
-    hasil.push({ p, kirim: await kirimAman(wa, { ke: p.nomorWa, teks: p.teks }) });
+    hasil.push({ p, kirim: await kirimAman(wa, { ke: p.nomorWa, teks: p.teks, template: p.template }) });
   }
 
   await db.insert(reminders).values(

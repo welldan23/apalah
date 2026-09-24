@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { pesanPengingat, pesanPengingatAwal } from "./pesan.ts";
+import { isiTemplate, pesanPengingat, pesanPengingatAwal, TEMPLATE_PENGINGAT, templatePengingat } from "./pesan.ts";
 
 const inv = (jatuhTempo: string) => ({
   namaPenghuni: "Yoga Saputra",
@@ -23,5 +23,31 @@ describe("template pengingat", () => {
   it("memilih template lewat jatuh tempo bila tanggalnya sudah lewat", () => {
     assert.match(pesanPengingat(inv("2026-09-20"), "Kos Melati", "2026-09-24"), /sudah lewat jatuh tempo \(20 Sep 2026\)/);
     assert.match(pesanPengingat(inv("2026-09-25"), "Kos Melati", "2026-09-24"), /1 hari lagi/);
+  });
+});
+
+describe("template WhatsApp resmi pengingat", () => {
+  it("isi template + variabel = teks yang dikirim provider teks (tanpa baris link)", () => {
+    for (const [jatuhTempo, nama] of [
+      ["2026-09-26", "kostera_pengingat_sebelum"],
+      ["2026-09-24", "kostera_pengingat_sebelum"],
+      ["2026-09-20", "kostera_pengingat_lewat"],
+    ]) {
+      const t = templatePengingat(inv(jatuhTempo), "Kos Melati", "2026-09-24", "demo-a03-2026-09");
+      assert.equal(t.nama, nama);
+      assert.deepEqual([t.bahasa, t.tombolUrl], ["id", "demo-a03-2026-09"]);
+      const isi = Object.values(TEMPLATE_PENGINGAT).find((d) => d.nama === t.nama)!.isi;
+      assert.equal(isiTemplate(isi, t.variabel), pesanPengingat(inv(jatuhTempo), "Kos Melati", "2026-09-24"));
+    }
+  });
+
+  it("memenuhi aturan Meta: variabel {{1}}…{{n}} berurutan, tidak di awal/akhir isi, nilai tanpa baris baru", () => {
+    for (const { isi } of Object.values(TEMPLATE_PENGINGAT)) {
+      const nomor = [...isi.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
+      assert.deepEqual(nomor, [1, 2, 3, 4, 5, 6]);
+      assert.doesNotMatch(isi, /^\{\{|\}\}$/);
+    }
+    const t = templatePengingat(inv("2026-09-20"), "Kos Melati", "2026-09-24", "x");
+    assert.ok(t.variabel.every((v) => v && !/[\n\t]| {5}/.test(v)));
   });
 });
