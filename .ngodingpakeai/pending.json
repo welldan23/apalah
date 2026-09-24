@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "f373c075a48d989fdf7b5c30de59b1ff52143e0f",
+  "generatedForCommit": "9ca16cc8359f29d13eb0aaa4a1ce863f6fd189e7",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "src/app/(app)/kamar/page.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 855
     },
@@ -262,7 +262,7 @@
     },
     {
       "path": "src/components/app-shell/nav-items.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1304
     },
@@ -316,9 +316,15 @@
     },
     {
       "path": "src/components/kamar/daftar-kamar.tsx",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 10999
+    },
+    {
+      "path": "src/components/kamar/kartu-kamar.tsx",
       "reason": "new",
       "language": "typescript",
-      "size": 8098
+      "size": 1769
     },
     {
       "path": "src/components/kosta/bubble-pesan.tsx",
@@ -664,7 +670,7 @@
     },
     {
       "path": "src/lib/data/halaman-kamar.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 696
     },
@@ -694,13 +700,13 @@
     },
     {
       "path": "src/lib/data/kamar.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1959
     },
     {
       "path": "src/lib/data/kamar.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1870
     },
