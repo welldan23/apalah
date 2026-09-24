@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "4fe3a5b094271323956fbc08aa585bd1c0a9d65a",
+  "generatedForCommit": "24b03eeeef9accd74df65acc1dca46ef871d7a50",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "src/app/(app)/kamar/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1637
     },
@@ -324,17 +324,23 @@
       "path": "src/components/kamar/daftar-kamar.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 11997
+      "size": 13561
     },
     {
       "path": "src/components/kamar/kartu-kamar.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 2301
+      "size": 2806
+    },
+    {
+      "path": "src/components/kamar/pindah-kamar.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 7684
     },
     {
       "path": "src/components/kamar/tambah-penghuni.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1558
     },
@@ -502,7 +508,7 @@
     },
     {
       "path": "src/components/quick-actions/tenant-flow.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 9252
     },
@@ -889,6 +895,18 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 884
+    },
+    {
+      "path": "src/lib/pindah-kamar.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 916
+    },
+    {
+      "path": "src/lib/pindah-kamar.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 569
     },
     {
       "path": "src/lib/rencana-kamar.test.ts",

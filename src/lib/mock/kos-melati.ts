@@ -111,6 +111,32 @@ export const mockTenants: Tenant[] = PENGHUNI.map(
   },
 );
 
+/** Mantan penghuni (status keluar) — kamarnya kini kosong. */
+export const mockPenghuniKeluar: Tenant[] = [
+  {
+    id: "tnt_keluar_A07",
+    organizationId: mockOrganization.id,
+    nama: "Rudi Hartono",
+    nomorWa: "6281377001122",
+    roomId: "room_A07",
+    tanggalMasuk: "2024-03-01",
+    tanggalKeluar: "2026-06-30",
+    status: "keluar",
+    hargaSewa: 500_000,
+  },
+  {
+    id: "tnt_keluar_B05",
+    organizationId: mockOrganization.id,
+    nama: "Mega Lestari",
+    nomorWa: "6281377003344",
+    roomId: "room_B05",
+    tanggalMasuk: "2025-01-10",
+    tanggalKeluar: "2026-08-31",
+    status: "keluar",
+    hargaSewa: 650_000,
+  },
+];
+
 /** Jatuh tempo bulanan mengikuti tanggal masuk penghuni. */
 function jatuhTempoPeriodeIni(tanggalMasuk: string) {
   const hari = tanggalMasuk.slice(8, 10);

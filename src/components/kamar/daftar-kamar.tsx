@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowRightLeft, LayoutGrid, List, Search, UserPlus } from "lucide-react";
+import { ArrowRightLeft, LayoutGrid, List, LogOut, Search, UserPlus } from "lucide-react";
 
 import { KartuKamar } from "@/components/kamar/kartu-kamar";
+import { KeluarPenghuniFlow } from "@/components/kamar/keluar-penghuni";
 import { PindahKamarFlow } from "@/components/kamar/pindah-kamar";
 import { SheetTambahPenghuni } from "@/components/kamar/tambah-penghuni";
 import { ActionSheet } from "@/components/quick-actions/action-sheet";
@@ -42,10 +43,12 @@ function GridKamar({
   kamar,
   onIsi,
   onPindah,
+  onKeluar,
 }: {
   kamar: KamarPenghuni[];
   onIsi: (roomId: string) => void;
   onPindah: (kamar: KamarPenghuni) => void;
+  onKeluar: (kamar: KamarPenghuni) => void;
 }) {
   const perTipe = new Map<string, KamarPenghuni[]>();
   for (const k of kamar) perTipe.set(k.tipe, [...(perTipe.get(k.tipe) ?? []), k]);
@@ -69,7 +72,12 @@ function GridKamar({
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {daftar.map((k) => (
               <li key={k.id}>
-                <KartuKamar kamar={k} onIsi={() => onIsi(k.id)} onPindah={() => onPindah(k)} />
+                <KartuKamar
+                  kamar={k}
+                  onIsi={() => onIsi(k.id)}
+                  onPindah={() => onPindah(k)}
+                  onKeluar={() => onKeluar(k)}
+                />
               </li>
             ))}
           </ul>
@@ -114,6 +122,7 @@ function Sewa({ kamar }: { kamar: KamarPenghuni }) {
 export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIni: string }) {
   const [isiKamar, setIsiKamar] = useState<string | null>(null);
   const [pindahDari, setPindahDari] = useState<KamarPenghuni | null>(null);
+  const [keluarDari, setKeluarDari] = useState<KamarPenghuni | null>(null);
   const kamarKosong = kamar.filter((k) => k.status === "kosong");
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -214,7 +223,12 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
           Tidak ada kamar yang cocok{kataKunci ? ` dengan “${cari.trim()}”` : ""}.
         </p>
       ) : tampilan === "kartu" ? (
-        <GridKamar kamar={tersaring} onIsi={setIsiKamar} onPindah={setPindahDari} />
+        <GridKamar
+          kamar={tersaring}
+          onIsi={setIsiKamar}
+          onPindah={setPindahDari}
+          onKeluar={setKeluarDari}
+        />
       ) : (
         <>
           {/* Mobile: kartu */}
@@ -298,16 +312,28 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
                         Isi kamar
                       </Button>
                     ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-haspopup="dialog"
-                        aria-label={`Pindahkan ${k.penghuni?.nama ?? "penghuni"} dari kamar ${k.nomorKamar}`}
-                        onClick={() => setPindahDari(k)}
-                      >
-                        <ArrowRightLeft data-icon="inline-start" />
-                        Pindah
-                      </Button>
+                      <span className="inline-flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-haspopup="dialog"
+                          aria-label={`Pindahkan ${k.penghuni?.nama ?? "penghuni"} dari kamar ${k.nomorKamar}`}
+                          onClick={() => setPindahDari(k)}
+                        >
+                          <ArrowRightLeft data-icon="inline-start" />
+                          Pindah
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-haspopup="dialog"
+                          aria-label={`Keluarkan ${k.penghuni?.nama ?? "penghuni"} dari kamar ${k.nomorKamar}`}
+                          onClick={() => setKeluarDari(k)}
+                        >
+                          <LogOut data-icon="inline-start" />
+                          Keluar
+                        </Button>
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -324,6 +350,15 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
         description="Pindahkan penghuni ke kamar kosong. Cek preview sebelum menyimpan."
       >
         {pindahDari && <PindahKamarFlow asal={pindahDari} semuaKamar={kamar} hariIni={hariIni} />}
+      </ActionSheet>
+
+      <ActionSheet
+        open={keluarDari !== null}
+        onOpenChange={(buka) => !buka && setKeluarDari(null)}
+        title="Penghuni keluar"
+        description="Tandai penghuni keluar; kamar jadi kosong. Cek preview sebelum menyimpan."
+      >
+        {keluarDari && <KeluarPenghuniFlow kamar={keluarDari} hariIni={hariIni} />}
       </ActionSheet>
 
       <SheetTambahPenghuni

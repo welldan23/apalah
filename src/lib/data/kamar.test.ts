@@ -5,7 +5,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
-import { getDaftarKamarPenghuni } from "./kamar.ts";
+import { getDaftarKamarPenghuni, getPenghuniNonaktif } from "./kamar.ts";
 
 describe("getDaftarKamarPenghuni", () => {
   let db: Db;
@@ -38,6 +38,27 @@ describe("getDaftarKamarPenghuni", () => {
     );
     const a07 = daftar.find((k) => k.nomorKamar === "A07")!;
     assert.equal(a07.status, "kosong");
+    // Mantan penghuni A07 (keluar) tidak dihitung sebagai penghuni.
     assert.equal(a07.penghuni, undefined);
+  });
+
+  it("tagihan belum lunas per penghuni", async () => {
+    const daftar = await getDaftarKamarPenghuni(db, "org_kos_melati");
+    const tagihan = (kamar: string) => daftar.find((k) => k.nomorKamar === kamar)?.penghuni?.tagihanTerbuka;
+    assert.deepEqual(tagihan("A05"), { jumlah: 1, nominal: 500_000 }); // jatuh tempo
+    assert.deepEqual(tagihan("C09"), { jumlah: 1, nominal: 800_000 }); // perlu review
+    assert.deepEqual(tagihan("A01"), { jumlah: 0, nominal: 0 }); // lunas
+  });
+
+  it("penghuni nonaktif, yang terakhir keluar di atas", async () => {
+    const nonaktif = await getPenghuniNonaktif(db, "org_kos_melati");
+    assert.deepEqual(
+      nonaktif.map((p) => [p.nama, p.nomorKamar, p.tanggalKeluar]),
+      [
+        ["Mega Lestari", "B05", "2026-08-31"],
+        ["Rudi Hartono", "A07", "2026-06-30"],
+      ],
+    );
+    assert.deepEqual(await getPenghuniNonaktif(db, "org_lain"), []);
   });
 });

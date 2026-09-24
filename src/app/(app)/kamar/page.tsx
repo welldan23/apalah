@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { DaftarKamar } from "@/components/kamar/daftar-kamar";
+import { DaftarNonaktif } from "@/components/kamar/daftar-nonaktif";
 import { TombolTambahPenghuni } from "@/components/kamar/tambah-penghuni";
 import { Button } from "@/components/ui/button";
 import { getHalamanKamar } from "@/lib/data/halaman-kamar";
@@ -40,6 +41,7 @@ export default async function KamarPage() {
       </header>
 
       <DaftarKamar kamar={data.kamar} hariIni={data.hariIni} />
+      <DaftarNonaktif penghuni={data.nonaktif} />
     </div>
   );
 }

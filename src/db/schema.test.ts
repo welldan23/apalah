@@ -27,7 +27,8 @@ describe("skema & migrasi dashboard", () => {
   it("data contoh Kos Melati sesuai angka PRD", async () => {
     assert.equal(await hitung(schema.organizations), 1);
     assert.equal(await hitung(schema.rooms), 40);
-    assert.equal(await hitung(schema.tenants), 34);
+    // 34 penghuni aktif + 2 mantan penghuni.
+    assert.equal(await hitung(schema.tenants), 36);
     assert.equal(await hitung(schema.invoices), 34);
 
     const [{ total }] = await db

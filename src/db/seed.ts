@@ -10,6 +10,7 @@ import {
   mockOrganization,
   mockOwner,
   mockPayments,
+  mockPenghuniKeluar,
   mockRooms,
   mockTenants,
 } from "../lib/mock/kos-melati.ts";
@@ -48,7 +49,7 @@ export async function isiDataContoh(db: Db) {
       peran: "owner",
     });
     await tx.insert(schema.rooms).values(mockRooms);
-    await tx.insert(schema.tenants).values(mockTenants);
+    await tx.insert(schema.tenants).values([...mockTenants, ...mockPenghuniKeluar]);
     await tx.insert(schema.invoices).values(
       mockInvoices.map((inv) => ({
         ...inv,
