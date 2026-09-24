@@ -11,11 +11,10 @@ type Metrik = { label: string; nilai: string; catatan: string; href?: string };
 /** Kartu utama: kondisi kos sekilas (kamar, tagihan perlu ditagih, pemasukan). */
 export function KosOverview({ data }: { data: DashboardData }) {
   const { organization, periode, kamar, tagihan, pemasukan } = data;
-  const persenTerisi = Math.round((kamar.terisi / kamar.total) * 100);
 
   const metrik: Metrik[] = [
     { label: "Total kamar", nilai: String(kamar.total), catatan: `${kamar.kosong} masih kosong` },
-    { label: "Terisi", nilai: String(kamar.terisi), catatan: `${persenTerisi}% hunian` },
+    { label: "Terisi", nilai: String(kamar.terisi), catatan: `${kamar.persenTerisi}% hunian` },
     {
       label: "Perlu ditagih",
       nilai: String(tagihan.jatuhTempo.jumlah),

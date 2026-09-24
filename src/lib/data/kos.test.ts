@@ -5,6 +5,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
+import { ubahKamar } from "../aksi/kamar.ts";
 import { getRingkasanKos } from "./kos.ts";
 
 describe("getRingkasanKos", () => {
@@ -48,6 +49,9 @@ describe("getRingkasanKos", () => {
     assert.equal(ringkasan.kamar.total, 40);
     assert.equal(ringkasan.kamar.terisi, 34);
     assert.equal(ringkasan.kamar.kosong, 6);
+    assert.equal(ringkasan.kamar.persenTerisi, 85);
+    assert.equal(ringkasan.kamar.potensiSewaKosong, 3_900_000);
+    assert.equal(ringkasan.kamar.nonaktif, 0);
     assert.deepEqual(ringkasan.kamar.perTipe, [
       { tipe: "Standar", hargaSewa: 500_000, total: 12, terisi: 10 },
       { tipe: "KM Dalam", hargaSewa: 650_000, total: 16, terisi: 14 },
@@ -73,6 +77,21 @@ describe("getRingkasanKos", () => {
     assert.equal(lain?.kamar.daftar[0].namaPenghuni, "Penghuni Kos Lain");
     const melati = await getRingkasanKos(db, "org_kos_melati");
     assert.ok(melati?.kamar.daftar.every((k) => k.namaPenghuni !== "Penghuni Kos Lain"));
+  });
+
+  it("kamar nonaktif tidak dihitung; kos tanpa kamar → persen 0, bukan NaN", async () => {
+    await ubahKamar(db, "org_kos_melati", "room_C10", { aktif: false });
+    const { kamar } = (await getRingkasanKos(db, "org_kos_melati"))!;
+    assert.deepEqual(
+      [kamar.total, kamar.kosong, kamar.nonaktif, kamar.persenTerisi, kamar.potensiSewaKosong],
+      [39, 5, 1, 87, 3_100_000],
+    );
+    await ubahKamar(db, "org_kos_melati", "room_C10", { aktif: true });
+
+    await db.insert(schema.users).values({ id: "usr_kosong", nama: "Owner Kosong", nomorWa: "6280000000009" });
+    await db.insert(schema.organizations).values({ id: "org_kosong", namaKos: "Kos Kosong", jumlahKamar: 0, ownerId: "usr_kosong" });
+    const kosong = (await getRingkasanKos(db, "org_kosong"))!.kamar;
+    assert.deepEqual([kosong.total, kosong.persenTerisi, kosong.potensiSewaKosong], [0, 0, 0]);
   });
 
   it("organisasi tidak dikenal → null", async () => {

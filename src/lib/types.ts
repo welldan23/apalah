@@ -118,9 +118,16 @@ export type RekapTagihan = {
 };
 
 export type RingkasanKamar = {
+  /** Kamar aktif (kamar nonaktif tidak dihitung). */
   total: number;
   terisi: number;
   kosong: number;
+  /** Persen hunian dibulatkan; 0 bila belum ada kamar. */
+  persenTerisi: number;
+  /** Total harga sewa kamar kosong per bulan. */
+  potensiSewaKosong: number;
+  /** Kamar yang dinonaktifkan (mis. renovasi). */
+  nonaktif: number;
   perTipe: RoomTypeSummary[];
   /** Semua kamar, urut nomor kamar. */
   daftar: RoomCell[];

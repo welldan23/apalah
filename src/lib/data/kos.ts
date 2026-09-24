@@ -1,7 +1,7 @@
 // Ringkasan Kos & Kamar dari database — dipakai Dashboard Kos dan endpoint
 // GET /api/dashboard/ringkasan. Query selalu dibatasi satu organisasi.
 
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import type { RingkasanKos, RoomTypeSummary } from "@/lib/types";
@@ -59,12 +59,19 @@ export async function getRingkasanKos(
   }
 
   const terisi = daftar.filter((k) => k.status === "terisi").length;
+  const [{ nonaktif }] = await db
+    .select({ nonaktif: count() })
+    .from(rooms)
+    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.aktif, false)));
   return {
     organization,
     kamar: {
       total: daftar.length,
       terisi,
       kosong: daftar.length - terisi,
+      persenTerisi: daftar.length ? Math.round((terisi / daftar.length) * 100) : 0,
+      potensiSewaKosong: daftar.filter((k) => k.status === "kosong").reduce((total, k) => total + k.hargaSewa, 0),
+      nonaktif,
       perTipe: [...perTipe.values()],
       daftar,
     },

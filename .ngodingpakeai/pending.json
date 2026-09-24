@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "ab12e0c99005bfd185757bd6eab68419dbd063e8",
+  "generatedForCommit": "a4cf3e18b81d4f02f7c0fdc17e5dcf7d548739b2",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -250,7 +250,7 @@
     },
     {
       "path": "src/app/api/dashboard/aksi/keluar-penghuni/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 844
     },
@@ -301,6 +301,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 872
+    },
+    {
+      "path": "src/app/api/dashboard/kamar/kosong/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1339
     },
     {
       "path": "src/app/api/dashboard/kamar/route.ts",
@@ -484,7 +490,7 @@
     },
     {
       "path": "src/components/kamar/daftar-nonaktif.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2026
     },
@@ -496,7 +502,7 @@
     },
     {
       "path": "src/components/kamar/keluar-penghuni.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5344
     },
@@ -862,13 +868,13 @@
     },
     {
       "path": "src/lib/aksi/keluar-penghuni.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4059
     },
     {
       "path": "src/lib/aksi/penghuni.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 9792
     },
@@ -964,7 +970,7 @@
     },
     {
       "path": "src/lib/data/kamar.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6928
     },
@@ -1090,15 +1096,15 @@
     },
     {
       "path": "src/lib/kamar-kosong.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2174
+      "size": 2936
     },
     {
       "path": "src/lib/kamar-kosong.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1853
+      "size": 2798
     },
     {
       "path": "src/lib/kosta/deps.ts",

@@ -43,9 +43,8 @@ export function RoomSummary({
   namaKos: string;
   kamar: DashboardData["kamar"];
 }) {
-  const persenTerisi = Math.round((kamar.terisi / kamar.total) * 100);
+  const { persenTerisi } = kamar;
   const kosong = kamar.daftar.filter((k) => k.status === "kosong");
-  const potensiKosong = kosong.reduce((total, k) => total + k.hargaSewa, 0);
   const ringkasan = [
     {
       label: "Terisi",
@@ -57,8 +56,8 @@ export function RoomSummary({
     {
       label: "Kosong",
       nilai: kamar.kosong,
-      persen: 100 - persenTerisi,
-      catatan: kosong.length > 0 ? `Potensi ${formatRupiahSingkat(potensiKosong)}/bln` : "Semua terisi",
+      persen: kamar.total ? 100 - persenTerisi : 0,
+      catatan: kamar.kosong > 0 ? `Potensi ${formatRupiahSingkat(kamar.potensiSewaKosong)}/bln` : "Semua terisi",
       href: "/kamar/kosong",
     },
   ];
