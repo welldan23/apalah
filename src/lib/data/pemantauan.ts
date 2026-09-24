@@ -5,7 +5,9 @@ import { connection } from "next/server";
 
 import { getDb } from "@/db";
 import { getDaftarTagihanPembayaran, type TagihanPembayaran } from "@/lib/data/pembayaran";
+import { getPerluReview } from "@/lib/data/perlu-review";
 import { getWorkspaceSession } from "@/lib/data/session";
+import type { PembayaranPerluReview } from "@/lib/types";
 import { hariIniWib, periodeValid } from "@/lib/waktu";
 
 export type HalamanPembayaran = {
@@ -13,6 +15,8 @@ export type HalamanPembayaran = {
   periode: string;
   periodeBerjalan: string;
   tagihan: TagihanPembayaran[];
+  /** Semua tagihan Perlu Review lintas periode — untuk banner notifikasi. */
+  perluReview: PembayaranPerluReview[];
 };
 
 export async function getHalamanPembayaran(periodeDiminta?: string): Promise<HalamanPembayaran> {
@@ -24,8 +28,10 @@ export async function getHalamanPembayaran(periodeDiminta?: string): Promise<Hal
   const periode =
     periodeDiminta && periodeValid(periodeDiminta) ? periodeDiminta : periodeBerjalan;
 
-  const tagihan = await getDaftarTagihanPembayaran(await getDb(), session.organization.id, {
-    periode,
-  });
-  return { hariIni, periode, periodeBerjalan, tagihan };
+  const db = await getDb();
+  const [tagihan, perluReview] = await Promise.all([
+    getDaftarTagihanPembayaran(db, session.organization.id, { periode }),
+    getPerluReview(db, session.organization.id),
+  ]);
+  return { hariIni, periode, periodeBerjalan, tagihan, perluReview };
 }

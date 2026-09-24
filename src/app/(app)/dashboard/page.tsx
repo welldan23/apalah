@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { IncomeSummary } from "@/components/dashboard/income-summary";
 import { InvoiceStatusTable } from "@/components/dashboard/invoice-status-table";
 import { KosOverview } from "@/components/dashboard/kos-overview";
+import { BannerPerluReview } from "@/components/pembayaran/banner-perlu-review";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RoomSummary } from "@/components/dashboard/room-summary";
 import { getDashboardData } from "@/lib/data/dashboard";
@@ -29,7 +30,8 @@ export default async function DashboardPage() {
           </p>
         </header>
 
-        <div className="order-2 lg:order-none lg:col-span-2 lg:row-start-2">
+        <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-2 lg:row-start-2">
+          <BannerPerluReview items={data.perluReview} />
           <KosOverview data={data} />
         </div>
 

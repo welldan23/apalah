@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "a1368d2f7b3c4db2a906b80f078d5b55ed66c6e2",
+  "generatedForCommit": "ae14f1aa0c47c45211fd42e510c4056d93a58075",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -40,7 +40,7 @@
     },
     {
       "path": "README.md",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 2145
     },
@@ -136,9 +136,9 @@
     },
     {
       "path": "src/app/(app)/pembayaran/page.tsx",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1434
+      "size": 1457
     },
     {
       "path": "src/app/(app)/tagihan/page.tsx",
@@ -256,7 +256,7 @@
     },
     {
       "path": "src/components/app-shell/nav-items.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1305
     },
@@ -274,7 +274,7 @@
     },
     {
       "path": "src/components/dashboard/income-summary.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5687
     },
@@ -424,9 +424,15 @@
     },
     {
       "path": "src/components/pembayaran/daftar-pembayaran.tsx",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 9460
+    },
+    {
+      "path": "src/components/pembayaran/detail-tagihan.tsx",
       "reason": "new",
       "language": "typescript",
-      "size": 7448
+      "size": 4908
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
@@ -460,9 +466,9 @@
     },
     {
       "path": "src/components/status-badge.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2468
+      "size": 3116
     },
     {
       "path": "src/components/status-filter-chips.tsx",
@@ -490,7 +496,7 @@
     },
     {
       "path": "src/components/tagihan/periode-nav.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1449
     },
@@ -586,7 +592,7 @@
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2399
     },
@@ -652,7 +658,7 @@
     },
     {
       "path": "src/lib/data/invoice.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4176
     },
@@ -682,33 +688,33 @@
     },
     {
       "path": "src/lib/data/pemantauan.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1104
     },
     {
       "path": "src/lib/data/pemasukan.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4246
     },
     {
       "path": "src/lib/data/pemasukan.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2994
     },
     {
       "path": "src/lib/data/pembayaran.test.ts",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2083
+      "size": 2269
     },
     {
       "path": "src/lib/data/pembayaran.ts",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1827
+      "size": 2476
     },
     {
       "path": "src/lib/data/session.ts",
@@ -784,13 +790,13 @@
     },
     {
       "path": "src/lib/mock/kos-melati.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6685
     },
     {
       "path": "src/lib/mock/kosta.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3986
     },
@@ -838,7 +844,7 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5377
     },

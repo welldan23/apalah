@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ShieldCheck } from "lucide-react";
 
+import { BannerPerluReview } from "@/components/pembayaran/banner-perlu-review";
 import { DaftarPembayaran } from "@/components/pembayaran/daftar-pembayaran";
 import { PeriodeNav } from "@/components/tagihan/periode-nav";
 import { getHalamanPembayaran } from "@/lib/data/pemantauan";
@@ -28,6 +29,7 @@ export default async function PembayaranPage({ searchParams }: PageProps<"/pemba
         <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} basePath="/pembayaran" />
       </header>
 
+      <BannerPerluReview items={data.perluReview} />
       <DaftarPembayaran tagihan={data.tagihan} hariIni={data.hariIni} />
     </div>
   );

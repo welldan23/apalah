@@ -168,6 +168,18 @@ export type DashboardData = {
   pemasukan: Pemasukan;
   /** Invoice periode berjalan, urut dari yang paling perlu ditindak. */
   invoices: InvoiceRow[];
+  /** Tagihan dengan pembayaran tidak cocok (semua periode) — untuk banner notifikasi. */
+  perluReview: PembayaranPerluReview[];
+};
+
+/** Tagihan berstatus Perlu Review beserta uang yang sudah diterima gateway (tanpa pending). */
+export type PembayaranPerluReview = {
+  invoiceId: string;
+  nomorKamar: string;
+  namaPenghuni: string;
+  periode: string;
+  nominal: number;
+  dibayar: number;
 };
 
 /**
