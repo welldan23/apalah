@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "1f5b7c5273fc682e59e509c7f79cf252b8d50f82",
+  "generatedForCommit": "f8eddd6cf5ae1d8bbca37184262e1d9258026c32",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -226,7 +226,7 @@
     },
     {
       "path": "src/app/(app)/reminder/kirim/page.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1140
     },
@@ -690,7 +690,7 @@
       "path": "src/components/quick-actions/reminder-flow.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 6295
+      "size": 7827
     },
     {
       "path": "src/components/quick-actions/rupiah-input.tsx",
@@ -730,13 +730,13 @@
     },
     {
       "path": "src/components/reminder/perlu-diingatkan.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3358
     },
     {
       "path": "src/components/reminder/pilih-penerima.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 8660
     },
@@ -1012,7 +1012,7 @@
     },
     {
       "path": "src/lib/data/halaman-reminder.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3221
     },
@@ -1114,13 +1114,13 @@
     },
     {
       "path": "src/lib/data/reminder.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3146
     },
     {
       "path": "src/lib/data/reminder.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4437
     },
@@ -1431,10 +1431,16 @@
       "size": 3109
     },
     {
-      "path": "src/lib/pesan.ts",
-      "reason": "needs_summary",
+      "path": "src/lib/pesan.test.ts",
+      "reason": "new",
       "language": "typescript",
-      "size": 1818
+      "size": 1168
+    },
+    {
+      "path": "src/lib/pesan.ts",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 2847
     },
     {
       "path": "src/lib/pindah-kamar.test.ts",
@@ -1450,13 +1456,13 @@
     },
     {
       "path": "src/lib/reminder.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3401
     },
     {
       "path": "src/lib/reminder.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4553
     },

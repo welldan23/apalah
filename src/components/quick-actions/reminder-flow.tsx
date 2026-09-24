@@ -7,11 +7,11 @@ import { Send } from "lucide-react";
 import {
   GalatServer,
   PreviewRows,
-  SelesaiState,
   SheetActions,
   SheetBody,
   kirimAksi,
 } from "@/components/quick-actions/action-sheet";
+import { HasilKirim, type HasilKirimReminder } from "@/components/reminder/hasil-kirim";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SheetClose } from "@/components/ui/sheet";
@@ -20,7 +20,6 @@ import { keteranganWaktu } from "@/lib/invoice";
 import { pesanPengingat } from "@/lib/pesan";
 import type { InvoiceRow } from "@/lib/types";
 
-type Hasil = { terkirim: number; gagal: string[]; simulasi: boolean };
 
 /** Kirim Reminder: preview penerima, periode, nominal → konfirmasi owner → kirim. */
 export function ReminderFlow({
@@ -38,7 +37,10 @@ export function ReminderFlow({
   const router = useRouter();
   const [dipilih, setDipilih] = useState(() => new Set(tagihan.map((inv) => inv.id)));
   const [status, setStatus] = useState<"preview" | "mengirim" | "selesai">("preview");
-  const [hasil, setHasil] = useState<Hasil | null>(null);
+  const [hasil, setHasil] = useState<HasilKirimReminder | null>(null);
+  /** Tagihan yang dikirimi saat konfirmasi (tetap walau pilihan berubah). */
+  const [terkirimKe, setTerkirimKe] = useState<InvoiceRow[]>([]);
+  const [mengirimUlang, setMengirimUlang] = useState(false);
   const [galatServer, setGalatServer] = useState<string | null>(null);
 
   const penerima = tagihan.filter((inv) => dipilih.has(inv.id));
@@ -61,9 +63,10 @@ export function ReminderFlow({
     setStatus("mengirim");
     setGalatServer(null);
     try {
-      const data = await kirimAksi<Hasil>("/api/dashboard/aksi/reminder", {
+      const data = await kirimAksi<HasilKirimReminder>("/api/dashboard/aksi/reminder", {
         invoiceIds: penerima.map((inv) => inv.id),
       });
+      setTerkirimKe(penerima);
       setHasil(data);
       setStatus("selesai");
       router.refresh();
@@ -73,19 +76,29 @@ export function ReminderFlow({
     }
   }
 
+  /** Kirim ulang hanya ke yang gagal; angka terkirim bertambah, daftar gagal diganti. */
+  async function kirimUlang(invoiceIds: string[]) {
+    setMengirimUlang(true);
+    setGalatServer(null);
+    try {
+      const data = await kirimAksi<HasilKirimReminder>("/api/dashboard/aksi/reminder", { invoiceIds });
+      setHasil((lama) => (lama ? { ...data, terkirim: lama.terkirim + data.terkirim } : data));
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+    } finally {
+      setMengirimUlang(false);
+    }
+  }
+
   if (status === "selesai" && hasil) {
-    const gagal = hasil.gagal.length
-      ? ` Gagal terkirim ke kamar ${hasil.gagal.join(", ")}, coba kirim ulang nanti.`
-      : "";
     return (
-      <SelesaiState
-        judul={`Reminder terkirim ke ${hasil.terkirim} penyewa`}
-        pesan={`Tercatat di riwayat reminder. Status tagihan berubah otomatis begitu pembayaran masuk.${gagal}`}
-        catatan={
-          hasil.simulasi
-            ? "Mode pengembangan: provider WhatsApp belum disambungkan, pesan hanya dicatat di log server."
-            : undefined
-        }
+      <HasilKirim
+        hasil={hasil}
+        penerima={terkirimKe}
+        onKirimUlang={kirimUlang}
+        mengirimUlang={mengirimUlang}
+        galat={galatServer}
       />
     );
   }
