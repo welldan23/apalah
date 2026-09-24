@@ -11,18 +11,26 @@ import { normalisasiNomorWa } from "../nomor-wa.ts";
 import { MAKS_PERCOBAAN_OTP, MASA_BERLAKU_OTP_MENIT, PANJANG_OTP } from "../otp.ts";
 
 export type KonfigurasiAuth = {
-  /** Rahasia penandatangan cookie sesi (BETTER_AUTH_SECRET). */
-  secret: string;
+  /** Rahasia penandatangan cookie sesi; kosong = Better Auth membaca BETTER_AUTH_SECRET. */
+  secret?: string;
   /** Alamat aplikasi, mis. https://kostera.id. */
   baseURL: string;
   /** Kirim kode OTP ke nomor WhatsApp (format 628…). */
   kirimOtp: (nomorWa: string, kode: string) => Promise<void>;
+  /** Batasi jumlah permintaan per IP; bawaan hanya di produksi. */
+  batasPermintaan?: boolean;
+};
+
+/** Batas permintaan OTP per IP: kirim kode (biaya WhatsApp) & tebak kode. */
+export const ATURAN_BATAS = {
+  "/phone-number/send-otp": { window: 10 * 60, max: 5 },
+  "/phone-number/verify": { window: 60, max: 10 },
 };
 
 /** Better Auth mewajibkan email; akun dari nomor WA memakai email sementara ini. */
 export const emailSementara = (nomorWa: string) => `${nomorWa}@wa.kostera.id`;
 
-export function buatAuth(db: Db, { secret, baseURL, kirimOtp }: KonfigurasiAuth) {
+export function buatAuth(db: Db, { secret, baseURL, kirimOtp, batasPermintaan }: KonfigurasiAuth) {
   const waktu = { createdAt: "dibuatPada", updatedAt: "diperbaruiPada" };
   return betterAuth({
     secret,
@@ -50,7 +58,7 @@ export function buatAuth(db: Db, { secret, baseURL, kirimOtp }: KonfigurasiAuth)
     },
     account: { modelName: "accounts", fields: waktu },
     verification: { modelName: "verifications", fields: { expiresAt: "kedaluwarsaPada", ...waktu } },
-    rateLimit: { storage: "database", modelName: "rateLimits" },
+    rateLimit: { enabled: batasPermintaan, storage: "database", modelName: "rateLimits", customRules: ATURAN_BATAS },
     plugins: [
       phoneNumber({
         otpLength: PANJANG_OTP,

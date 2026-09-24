@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { isiTemplate, pesanPengingat, pesanPengingatAwal, TEMPLATE_PENGINGAT, templatePengingat } from "./pesan.ts";
+import { isiTemplate, pesanOtp, pesanPengingat, pesanPengingatAwal, TEMPLATE_PENGINGAT, templateOtp, templatePengingat } from "./pesan.ts";
 
 const inv = (jatuhTempo: string) => ({
   namaPenghuni: "Yoga Saputra",
@@ -49,5 +49,15 @@ describe("template WhatsApp resmi pengingat", () => {
     }
     const t = templatePengingat(inv("2026-09-20"), "Kos Melati", "2026-09-24", "x");
     assert.ok(t.variabel.every((v) => v && !/[\n\t]| {5}/.test(v)));
+  });
+});
+
+describe("pesan kode OTP", () => {
+  it("teks untuk WAHA/log & template autentikasi resmi", () => {
+    assert.equal(
+      pesanOtp("482913", 5),
+      "Kode verifikasi Kostera kamu: 482913. Berlaku 5 menit. Jangan berikan kode ini ke siapa pun, termasuk yang mengaku dari Kostera.",
+    );
+    assert.deepEqual(templateOtp("482913"), { nama: "kostera_kode_otp", bahasa: "id", variabel: ["482913"], tombolUrl: "482913" });
   });
 });

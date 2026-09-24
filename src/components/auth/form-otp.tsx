@@ -8,6 +8,7 @@ import { CatatanSimulasi, FieldError } from "@/components/quick-actions/action-s
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { panggilAuth } from "@/lib/auth/klien";
 import { tampilNomorWa } from "@/lib/nomor-wa";
 import {
   bersihkanKodeOtp,
@@ -18,7 +19,7 @@ import {
   PANJANG_OTP,
 } from "@/lib/otp";
 
-// Tahap frontend: kode belum benar-benar dikirim; kode ini selalu diterima.
+// Tahap ini: pengecekan kode belum tersambung ke server; kode ini selalu diterima.
 const KODE_CONTOH = "123456";
 
 type Status = "isi" | "memeriksa" | "berhasil";
@@ -33,6 +34,7 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
   const [info, setInfo] = useState<string>();
   const [salah, setSalah] = useState(0);
   const [sisaJeda, setSisaJeda] = useState(JEDA_KIRIM_ULANG_DETIK);
+  const [mengirimUlang, setMengirimUlang] = useState(false);
 
   useEffect(() => {
     if (sisaJeda <= 0) return;
@@ -68,13 +70,22 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
     requestAnimationFrame(() => inputRef.current?.focus());
   }
 
-  function kirimUlang() {
-    setSisaJeda(JEDA_KIRIM_ULANG_DETIK);
-    setSalah(0);
-    setKode("");
+  async function kirimUlang() {
+    setMengirimUlang(true);
     setGalat(undefined);
-    setInfo(`Kode baru sudah dikirim ke ${tampilNomorWa(nomorWa)}. Kode sebelumnya tidak berlaku lagi.`);
-    requestAnimationFrame(() => inputRef.current?.focus());
+    setInfo(undefined);
+    try {
+      await panggilAuth("/phone-number/send-otp", { phoneNumber: nomorWa });
+      setSisaJeda(JEDA_KIRIM_ULANG_DETIK);
+      setSalah(0);
+      setKode("");
+      setInfo(`Kode baru sudah dikirim ke ${tampilNomorWa(nomorWa)}. Kode sebelumnya tidak berlaku lagi.`);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    } catch (err) {
+      setGalat((err as Error).message);
+    } finally {
+      setMengirimUlang(false);
+    }
   }
 
   if (status === "berhasil") {
@@ -144,13 +155,13 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
             Belum dapat kode? Kirim ulang dalam <span className="tabular-nums">{formatHitungMundur(sisaJeda)}</span>
           </p>
         ) : (
-          <Button type="button" variant="ghost" size="lg" className="h-11 text-primary" onClick={kirimUlang}>
-            Kirim ulang kode
+          <Button type="button" variant="ghost" size="lg" className="h-11 text-primary" disabled={mengirimUlang} onClick={kirimUlang}>
+            {mengirimUlang ? "Mengirim…" : "Kirim ulang kode"}
           </Button>
         )}
       </div>
 
-      <CatatanSimulasi>Mode contoh: kode belum benar-benar dikirim. Pakai kode {KODE_CONTOH}.</CatatanSimulasi>
+      <CatatanSimulasi>Mode contoh: pengecekan kode belum tersambung — pakai kode {KODE_CONTOH}.</CatatanSimulasi>
     </form>
   );
 }

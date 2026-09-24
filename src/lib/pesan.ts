@@ -80,3 +80,19 @@ export function templatePengingat(inv: DataTagihan, namaKos: string, hariIni: st
     tombolUrl: tokenInvoice,
   };
 }
+
+/**
+ * Template autentikasi (WhatsApp Cloud API) untuk kode OTP: daftarkan dengan kategori Authentication,
+ * bahasa Indonesia (id), dan tombol "Salin kode". Isinya baku dari Meta; variabel {{1}} = kode.
+ */
+export const TEMPLATE_OTP = { nama: "kostera_kode_otp" } as const;
+
+/** Pesan kode OTP untuk provider teks (WAHA, log). */
+export function pesanOtp(kode: string, masaBerlakuMenit: number) {
+  return `Kode verifikasi Kostera kamu: ${kode}. Berlaku ${masaBerlakuMenit} menit. Jangan berikan kode ini ke siapa pun, termasuk yang mengaku dari Kostera.`;
+}
+
+/** Template OTP resmi: kode di isi pesan dan di tombol salin kode. */
+export function templateOtp(kode: string): TemplateWhatsApp {
+  return { nama: TEMPLATE_OTP.nama, bahasa: "id", variabel: [kode], tombolUrl: kode };
+}
