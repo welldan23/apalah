@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "3baade0771730ad0724f7868c003dd363ad2fc10",
+  "generatedForCommit": "558675ebcecf5a4be9b69c04031d5cfe70b22e08",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -16,7 +16,7 @@
     },
     {
       "path": ".gitignore",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": null,
       "size": 529
     },
@@ -40,7 +40,7 @@
     },
     {
       "path": "README.md",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 1633
     },
@@ -52,25 +52,25 @@
     },
     {
       "path": "drizzle/0000_skema_dashboard.sql",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "sql",
       "size": 6459
     },
     {
       "path": "drizzle/meta/0000_snapshot.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 20689
     },
     {
       "path": "drizzle/meta/_journal.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 209
     },
     {
       "path": "drizzle.config.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 320
     },
@@ -82,19 +82,19 @@
     },
     {
       "path": "next.config.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 133
+      "size": 217
     },
     {
       "path": "package-lock.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 455948
     },
     {
       "path": "package.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 1263
     },
@@ -127,6 +127,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1092
+    },
+    {
+      "path": "src/app/api/dashboard/ringkasan/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 538
     },
     {
       "path": "src/app/globals.css",
@@ -394,37 +400,37 @@
     },
     {
       "path": "src/db/index.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1991
     },
     {
       "path": "src/db/migrate.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1466
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3505
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5197
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2333
     },
     {
       "path": "src/db/testing.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 562
     },
@@ -436,9 +442,21 @@
     },
     {
       "path": "src/lib/data/dashboard.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4240
+      "size": 3534
+    },
+    {
+      "path": "src/lib/data/kos.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2991
+    },
+    {
+      "path": "src/lib/data/kos.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1995
     },
     {
       "path": "src/lib/data/session.ts",
@@ -472,9 +490,9 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3383
+      "size": 3589
     },
     {
       "path": "src/lib/utils.ts",

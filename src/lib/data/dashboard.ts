@@ -1,20 +1,14 @@
 // Kontrak data halaman Dashboard Kos.
-// Kos & kamar sudah dibaca dari database; tagihan & pemasukan masih dari data tiruan
+// Kos, kamar, dan invoice dibaca dari database; pemasukan masih dari data tiruan
 // sampai lapisan backend-nya selesai — bentuk `DashboardData` tetap sama.
 
 import { connection } from "next/server";
 
 import { getDb } from "@/db";
+import { getDaftarInvoice } from "@/lib/data/invoice";
 import { getRingkasanKos } from "@/lib/data/kos";
 import { getWorkspaceSession } from "@/lib/data/session";
-import {
-  MOCK_HARI_INI,
-  MOCK_PERIODE,
-  mockInvoices,
-  mockPayments,
-  mockRooms,
-  mockTenants,
-} from "@/lib/mock/kos-melati";
+import { mockPayments } from "@/lib/mock/kos-melati";
 import type {
   DashboardData,
   InvoiceRow,
@@ -22,45 +16,23 @@ import type {
   PaymentRow,
   RekapTagihan,
 } from "@/lib/types";
-
-// Urutan tampil: yang perlu ditindak dulu, yang sudah beres belakangan.
-const URUTAN_STATUS: Record<InvoiceStatus, number> = {
-  jatuh_tempo: 0,
-  perlu_review: 1,
-  menunggu: 2,
-  terkirim: 3,
-  draft: 4,
-  lunas: 5,
-};
-
-function urutkanInvoice(a: InvoiceRow, b: InvoiceRow) {
-  const beda = URUTAN_STATUS[a.status] - URUTAN_STATUS[b.status];
-  if (beda !== 0) return beda;
-  if (a.status === "lunas") {
-    return (b.dibayarPada ?? "").localeCompare(a.dibayarPada ?? "");
-  }
-  return a.jatuhTempo.localeCompare(b.jatuhTempo);
-}
+import { hariIniWib } from "@/lib/waktu";
 
 export async function getDashboardData(): Promise<DashboardData> {
   // Data dashboard selalu per-request (milik workspace yang sedang masuk), jangan di-prerender.
   await connection();
 
   const session = await getWorkspaceSession();
-  const ringkasan = await getRingkasanKos(await getDb(), session.organization.id);
-  if (!ringkasan) throw new Error(`Organisasi ${session.organization.id} tidak ditemukan`);
+  const organizationId = session.organization.id;
+  const hariIni = hariIniWib();
+  const periode = hariIni.slice(0, 7);
 
-  const tenantById = new Map(mockTenants.map((t) => [t.id, t]));
-  const roomById = new Map(mockRooms.map((r) => [r.id, r]));
-
-  const invoices: InvoiceRow[] = mockInvoices
-    .filter((inv) => inv.periode === MOCK_PERIODE)
-    .map((inv) => ({
-      ...inv,
-      namaPenghuni: tenantById.get(inv.tenantId)?.nama ?? "—",
-      nomorKamar: roomById.get(inv.roomId)?.nomorKamar ?? "—",
-    }))
-    .sort(urutkanInvoice);
+  const db = await getDb();
+  const [ringkasan, invoices] = await Promise.all([
+    getRingkasanKos(db, organizationId),
+    getDaftarInvoice(db, organizationId, { periode }),
+  ]);
+  if (!ringkasan) throw new Error(`Organisasi ${organizationId} tidak ditemukan`);
 
   const rekap = (rows: InvoiceRow[]): RekapTagihan => ({
     jumlah: rows.length,
@@ -91,8 +63,8 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     organization: ringkasan.organization,
     owner: session.user,
-    hariIni: MOCK_HARI_INI,
-    periode: MOCK_PERIODE,
+    hariIni,
+    periode,
     kamar: ringkasan.kamar,
     tagihan: {
       total: rekap(invoices),
