@@ -64,7 +64,20 @@ describe("alur preview → konfirmasi aksi Kosta", () => {
     assert.equal(terkirim.length, 3);
   });
 
+  it("konfirmasi berikutnya tidak mengirim ulang ke penyewa yang baru dihubungi (< 24 jam)", async () => {
+    const preview = await siapkanDraftReminder(db, PEMILIK);
+    const sebelum = terkirim.length;
+    const hasil = await putuskanDraft(db, { draftId: preview!.draftId!, organizationId: ORG, keputusan: "setuju" }, deps);
+    assert.equal(
+      hasil.balasan,
+      "Tidak ada pengingat yang dikirim. Kamar A05, B06, C05 dilewati karena penyewanya sudah dihubungi dalam 24 jam terakhir.",
+    );
+    assert.equal(terkirim.length, sebelum);
+  });
+
   it("preview reminder dari database; yang sudah bayar sebelum konfirmasi dilewati", async () => {
+    // Pengingat dari tes sebelumnya dianggap sudah dua hari lalu.
+    await db.update(schema.reminders).set({ terkirimPada: new Date(Date.now() - 48 * 3_600_000) });
     const preview = await siapkanDraftReminder(db, PEMILIK);
     assert.ok(preview?.draftId);
     assert.deepEqual(

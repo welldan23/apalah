@@ -133,6 +133,12 @@ export function slotPengingatJatuhWaktu(jadwal: JadwalPengingat[], sekarang: Dat
   return slot;
 }
 
+/**
+ * Galat sementara pada baris reminders yang diklaim sebelum pesannya dikirim. Tertimpa hasil kirim;
+ * tersisa hanya bila proses terputus. Klaim yang masih berjalan dihitung sebagai "sudah dihubungi".
+ */
+export const GALAT_TERPUTUS = "Pengiriman terputus sebelum selesai.";
+
 /** Satu penyewa tidak diingatkan lebih dari sekali dalam rentang ini. */
 export const JEDA_PENGINGAT_JAM = 24;
 

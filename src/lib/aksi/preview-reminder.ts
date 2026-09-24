@@ -1,9 +1,10 @@
 // Preview reminder massal: penerima, isi pesan persis seperti yang akan dikirim, total, dan penyewa
 // yang dilewati karena sudah dihubungi dalam 24 jam terakhir — sebelum owner mengonfirmasi.
 
-import { and, eq, inArray, max, ne } from "drizzle-orm";
+import { and, eq, inArray, max } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
+import { kontakPenyewa } from "../data/reminder.ts";
 import { bolehDiingatkan } from "../reminder.ts";
 import { susunPesanReminder } from "./pesan-reminder.ts";
 
@@ -38,8 +39,7 @@ export async function previewReminder(
   const pesan = await susunPesanReminder(db, organizationId, invoiceIds, { baseUrl, hariIni });
   if (pesan.length === 0) return { penerima: [], dilewati: [], total: 0, periode: [] };
 
-  // Kontak terakhir per penyewa (pesan terkirim apa pun selain konfirmasi lunas) — aturan sama
-  // dengan pilihan penerima & pengingat otomatis.
+  // Kontak terakhir per penyewa — aturan sama dengan konfirmasi kirim & pengingat otomatis.
   const kontak = await db
     .select({ tenantId: reminders.tenantId, waktu: max(reminders.terkirimPada) })
     .from(reminders)
@@ -47,8 +47,7 @@ export async function previewReminder(
       and(
         eq(reminders.organizationId, organizationId),
         inArray(reminders.tenantId, [...new Set(pesan.map((p) => p.tenantId))]),
-        eq(reminders.status, "terkirim"),
-        ne(reminders.jenis, "konfirmasi_lunas"),
+        kontakPenyewa(),
       ),
     )
     .groupBy(reminders.tenantId);

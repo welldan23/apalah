@@ -7,13 +7,15 @@
 // - satu slot per tagihan diklaim dulu di tabel reminders (unique invoice + jenis), jadi dua
 //   putaran yang berjalan bersamaan tidak mengirim dobel.
 
-import { and, eq, gt, inArray, like, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, like } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { GalatAksi } from "../aksi/galat.ts";
 import { susunPesanReminder } from "../aksi/pesan-reminder.ts";
+import { kontakPenyewa } from "../data/reminder.ts";
 import {
   dalamJamKirim,
+  GALAT_TERPUTUS,
   JEDA_PENGINGAT_JAM,
   slotPengingatJatuhWaktu,
   STATUS_BISA_DIINGATKAN,
@@ -33,9 +35,6 @@ export type HasilPengingatOtomatis = {
   /** true bila putaran ini di luar jam kirim wajar — semua pengingat ditunda. */
   ditunda: boolean;
 };
-
-/** Teks sementara saat slot diklaim; tertimpa hasil kirim, tersisa hanya bila proses terputus. */
-const GALAT_TERPUTUS = "Pengiriman terputus sebelum selesai.";
 
 type Kandidat = { organizationId: string; invoiceId: string; tenantId: string; slot: SlotPengingat };
 
@@ -97,8 +96,7 @@ export async function kirimPengingatOtomatis(
     .where(
       and(
         inArray(reminders.tenantId, [...new Set(kandidat.map((k) => k.tenantId))]),
-        eq(reminders.status, "terkirim"),
-        ne(reminders.jenis, "konfirmasi_lunas"),
+        kontakPenyewa(),
         gt(reminders.terkirimPada, new Date(sekarang.getTime() - JEDA_PENGINGAT_JAM * 3_600_000)),
       ),
     );

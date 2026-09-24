@@ -1,11 +1,11 @@
 // Data pengingat bayar dari tabel reminders — riwayat & statistik per kos.
 // Pesan non-pengingat (kirim tagihan, konfirmasi lunas) tidak ikut dihitung.
 
-import { and, desc, eq, gte, inArray, lt, max, notInArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, max, ne, notInArray, or, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { periodeBerikutnya } from "../format.ts";
-import { JENIS_BUKAN_PENGINGAT } from "../reminder.ts";
+import { GALAT_TERPUTUS, JENIS_BUKAN_PENGINGAT } from "../reminder.ts";
 import { getDaftarInvoice } from "./invoice.ts";
 import type { InvoiceRow } from "@/lib/types";
 
@@ -24,6 +24,13 @@ export type RiwayatReminder = {
 };
 
 const awalBulanWib = (periode: string) => new Date(`${periode}-01T00:00:00+07:00`);
+
+/**
+ * Baris reminders yang berarti "penyewa sudah dihubungi" untuk aturan satu pesan per 24 jam:
+ * pesan selain konfirmasi lunas yang terkirim atau sedang dikirim (klaim). Kiriman gagal tidak dihitung.
+ */
+export const kontakPenyewa = () =>
+  and(ne(reminders.jenis, "konfirmasi_lunas"), or(eq(reminders.status, "terkirim"), eq(reminders.galat, GALAT_TERPUTUS)));
 
 /** Pengingat terbaru di atas; `periode` membatasi ke bulan kirim (WIB). */
 export async function getRiwayatReminder(

@@ -256,9 +256,12 @@ async function jalankanReminder(
 
   const hasil = await kirimReminder(db, organizationId, { invoiceIds: masih.map((m) => m.id) }, wa, { baseUrl });
   return [
-    `Pengingat terkirim ke ${hasil.terkirim} penyewa.`,
+    hasil.terkirim || hasil.gagal.length ? `Pengingat terkirim ke ${hasil.terkirim} penyewa.` : "Tidak ada pengingat yang dikirim.",
     hasil.gagal.length ? `Gagal ke kamar ${hasil.gagal.join(", ")}.` : "",
     dilewati ? `${dilewati} tagihan dilewati karena sudah dibayar.` : "",
+    hasil.dilewati.length
+      ? `Kamar ${hasil.dilewati.join(", ")} dilewati karena penyewanya sudah dihubungi dalam 24 jam terakhir.`
+      : "",
     hasil.simulasi ? "(Mode pengembangan: pesan hanya dicatat.)" : "",
   ]
     .filter(Boolean)

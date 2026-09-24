@@ -95,7 +95,9 @@ export function ReminderFlow({
     setGalatServer(null);
     try {
       const data = await kirimAksi<HasilKirimReminder>("/api/dashboard/aksi/reminder", { invoiceIds });
-      setHasil((lama) => (lama ? { ...data, terkirim: lama.terkirim + data.terkirim } : data));
+      setHasil((lama) =>
+        lama ? { ...data, terkirim: lama.terkirim + data.terkirim, dilewati: [...lama.dilewati, ...data.dilewati] } : data,
+      );
       router.refresh();
     } catch (err) {
       setGalatServer((err as Error).message);

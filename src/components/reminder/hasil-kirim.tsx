@@ -9,7 +9,7 @@ import { SheetClose } from "@/components/ui/sheet";
 import type { InvoiceRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export type HasilKirimReminder = { terkirim: number; gagal: string[]; simulasi: boolean };
+export type HasilKirimReminder = { terkirim: number; gagal: string[]; dilewati: string[]; simulasi: boolean };
 
 /** Ringkasan setelah reminder massal dikirim: terkirim vs gagal, kirim ulang yang gagal. */
 export function HasilKirim({
@@ -28,6 +28,8 @@ export function HasilKirim({
 }) {
   const gagal = penerima.filter((inv) => hasil.gagal.includes(inv.nomorKamar));
   const semuaBerhasil = gagal.length === 0;
+  /** Yang benar-benar dicoba dikirimi (tanpa yang dilewati karena baru dihubungi). */
+  const dicoba = penerima.length - hasil.dilewati.length;
 
   return (
     <>
@@ -42,7 +44,7 @@ export function HasilKirim({
             {semuaBerhasil ? <CircleCheck className="size-6" /> : <CircleAlert className="size-6" />}
           </span>
           <p className="text-base font-semibold">
-            Terkirim ke {hasil.terkirim} dari {penerima.length} penyewa
+            Terkirim ke {hasil.terkirim} dari {dicoba} penyewa
           </p>
           <p className="text-sm text-muted-foreground">
             Semua tercatat di riwayat reminder. Status tagihan berubah otomatis begitu pembayaran masuk.
@@ -78,6 +80,12 @@ export function HasilKirim({
             </p>
             <GalatServer pesan={galat} />
           </section>
+        )}
+
+        {hasil.dilewati.length > 0 && (
+          <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+            Kamar {hasil.dilewati.join(", ")} tidak dikirimi karena penyewanya sudah dihubungi dalam 24 jam terakhir.
+          </p>
         )}
 
         {hasil.simulasi && (

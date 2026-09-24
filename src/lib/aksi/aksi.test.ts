@@ -196,7 +196,7 @@ describe("aksi cepat dashboard", () => {
     it("mengirim pesan berisi nominal & link invoice, lalu mencatat riwayat", async () => {
       const ids = ["inv_2026-09_A05", "inv_2026-09_B06", "inv_2026-09_C05"];
       const hasil = await kirimReminder(db, ORG, { invoiceIds: ids }, wa, opsi);
-      assert.deepEqual(hasil, { terkirim: 2, gagal: ["B06"], simulasi: false });
+      assert.deepEqual(hasil, { terkirim: 2, gagal: ["B06"], dilewati: [], simulasi: false });
 
       const a05 = terkirim.find((p) => p.teks.includes("kamar A05"));
       assert.match(a05!.teks, /Halo Rizky, ini pengingat dari Kos Melati/);
@@ -218,7 +218,7 @@ describe("aksi cepat dashboard", () => {
 
     it("tagihan yang belum jatuh tempo juga bisa diingatkan, dengan pesan sebelum jatuh tempo", async () => {
       const hasil = await kirimReminder(db, ORG, { invoiceIds: ["inv_2026-09_A03"] }, wa, opsi);
-      assert.deepEqual(hasil, { terkirim: 1, gagal: [], simulasi: false });
+      assert.deepEqual(hasil, { terkirim: 1, gagal: [], dilewati: [], simulasi: false });
       assert.match(terkirim.at(-1)!.teks, /^Halo Yoga, pengingat dari Kos Melati: .* jatuh tempo 26 Sep 2026 \(2 hari lagi\)/);
     });
 
