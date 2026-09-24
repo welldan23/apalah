@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "473afba79e7acb8b7bc6d051d114686249b67441",
+  "generatedForCommit": "88e5adb3f82637ba235990c2895b53adba2f1aec",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -718,9 +718,9 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5547
+      "size": 5617
     },
     {
       "path": "src/db/schema.ts",
@@ -730,9 +730,9 @@
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4065
+      "size": 4793
     },
     {
       "path": "src/db/testing.ts",
@@ -868,9 +868,9 @@
     },
     {
       "path": "src/lib/data/kosta.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1360
+      "size": 1271
     },
     {
       "path": "src/lib/data/pemantauan.ts",
@@ -999,6 +999,18 @@
       "size": 1982
     },
     {
+      "path": "src/lib/kosta/workspace.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 5153
+    },
+    {
+      "path": "src/lib/kosta/workspace.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4294
+    },
+    {
       "path": "src/lib/landing/content.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -1024,9 +1036,9 @@
     },
     {
       "path": "src/lib/mock/kosta.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3986
+      "size": 4167
     },
     {
       "path": "src/lib/nomor-wa.ts",
@@ -1156,19 +1168,19 @@
     },
     {
       "path": "src/lib/whatsapp/index.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1953
     },
     {
       "path": "src/lib/whatsapp/waha.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2993
     },
     {
       "path": "src/lib/whatsapp/waha.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1819
     },
