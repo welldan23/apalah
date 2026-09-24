@@ -19,11 +19,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatPeriode, formatRupiah, formatTanggalPendek } from "@/lib/format";
-import { keteranganWaktu } from "@/lib/invoice";
+import {
+  PILIHAN_URUT,
+  keteranganWaktu,
+  parseUrutInvoice,
+  urutkanInvoice,
+} from "@/lib/invoice";
 import type { InvoiceRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-/** Daftar Invoice satu periode: cari nama penghuni/kamar dan saring per status (disimpan di URL). */
+/** Daftar Invoice satu periode: cari nama penghuni/kamar, saring per status, dan urutkan (disimpan di URL). */
 export function DaftarInvoice({
   invoices,
   hariIni,
@@ -37,8 +42,9 @@ export function DaftarInvoice({
   const searchParams = useSearchParams();
   const filter = parseStatusFilter(searchParams.get("status"));
   const cari = searchParams.get("q") ?? "";
+  const urut = parseUrutInvoice(searchParams.get("urut"));
 
-  function setParam(nama: "status" | "q", nilai: string | null) {
+  function setParam(nama: "status" | "q" | "urut", nilai: string | null) {
     const params = new URLSearchParams(searchParams.toString());
     if (nilai) params.set(nama, nilai);
     else params.delete(nama);
@@ -55,8 +61,10 @@ export function DaftarInvoice({
           inv.nomorKamar.toLowerCase().includes(kataKunci),
       )
     : invoices;
-  const tersaring =
-    filter === "semua" ? hasilCari : hasilCari.filter((inv) => inv.status === filter);
+  const tersaring = urutkanInvoice(
+    filter === "semua" ? hasilCari : hasilCari.filter((inv) => inv.status === filter),
+    urut,
+  );
   const totalTersaring = tersaring.reduce((jumlah, inv) => jumlah + inv.nominal, 0);
 
   if (invoices.length === 0) {
@@ -76,16 +84,30 @@ export function DaftarInvoice({
   return (
     <Card className="gap-0 py-0 shadow-none">
       <div className="flex flex-col gap-3 border-b p-4">
-        <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            aria-label="Cari nama penghuni atau nomor kamar"
-            placeholder="Cari penghuni atau kamar"
-            className="h-11 bg-card pl-9 text-base sm:h-10 sm:text-sm"
-            value={cari}
-            onChange={(e) => setParam("q", e.target.value)}
-          />
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              aria-label="Cari nama penghuni atau nomor kamar"
+              placeholder="Cari penghuni atau kamar"
+              className="h-11 bg-card pl-9 text-base sm:h-10 sm:text-sm"
+              value={cari}
+              onChange={(e) => setParam("q", e.target.value)}
+            />
+          </div>
+          <select
+            aria-label="Urutkan tagihan"
+            className="h-11 w-full rounded-lg border border-input bg-card px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10 sm:w-56 sm:text-sm"
+            value={urut}
+            onChange={(e) => setParam("urut", e.target.value === "prioritas" ? null : e.target.value)}
+          >
+            {PILIHAN_URUT.map(({ value, label }) => (
+              <option key={value} value={value}>
+                Urut: {label}
+              </option>
+            ))}
+          </select>
         </div>
         <StatusFilterChips
           invoices={hasilCari}

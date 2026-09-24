@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "9fe767368c8dc1700c93beab3bd7115abe4ef81e",
+  "generatedForCommit": "0992da36362f0081e0007d9366ec530ad09ddabf",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -40,7 +40,7 @@
     },
     {
       "path": "README.md",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "markdown",
       "size": 2046
     },
@@ -129,6 +129,12 @@
       "size": 322
     },
     {
+      "path": "src/app/(app)/tagihan/page.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1370
+    },
+    {
       "path": "src/app/(marketing)/layout.tsx",
       "reason": "needs_summary",
       "language": "typescript",
@@ -178,7 +184,7 @@
     },
     {
       "path": "src/app/api/landing/konten/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 316
     },
@@ -226,9 +232,9 @@
     },
     {
       "path": "src/components/app-shell/nav-items.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1308
+      "size": 1307
     },
     {
       "path": "src/components/app-shell/user-avatar.tsx",
@@ -250,9 +256,9 @@
     },
     {
       "path": "src/components/dashboard/invoice-status-table.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 9145
+      "size": 7267
     },
     {
       "path": "src/components/dashboard/kos-overview.tsx",
@@ -391,6 +397,24 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 2468
+    },
+    {
+      "path": "src/components/status-filter-chips.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2133
+    },
+    {
+      "path": "src/components/tagihan/daftar-invoice.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 7931
+    },
+    {
+      "path": "src/components/tagihan/periode-nav.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1340
     },
     {
       "path": "src/components/ui/avatar.tsx",
@@ -579,16 +603,28 @@
       "size": 606
     },
     {
-      "path": "src/lib/format.test.ts",
-      "reason": "needs_summary",
+      "path": "src/lib/data/tagihan.ts",
+      "reason": "new",
       "language": "typescript",
-      "size": 2611
+      "size": 1181
+    },
+    {
+      "path": "src/lib/format.test.ts",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 2817
     },
     {
       "path": "src/lib/format.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3171
+      "size": 3406
+    },
+    {
+      "path": "src/lib/invoice.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 768
     },
     {
       "path": "src/lib/landing/content.ts",
@@ -598,13 +634,13 @@
     },
     {
       "path": "src/lib/landing/konten-publik.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1078
     },
     {
       "path": "src/lib/landing/konten-publik.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1133
     },
