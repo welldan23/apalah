@@ -1,10 +1,10 @@
-// Kontrak data halaman Reminder Otomatis.
-// Riwayat, statistik, tunggakan, dan antrian dari database. Tahap frontend: jadwal masih jadwal
-// bawaan H-3/H/H+3 (disimpan di reminder_schedules pada tahap backend) — bentuk data tetap sama.
+// Kontrak data halaman Reminder Otomatis: jadwal & saklar otomatis, riwayat, statistik,
+// tunggakan, dan antrian — semuanya dari database.
 
 import { connection } from "next/server";
 
 import { getDb } from "@/db";
+import { getPengaturanPengingat } from "@/lib/aksi/jadwal-pengingat";
 import { getDaftarInvoice } from "@/lib/data/invoice";
 import {
   getKandidatReminder,
@@ -15,7 +15,7 @@ import {
   type StatistikReminder,
 } from "@/lib/data/reminder";
 import { getWorkspaceSession } from "@/lib/data/session";
-import { antrianPengingat, JADWAL_BAWAAN, type AntrianPengingat, type JadwalPengingat } from "@/lib/reminder";
+import { antrianPengingat, type AntrianPengingat, type JadwalPengingat } from "@/lib/reminder";
 import type { InvoiceRow } from "@/lib/types";
 import { hariIniWib, periodeValid } from "@/lib/waktu";
 
@@ -42,17 +42,17 @@ export async function getHalamanReminder(): Promise<HalamanReminder> {
   const periode = hariIni.slice(0, 7);
   const db = await getDb();
 
-  const [statistik, semuaTagihan, riwayat] = await Promise.all([
+  const [statistik, semuaTagihan, riwayat, { otomatisAktif, jadwal }] = await Promise.all([
     getStatistikReminder(db, org, periode),
     getDaftarInvoice(db, org, {}),
     getRiwayatReminder(db, org, { batas: 8 }),
+    getPengaturanPengingat(db, org),
   ]);
-  const jadwal = JADWAL_BAWAAN;
   return {
     hariIni,
     periode,
     namaKos: session.organization.namaKos,
-    otomatisAktif: true,
+    otomatisAktif,
     jadwal,
     statistik,
     menunggak: semuaTagihan.filter((t) => t.status === "jatuh_tempo"),
@@ -63,7 +63,7 @@ export async function getHalamanReminder(): Promise<HalamanReminder> {
 
 export type HalamanJadwalPengingat = Pick<HalamanReminder, "hariIni" | "otomatisAktif" | "jadwal" | "antrian">;
 
-/** Halaman Jadwal pengingat: jadwal (tahap frontend: bawaan) + antrian 7 hari untuk tiap jadwal. */
+/** Halaman Jadwal pengingat: saklar otomatis & jadwal tersimpan + antrian 7 hari untuk tiap jadwal. */
 export async function getHalamanJadwalPengingat(): Promise<HalamanJadwalPengingat> {
   const { hariIni, otomatisAktif, jadwal, antrian } = await getHalamanReminder();
   return { hariIni, otomatisAktif, jadwal, antrian };

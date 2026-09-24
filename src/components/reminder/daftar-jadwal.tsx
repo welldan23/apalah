@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Pencil, Plus, Save } from "lucide-react";
 
-import { ActionSheet, CatatanSimulasi } from "@/components/quick-actions/action-sheet";
+import { ActionSheet, GalatServer, kirimAksi } from "@/components/quick-actions/action-sheet";
 import { FormJadwal } from "@/components/reminder/form-jadwal";
 import { Saklar } from "@/components/saklar";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,12 @@ const urutkan = (jadwal: JadwalPengingat[]) => [...jadwal].sort((a, b) => a.offs
 
 /** Daftar jadwal pengingat: saklar utama + saklar per jadwal, dengan jumlah pengingat minggu ini. */
 export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPengingat) {
+  const router = useRouter();
   const [pengaturan, setPengaturan] = useState<Pengaturan>({ otomatisAktif, jadwal: urutkan(jadwal) });
   const [tersimpan, setTersimpan] = useState<Pengaturan>({ otomatisAktif, jadwal: urutkan(jadwal) });
   const [baruDisimpan, setBaruDisimpan] = useState(false);
+  const [menyimpan, setMenyimpan] = useState(false);
+  const [galat, setGalat] = useState<string | null>(null);
   /** null = tertutup; indeks undefined = tambah baru. */
   const [form, setForm] = useState<{ indeks?: number } | null>(null);
   const berubah = JSON.stringify(pengaturan) !== JSON.stringify(tersimpan);
@@ -32,7 +36,26 @@ export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPe
 
   function ubah(perubahan: Partial<Pengaturan>) {
     setBaruDisimpan(false);
+    setGalat(null);
     setPengaturan((p) => ({ ...p, ...perubahan }));
+  }
+
+  async function simpan() {
+    setMenyimpan(true);
+    setGalat(null);
+    try {
+      const hasil = await kirimAksi<Pengaturan>("/api/dashboard/jadwal-pengingat", pengaturan, "PUT");
+      const baru = { otomatisAktif: hasil.otomatisAktif, jadwal: urutkan(hasil.jadwal) };
+      setPengaturan(baru);
+      setTersimpan(baru);
+      setBaruDisimpan(true);
+      // Antrian "minggu ini" dihitung ulang di server dari jadwal yang baru.
+      router.refresh();
+    } catch (err) {
+      setGalat(err instanceof Error ? err.message : "Jadwal gagal disimpan. Coba lagi.");
+    } finally {
+      setMenyimpan(false);
+    }
   }
 
   const ubahJadwal = (offset: number, aktif: boolean) =>
@@ -153,6 +176,7 @@ export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPe
         diingatkan, dan satu penyewa tidak diingatkan lebih dari sekali sehari.
       </p>
 
+      <GalatServer pesan={galat} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {baruDisimpan && !berubah && (
           <p role="status" className="flex items-center gap-1.5 text-sm text-success">
@@ -160,18 +184,9 @@ export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPe
             Jadwal tersimpan.
           </p>
         )}
-        {baruDisimpan && !berubah && <CatatanSimulasi>Mode contoh: jadwal belum benar-benar disimpan ke server.</CatatanSimulasi>}
-        <Button
-          size="lg"
-          className="h-11"
-          disabled={!berubah}
-          onClick={() => {
-            setTersimpan(pengaturan);
-            setBaruDisimpan(true);
-          }}
-        >
+        <Button size="lg" className="h-11" disabled={!berubah || menyimpan} onClick={simpan}>
           <Save data-icon="inline-start" />
-          Simpan jadwal
+          {menyimpan ? "Menyimpan…" : "Simpan jadwal"}
         </Button>
       </div>
     </div>
