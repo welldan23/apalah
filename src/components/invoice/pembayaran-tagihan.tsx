@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Clock, Copy, Landmark, QrCode } from "lucide-react";
+import { Check, CircleCheck, Clock, Copy, Eye, Landmark, LoaderCircle, QrCode } from "lucide-react";
 
 import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
+import type { PembayaranPublik } from "@/lib/data/invoice-publik";
 import { formatRupiah, formatWaktu } from "@/lib/format";
 import {
   cariMetode,
@@ -16,7 +17,11 @@ import {
   type IdMetodeBayar,
   type InstruksiBayar,
 } from "@/lib/pembayaran/metode";
+import { JEDA_CEK_STATUS_MS, statusAkhir, statusKonfirmasi, type StatusKonfirmasi } from "@/lib/pembayaran/status-bayar";
 import { cn } from "@/lib/utils";
+
+/** Keadaan tagihan saat halaman bayar dibuka — acuan mendeteksi pembayaran baru. */
+type KeadaanAwal = { sudahDiterima: number; pembayaran: Pick<PembayaranPublik, "status">[] };
 
 /**
  * Tahap frontend: instruksi contoh (nomor VA/QR belum asli). Tahap backend: POST
@@ -30,13 +35,34 @@ function instruksiContoh(metode: IdMetodeBayar, nominal: number): InstruksiBayar
     : { metode, nominal, kedaluwarsaPada, nomorVa: "8808000012345678" };
 }
 
-/** Bayar tagihan lewat tautan: pilih metode → instruksi QRIS / Virtual Account dengan batas waktu. */
-export function PembayaranTagihan({ token, nominal }: { token: string; nominal: number }) {
+/**
+ * Bayar tagihan lewat tautan: pilih metode → instruksi QRIS / Virtual Account dengan batas waktu →
+ * status dicek otomatis sampai pembayaran diterima (Lunas) atau perlu diperiksa pemilik kos.
+ */
+export function PembayaranTagihan({
+  token,
+  nominal,
+  nomorInvoice,
+  awal,
+}: {
+  token: string;
+  nominal: number;
+  nomorInvoice: string;
+  awal: KeadaanAwal;
+}) {
   const [pilihan, setPilihan] = useState<IdMetodeBayar>("qris");
   const [instruksi, setInstruksi] = useState<InstruksiBayar | null>(null);
 
   if (instruksi) {
-    return <InstruksiPembayaran token={token} instruksi={instruksi} onGantiMetode={() => setInstruksi(null)} />;
+    return (
+      <InstruksiPembayaran
+        token={token}
+        nomorInvoice={nomorInvoice}
+        awal={awal}
+        instruksi={instruksi}
+        onGantiMetode={() => setInstruksi(null)}
+      />
+    );
   }
 
   return (
@@ -89,17 +115,42 @@ export function PembayaranTagihan({ token, nominal }: { token: string; nominal: 
 
 function InstruksiPembayaran({
   token,
+  nomorInvoice,
+  awal,
   instruksi,
   onGantiMetode,
 }: {
   token: string;
+  nomorInvoice: string;
+  awal: KeadaanAwal;
   instruksi: InstruksiBayar;
   onGantiMetode: () => void;
 }) {
   const metode = cariMetode(instruksi.metode)!;
   const [sisaMs, setSisaMs] = useState(() => new Date(instruksi.kedaluwarsaPada).getTime() - Date.now());
   const [tersalin, setTersalin] = useState(false);
+  const [status, setStatus] = useState<StatusKonfirmasi>("menunggu");
+  const [mengecek, setMengecek] = useState(false);
   const kedaluwarsa = sisaMs <= 0;
+
+  const cekStatus = useCallback(async () => {
+    setMengecek(true);
+    try {
+      const res = await fetch(`/api/invoice/${token}`, { cache: "no-store" });
+      if (res.ok) setStatus(statusKonfirmasi(awal, await res.json()));
+    } catch {
+      // Koneksi putus sebentar — dicoba lagi di putaran berikutnya.
+    } finally {
+      setMengecek(false);
+    }
+  }, [token, awal]);
+
+  // Cek otomatis sampai statusnya final (lunas / diperiksa).
+  useEffect(() => {
+    if (statusAkhir(status)) return;
+    const t = setInterval(cekStatus, JEDA_CEK_STATUS_MS);
+    return () => clearInterval(t);
+  }, [status, cekStatus]);
 
   useEffect(() => {
     const batas = new Date(instruksi.kedaluwarsaPada).getTime();
@@ -116,6 +167,10 @@ function InstruksiPembayaran({
     } catch {
       // Clipboard tidak tersedia (mis. bukan HTTPS) — nomor tetap bisa dipilih manual.
     }
+  }
+
+  if (statusAkhir(status)) {
+    return <KonfirmasiPembayaran token={token} nomorInvoice={nomorInvoice} status={status} />;
   }
 
   return (
@@ -171,19 +226,63 @@ function InstruksiPembayaran({
         </ol>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        Sudah bayar? Status tagihan berubah jadi Lunas otomatis begitu pembayaran diterima — tidak perlu kirim bukti
-        transfer.
+      <p
+        role="status"
+        className={cn(
+          "flex items-start gap-2 rounded-lg px-3 py-2 text-sm",
+          status === "diproses" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground",
+        )}
+      >
+        <LoaderCircle className="mt-0.5 size-4 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+        {status === "diproses"
+          ? "Pembayaran terdeteksi, sedang diproses bank/e-wallet. Halaman ini akan berubah sendiri begitu selesai."
+          : "Menunggu pembayaran — dicek otomatis. Tidak perlu kirim bukti transfer; status jadi Lunas sendiri begitu uang diterima."}
       </p>
       <div className="flex flex-col gap-2">
-        <Button asChild size="lg" className="h-11">
-          <Link href={`/invoice/${token}`}>Cek status tagihan</Link>
+        <Button size="lg" className="h-11" disabled={mengecek} onClick={cekStatus}>
+          {mengecek ? "Mengecek…" : "Cek sekarang"}
         </Button>
         <Button variant="ghost" size="lg" className="h-11" onClick={onGantiMetode}>
           Ganti cara bayar
         </Button>
       </div>
       <CatatanSimulasi>Mode contoh: nomor Virtual Account dan kode QR ini belum asli — jangan dibayar.</CatatanSimulasi>
+    </section>
+  );
+}
+
+/** Layar akhir: pembayaran diterima (Lunas) atau masuk tapi nominalnya perlu diperiksa pemilik kos. */
+function KonfirmasiPembayaran({
+  token,
+  nomorInvoice,
+  status,
+}: {
+  token: string;
+  nomorInvoice: string;
+  status: Extract<StatusKonfirmasi, "lunas" | "diperiksa">;
+}) {
+  const lunas = status === "lunas";
+  return (
+    <section aria-live="polite" className="flex flex-col items-center gap-4 rounded-2xl border bg-card px-5 py-8 text-center">
+      <span
+        className={cn(
+          "grid size-14 place-items-center rounded-full",
+          lunas ? "bg-success-soft text-success" : "bg-warning-soft text-warning",
+        )}
+      >
+        {lunas ? <CircleCheck className="size-7" aria-hidden="true" /> : <Eye className="size-7" aria-hidden="true" />}
+      </span>
+      <div>
+        <h2 className="text-lg font-semibold">{lunas ? "Pembayaran diterima" : "Pembayaran masuk, sedang diperiksa"}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {lunas
+            ? `Tagihan ${nomorInvoice} sudah Lunas. Terima kasih! Konfirmasi juga dikirim ke WhatsApp kamu.`
+            : "Nominal yang masuk belum sama dengan tagihan. Pemilik kos akan memeriksanya dan menghubungimu bila perlu."}
+        </p>
+      </div>
+      <Button asChild size="lg" className="h-11 w-full">
+        <Link href={`/invoice/${token}`}>{lunas ? "Lihat bukti pembayaran" : "Lihat rincian tagihan"}</Link>
+      </Button>
     </section>
   );
 }

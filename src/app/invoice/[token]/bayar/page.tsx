@@ -54,7 +54,12 @@ export default async function BayarTagihanPage({ params }: PageProps<"/invoice/[
         )}
       </section>
 
-      <PembayaranTagihan token={token} nominal={sisa} />
+      <PembayaranTagihan
+        token={token}
+        nominal={sisa}
+        nomorInvoice={inv.nomorInvoice}
+        awal={{ sudahDiterima: inv.sudahDiterima, pembayaran: inv.pembayaran.map((p) => ({ status: p.status })) }}
+      />
     </main>
   );
 }
