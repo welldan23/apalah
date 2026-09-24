@@ -42,9 +42,14 @@ export function FormTiket({ token, namaKos }: { token: string; namaKos: string }
           </p>
         </div>
         <CatatanSimulasi>Mode contoh: tiket belum benar-benar tersimpan.</CatatanSimulasi>
-        <Button asChild size="lg" className="h-11 w-full">
-          <Link href={`/invoice/${token}`}>Kembali ke tagihan</Link>
-        </Button>
+        <div className="flex w-full flex-col gap-2">
+          <Button asChild size="lg" className="h-11">
+            <Link href={`/invoice/${token}/tiket/status`}>Lihat status tiket</Link>
+          </Button>
+          <Button asChild variant="ghost" size="lg" className="h-11">
+            <Link href={`/invoice/${token}`}>Kembali ke tagihan</Link>
+          </Button>
+        </div>
       </section>
     );
   }

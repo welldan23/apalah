@@ -29,3 +29,23 @@ export function periksaTiket({ kategori, deskripsi }: { kategori: string; deskri
   else if (panjang > PANJANG_DESKRIPSI.maks) galat.deskripsi = `Maksimal ${PANJANG_DESKRIPSI.maks} karakter.`;
   return galat;
 }
+
+export const URUTAN_STATUS_TIKET: StatusTiket[] = ["baru", "diproses", "selesai"];
+
+export type TiketPenyewa = {
+  id: string;
+  /** Nomor tiket untuk disebut ke pemilik kos, mis. "TKT-0012". */
+  nomor: string;
+  kategori: KategoriTiket;
+  deskripsi: string;
+  status: StatusTiket;
+  /** ISO datetime. */
+  dibuatPada: string;
+  diperbaruiPada: string;
+};
+
+/** Tiket yang masih berjalan (baru/diproses) di atas, lalu yang selesai; masing-masing terbaru dulu. */
+export function urutkanTiket<T extends Pick<TiketPenyewa, "status" | "dibuatPada">>(tiket: T[]): T[] {
+  const selesai = (t: T) => (t.status === "selesai" ? 1 : 0);
+  return [...tiket].sort((a, b) => selesai(a) - selesai(b) || b.dibuatPada.localeCompare(a.dibuatPada));
+}

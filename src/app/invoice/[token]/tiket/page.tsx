@@ -42,6 +42,12 @@ export default async function BuatTiketPage({ params }: PageProps<"/invoice/[tok
         </p>
       </div>
       <FormTiket token={token} namaKos={inv.namaKos} />
+      <Link
+        href={`/invoice/${token}/tiket/status`}
+        className="inline-flex min-h-11 items-center justify-center text-sm font-medium text-primary hover:underline"
+      >
+        Lihat status tiket sebelumnya
+      </Link>
     </main>
   );
 }

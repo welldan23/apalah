@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { KATEGORI_TIKET, labelKategori, periksaTiket } from "./tiket.ts";
+import { KATEGORI_TIKET, labelKategori, periksaTiket, urutkanTiket } from "./tiket.ts";
 
 describe("tiket keluhan penyewa", () => {
   it("kategori tetap & labelnya", () => {
@@ -17,5 +17,18 @@ describe("tiket keluhan penyewa", () => {
       deskripsi: "Ceritakan masalahnya minimal 10 karakter.",
     });
     assert.deepEqual(periksaTiket({ kategori: "lainnya", deskripsi: "x".repeat(1001) }), { deskripsi: "Maksimal 1000 karakter." });
+  });
+
+  it("urutan daftar: yang masih berjalan dulu, lalu selesai; terbaru di atas", () => {
+    const t = (id: string, status: "baru" | "diproses" | "selesai", dibuatPada: string) => ({ id, status, dibuatPada });
+    assert.deepEqual(
+      urutkanTiket([
+        t("a", "selesai", "2026-09-20T01:00:00Z"),
+        t("b", "diproses", "2026-09-10T01:00:00Z"),
+        t("c", "baru", "2026-09-22T01:00:00Z"),
+        t("d", "selesai", "2026-09-23T01:00:00Z"),
+      ]).map((x) => x.id),
+      ["c", "b", "d", "a"],
+    );
   });
 });
