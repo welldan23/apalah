@@ -1,10 +1,11 @@
-// Kontrak data halaman Pilih kos: semua kos (workspace) yang boleh dikelola pengguna yang sedang masuk.
+// Kontrak data halaman Pilih kos: semua kos (workspace) yang bisa dibuka pengguna yang sedang masuk —
+// sama dengan GET /api/akun/workspace dan aturan POST /api/akun/workspace-aktif.
 
 import { redirect } from "next/navigation";
 
 import { getDb } from "@/db";
+import { daftarKeanggotaanAktif } from "@/lib/auth/workspace";
 import { getSesiPengguna } from "@/lib/data/session";
-import { daftarWorkspace } from "@/lib/kosta/workspace";
 import type { WorkspaceRingkas } from "@/lib/types";
 
 export type HalamanPilihKos = {
@@ -17,7 +18,8 @@ export type HalamanPilihKos = {
 export async function getHalamanPilihKos(): Promise<HalamanPilihKos> {
   const sesi = await getSesiPengguna();
   if (!sesi) redirect("/masuk");
-  const workspaces = await daftarWorkspace(await getDb(), sesi.user.id);
+  const workspaces = await daftarKeanggotaanAktif(await getDb(), sesi.user.id);
   if (workspaces.length === 0) redirect("/daftar/workspace");
-  return { namaPengguna: sesi.user.name, aktifId: sesi.session.organizationId ?? null, workspaces };
+  const aktifId = workspaces.some((w) => w.id === sesi.session.organizationId) ? (sesi.session.organizationId ?? null) : null;
+  return { namaPengguna: sesi.user.name, aktifId, workspaces };
 }

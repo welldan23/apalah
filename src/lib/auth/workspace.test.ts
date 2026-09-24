@@ -8,7 +8,7 @@ import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
 import { GalatAksi } from "../aksi/galat.ts";
-import { pilihWorkspaceAktif, tentukanWorkspace } from "./workspace.ts";
+import { daftarKeanggotaanAktif, pilihWorkspaceAktif, tentukanWorkspace } from "./workspace.ts";
 
 describe("sesi & pembatasan akses organisasi", () => {
   let db: Db;
@@ -25,6 +25,18 @@ describe("sesi & pembatasan akses organisasi", () => {
     await isiDataContoh(db);
   });
   after(() => tutup());
+
+  it("daftar workspace: semua keanggotaan aktif dengan perannya, urut nama kos", async () => {
+    assert.deepEqual(
+      (await daftarKeanggotaanAktif(db, "usr_ratna")).map((w) => [w.namaKos, w.peran, w.jumlahKamar]),
+      [
+        ["Griya Asri", "admin", 20],
+        ["Kos Mawar", "owner", 12],
+        ["Kos Melati", "owner", 40],
+      ],
+    );
+    assert.deepEqual(await daftarKeanggotaanAktif(db, "usr_tidak_ada"), []);
+  });
 
   it("beberapa kos & belum memilih → pilih kos; kos di sesi dipakai beserta perannya", async () => {
     // Ratna: owner Kos Melati & Kos Mawar, admin Griya Asri.
@@ -61,6 +73,7 @@ describe("sesi & pembatasan akses organisasi", () => {
       pilihWorkspaceAktif(db, { userId: "usr_ratna", sessionId: "s2" }, "org_griya_asri"),
       (err) => err instanceof GalatAksi && err.status === 403,
     );
+    assert.deepEqual((await daftarKeanggotaanAktif(db, "usr_ratna")).map((w) => w.namaKos), ["Kos Mawar", "Kos Melati"]);
   });
 
   it("pilih kos aktif: hanya kos yang dikelola; sesi orang lain tidak ikut berubah", async () => {

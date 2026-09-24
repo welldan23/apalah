@@ -28,7 +28,8 @@ export type HasilWorkspace =
 
 type SesiLogin = { userId: string; sessionId: string; organizationId: string | null };
 
-async function keanggotaanAktif(db: Db, userId: string) {
+/** Kos yang bisa dibuka pengguna (keanggotaan aktif, peran apa pun), urut nama kos. */
+export async function daftarKeanggotaanAktif(db: Db, userId: string) {
   return db
     .select({
       id: organizations.id,
@@ -50,7 +51,7 @@ export async function tentukanWorkspace(db: Db, sesi: SesiLogin): Promise<HasilW
     .where(eq(users.id, sesi.userId));
   if (!pengguna) return { status: "tanpa_sesi" };
 
-  const anggota = await keanggotaanAktif(db, sesi.userId);
+  const anggota = await daftarKeanggotaanAktif(db, sesi.userId);
   const pilihan = anggota.find((a) => a.id === sesi.organizationId) ?? (anggota.length === 1 ? anggota[0] : undefined);
   if (!pilihan) return { status: anggota.length ? "pilih_kos" : "tanpa_kos" };
 
@@ -67,7 +68,7 @@ export async function pilihWorkspaceAktif(
   { userId, sessionId }: { userId: string; sessionId: string },
   organizationId: string,
 ): Promise<Organization> {
-  const pilihan = (await keanggotaanAktif(db, userId)).find((a) => a.id === organizationId);
+  const pilihan = (await daftarKeanggotaanAktif(db, userId)).find((a) => a.id === organizationId);
   if (!pilihan) throw new GalatAksi("Kamu tidak punya akses ke kos ini.", 403);
   await db.update(sessions).set({ organizationId }).where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)));
   return { id: pilihan.id, namaKos: pilihan.namaKos, alamat: pilihan.alamat, jumlahKamar: pilihan.jumlahKamar };
