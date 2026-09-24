@@ -11,6 +11,7 @@ import {
   labelJenisReminder,
   parseStatusRiwayat,
   periksaJadwal,
+  periodeDiRiwayat,
   saringRiwayatReminder,
 } from "./reminder.ts";
 
@@ -74,25 +75,28 @@ describe("bolehDiingatkan", () => {
 
 describe("saring riwayat reminder", () => {
   const riwayat = [
-    { id: "1", jenis: "H+3", status: "terkirim", namaPenghuni: "Rizky Ramadhan", nomorKamar: "A05" },
-    { id: "2", jenis: "manual", status: "gagal", namaPenghuni: "Dewi Lestari", nomorKamar: "B06" },
-    { id: "3", jenis: "H", status: "gagal", namaPenghuni: "Tiara Ramadhani", nomorKamar: "B16" },
-    { id: "4", jenis: "H-3", status: "terkirim", namaPenghuni: "Budi", nomorKamar: "C05" },
-    { id: "5", jenis: "H-7", status: "terkirim", namaPenghuni: "Sari", nomorKamar: "A03" },
+    { id: "1", jenis: "H+3", status: "terkirim", periode: "2026-08", namaPenghuni: "Rizky Ramadhan", nomorKamar: "A05" },
+    { id: "2", jenis: "manual", status: "gagal", periode: "2026-09", namaPenghuni: "Dewi Lestari", nomorKamar: "B06" },
+    { id: "3", jenis: "H", status: "gagal", periode: "2026-09", namaPenghuni: "Tiara Ramadhani", nomorKamar: "B16" },
+    { id: "4", jenis: "H-3", status: "terkirim", periode: "2026-09", namaPenghuni: "Budi", nomorKamar: "C05" },
+    { id: "5", jenis: "H-7", status: "terkirim", periode: "2026-10", namaPenghuni: "Sari", nomorKamar: "A03" },
   ];
+  const semua = { status: "semua", jenis: "", tagihan: "", cari: "" } as const;
   const id = (hasil: { id: string }[]) => hasil.map((r) => r.id);
 
-  it("status, jenis, dan kata kunci (nama/kamar, tanpa beda huruf besar) digabung", () => {
-    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "semua", jenis: "", cari: "" })), ["1", "2", "3", "4", "5"]);
-    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "gagal", jenis: "", cari: "" })), ["2", "3"]);
-    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "semua", jenis: "manual", cari: "" })), ["2"]);
-    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "semua", jenis: "", cari: " ramadhan" })), ["1", "3"]);
-    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "gagal", jenis: "", cari: "b1" })), ["3"]);
-    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "terkirim", jenis: "H", cari: "" })), []);
+  it("status, jenis, periode tagihan, dan kata kunci (nama/kamar, tanpa beda huruf besar) digabung", () => {
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, semua)), ["1", "2", "3", "4", "5"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, status: "gagal" })), ["2", "3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, jenis: "manual" })), ["2"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, tagihan: "2026-09" })), ["2", "3", "4"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, cari: " ramadhan" })), ["1", "3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, status: "gagal", cari: "b1" })), ["3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, status: "terkirim", tagihan: "2026-09", cari: "ramadhan" })), []);
   });
 
-  it("pilihan jenis urut Manual, H-x → H+x; status dari URL", () => {
+  it("pilihan jenis urut Manual, H-x → H+x; periode tagihan terbaru dulu; status dari URL", () => {
     assert.deepEqual(jenisDiRiwayat([...riwayat, { jenis: "H-3" }, { jenis: "lain" }]), ["manual", "H-7", "H-3", "H", "H+3", "lain"]);
+    assert.deepEqual(periodeDiRiwayat(riwayat), ["2026-10", "2026-09", "2026-08"]);
     assert.equal(parseStatusRiwayat("gagal"), "gagal");
     assert.equal(parseStatusRiwayat("lunas"), "semua");
     assert.equal(parseStatusRiwayat(null), "semua");

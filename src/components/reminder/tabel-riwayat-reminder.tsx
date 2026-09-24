@@ -15,6 +15,7 @@ import {
   jenisDiRiwayat,
   labelJenisReminder,
   parseStatusRiwayat,
+  periodeDiRiwayat,
   saringRiwayatReminder,
   STATUS_RIWAYAT,
   type StatusRiwayat,
@@ -23,29 +24,41 @@ import { cn } from "@/lib/utils";
 
 const LABEL_STATUS: Record<StatusRiwayat, string> = { semua: "Semua", terkirim: "Terkirim", gagal: "Gagal" };
 
-/** Riwayat pengingat satu bulan: cari nama/kamar, saring status & jenis (disimpan di URL). */
+type ParamFilter = "status" | "jenis" | "tagihan" | "q";
+const TANPA_FILTER: Record<ParamFilter, null> = { status: null, jenis: null, tagihan: null, q: null };
+
+const kelasSelect =
+  "h-11 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10 sm:w-44 sm:text-sm";
+
+/** Riwayat pengingat satu bulan: cari nama/kamar, saring status, jenis & bulan tagihan (disimpan di URL). */
 export function TabelRiwayatReminder({ riwayat, periode }: { riwayat: RiwayatReminder[]; periode: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const status = parseStatusRiwayat(searchParams.get("status"));
   const jenis = searchParams.get("jenis") ?? "";
+  const tagihan = searchParams.get("tagihan") ?? "";
   const cari = searchParams.get("q") ?? "";
 
-  function setParam(nama: "status" | "jenis" | "q", nilai: string | null) {
+  function setParams(perubahan: Partial<Record<ParamFilter, string | null>>) {
     const params = new URLSearchParams(window.location.search);
-    if (nilai) params.set(nama, nilai);
-    else params.delete(nama);
+    for (const [nama, nilai] of Object.entries(perubahan)) {
+      if (nilai) params.set(nama, nilai);
+      else params.delete(nama);
+    }
     const query = params.toString();
     // replaceState tersinkron dengan useSearchParams tanpa memuat ulang data server.
     window.history.replaceState(null, "", `${pathname}${query ? `?${query}` : ""}`);
   }
 
   const pilihanJenis = jenisDiRiwayat(riwayat);
-  // Jumlah per status mengikuti jenis & kata kunci yang sedang dipakai.
-  const tanpaStatus = saringRiwayatReminder(riwayat, { status: "semua", jenis, cari });
-  const tersaring = saringRiwayatReminder(tanpaStatus, { status, jenis: "", cari: "" });
+  const pilihanTagihan = periodeDiRiwayat(riwayat);
+  // Pilihan bulan tagihan baru berguna bila pengingat bulan ini menyangkut lebih dari satu tagihan.
+  const tampilTagihan = pilihanTagihan.length > 1 || tagihan !== "";
+  // Jumlah per status mengikuti filter lain yang sedang dipakai.
+  const tanpaStatus = saringRiwayatReminder(riwayat, { status: "semua", jenis, tagihan, cari });
+  const tersaring = tanpaStatus.filter((r) => status === "semua" || r.status === status);
   const jumlah = (s: StatusRiwayat) => (s === "semua" ? tanpaStatus.length : tanpaStatus.filter((r) => r.status === s).length);
-  const adaFilter = status !== "semua" || jenis !== "" || cari.trim() !== "";
+  const adaFilter = status !== "semua" || jenis !== "" || tagihan !== "" || cari.trim() !== "";
 
   if (riwayat.length === 0) {
     return (
@@ -71,50 +84,76 @@ export function TabelRiwayatReminder({ riwayat, periode }: { riwayat: RiwayatRem
               placeholder="Cari penghuni atau kamar"
               className="h-11 bg-card pl-9 text-base sm:h-10 sm:text-sm"
               value={cari}
-              onChange={(e) => setParam("q", e.target.value)}
+              onChange={(e) => setParams({ q: e.target.value })}
             />
           </div>
-          <select
-            aria-label="Saring jenis pengingat"
-            className="h-11 w-full rounded-lg border border-input bg-card px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10 sm:w-48 sm:text-sm"
-            value={jenis}
-            onChange={(e) => setParam("jenis", e.target.value || null)}
-          >
-            <option value="">Semua jenis</option>
-            {pilihanJenis.map((j) => (
-              <option key={j} value={j}>
-                {labelJenisReminder(j)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div role="group" aria-label="Saring hasil kirim" className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
-          {STATUS_RIWAYAT.map((s) => {
-            const aktif = status === s;
-            return (
-              <button
-                key={s}
-                type="button"
-                aria-pressed={aktif}
-                onClick={() => setParam("status", s === "semua" ? null : s)}
-                className={cn(
-                  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
-                  aktif ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
+          <div className={cn("grid gap-2 sm:flex", tampilTagihan ? "grid-cols-2" : "grid-cols-1")}>
+            <select
+              aria-label="Saring jenis pengingat"
+              className={kelasSelect}
+              value={jenis}
+              onChange={(e) => setParams({ jenis: e.target.value })}
+            >
+              <option value="">Semua jenis</option>
+              {pilihanJenis.map((j) => (
+                <option key={j} value={j}>
+                  {labelJenisReminder(j)}
+                </option>
+              ))}
+            </select>
+            {tampilTagihan && (
+              <select
+                aria-label="Saring bulan tagihan"
+                className={kelasSelect}
+                value={tagihan}
+                onChange={(e) => setParams({ tagihan: e.target.value })}
               >
-                {LABEL_STATUS[s]}
-                <span
+                <option value="">Semua tagihan</option>
+                {/* Nilai dari URL yang tidak ada di data tetap tampil supaya bisa dilepas. */}
+                {(!tagihan || pilihanTagihan.includes(tagihan) ? pilihanTagihan : [tagihan, ...pilihanTagihan]).map((p) => (
+                  <option key={p} value={p}>
+                    {formatPeriode(p)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div role="group" aria-label="Saring hasil kirim" className="flex gap-1.5">
+            {STATUS_RIWAYAT.map((s) => {
+              const aktif = status === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  aria-pressed={aktif}
+                  onClick={() => setParams({ status: s === "semua" ? null : s })}
                   className={cn(
-                    "rounded-full px-1.5 text-xs tabular-nums",
-                    aktif ? "bg-primary-foreground/15" : "bg-card",
-                    !aktif && s === "gagal" && jumlah(s) > 0 && "text-danger",
+                    "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
+                    aktif ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {jumlah(s)}
-                </span>
-              </button>
-            );
-          })}
+                  {LABEL_STATUS[s]}
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 text-xs tabular-nums",
+                      aktif ? "bg-primary-foreground/15" : "bg-card",
+                      !aktif && s === "gagal" && jumlah(s) > 0 && "text-danger",
+                    )}
+                  >
+                    {jumlah(s)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {adaFilter && (
+            <Button variant="ghost" size="sm" className="ml-auto h-9 sm:h-8" onClick={() => setParams(TANPA_FILTER)}>
+              <X data-icon="inline-start" />
+              Reset
+            </Button>
+          )}
         </div>
       </div>
 
@@ -128,11 +167,7 @@ export function TabelRiwayatReminder({ riwayat, periode }: { riwayat: RiwayatRem
               variant="outline"
               size="lg"
               className="h-10"
-              onClick={() => {
-                setParam("q", null);
-                setParam("status", null);
-                setParam("jenis", null);
-              }}
+              onClick={() => setParams(TANPA_FILTER)}
             >
               <X data-icon="inline-start" />
               Hapus pencarian &amp; filter

@@ -33,7 +33,7 @@ export default async function RiwayatReminderPage({ searchParams }: PageProps<"/
             <span className={gagal > 0 ? "text-danger" : undefined}>{gagal} gagal</span> · {penyewa} penyewa diingatkan
           </p>
         </div>
-        <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} basePath="/reminder/riwayat" />
+        <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} basePath="/reminder/riwayat" pertahankanFilter />
       </header>
 
       <TabelRiwayatReminder riwayat={data.riwayat} periode={data.periode} />

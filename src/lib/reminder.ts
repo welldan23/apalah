@@ -127,16 +127,29 @@ function posisiJenis(jenis: string) {
 export const jenisDiRiwayat = (riwayat: { jenis: string }[]) =>
   [...new Set(riwayat.map((r) => r.jenis))].sort((a, b) => posisiJenis(a) - posisiJenis(b) || a.localeCompare(b));
 
-/** Saring riwayat pengingat per status, jenis ("" = semua), dan kata kunci nama penghuni / nomor kamar. */
-export function saringRiwayatReminder<T extends { status: string; jenis: string; namaPenghuni: string; nomorKamar: string }>(
-  riwayat: T[],
-  { status, jenis, cari }: { status: StatusRiwayat; jenis: string; cari: string },
-) {
+/** Periode tagihan unik yang ada di riwayat, terbaru dulu. */
+export const periodeDiRiwayat = (riwayat: { periode: string }[]) =>
+  [...new Set(riwayat.map((r) => r.periode))].sort((a, b) => b.localeCompare(a));
+
+export type FilterRiwayat = {
+  status: StatusRiwayat;
+  /** "" = semua jenis. */
+  jenis: string;
+  /** Periode tagihan YYYY-MM; "" = semua. */
+  tagihan: string;
+  cari: string;
+};
+
+/** Saring riwayat pengingat per status, jenis, periode tagihan, dan kata kunci nama penghuni / nomor kamar. */
+export function saringRiwayatReminder<
+  T extends { status: string; jenis: string; periode: string; namaPenghuni: string; nomorKamar: string },
+>(riwayat: T[], { status, jenis, tagihan, cari }: FilterRiwayat) {
   const kunci = cari.trim().toLowerCase();
   return riwayat.filter(
     (r) =>
       (status === "semua" || r.status === status) &&
       (!jenis || r.jenis === jenis) &&
+      (!tagihan || r.periode === tagihan) &&
       (!kunci || r.namaPenghuni.toLowerCase().includes(kunci) || r.nomorKamar.toLowerCase().includes(kunci)),
   );
 }
