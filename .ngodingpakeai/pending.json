@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "c5fba92dc994c893d0eb39a72acd8dc4c5e6229f",
+  "generatedForCommit": "ab12e0c99005bfd185757bd6eab68419dbd063e8",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -249,6 +249,12 @@
       "size": 1199
     },
     {
+      "path": "src/app/api/dashboard/aksi/keluar-penghuni/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 844
+    },
+    {
       "path": "src/app/api/dashboard/aksi/kirim-tagihan/route.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -262,7 +268,7 @@
     },
     {
       "path": "src/app/api/dashboard/aksi/pindah-kamar/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 785
     },
@@ -466,7 +472,7 @@
     },
     {
       "path": "src/components/kamar/daftar-kamar-kosong.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 12155
     },
@@ -478,9 +484,9 @@
     },
     {
       "path": "src/components/kamar/daftar-nonaktif.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1924
+      "size": 2026
     },
     {
       "path": "src/components/kamar/kartu-kamar.tsx",
@@ -490,13 +496,13 @@
     },
     {
       "path": "src/components/kamar/keluar-penghuni.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4773
+      "size": 5344
     },
     {
       "path": "src/components/kamar/pindah-kamar.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 8302
     },
@@ -855,14 +861,20 @@
       "size": 5965
     },
     {
+      "path": "src/lib/aksi/keluar-penghuni.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4059
+    },
+    {
       "path": "src/lib/aksi/penghuni.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 6810
+      "size": 9792
     },
     {
       "path": "src/lib/aksi/pindah-kamar.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4621
     },
@@ -954,7 +966,7 @@
       "path": "src/lib/data/kamar.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 6818
+      "size": 6928
     },
     {
       "path": "src/lib/data/kos.test.ts",

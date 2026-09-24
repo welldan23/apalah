@@ -29,12 +29,28 @@ const PEMBANDING: Record<UrutKamarKosong, (a: Kamar, b: Kamar) => number> = {
   termahal: (a, b) => b.hargaSewa - a.hargaSewa || nomor(a, b),
 };
 
-/** Tipe `null` = semua tipe. Tidak mengubah array asal. */
+/** Tipe `null` = semua tipe; `hargaMaks` = sewa paling mahal. Tidak mengubah array asal. */
 export function saringKamarKosong<T extends Kamar>(
   kamar: T[],
-  { tipe, urut }: { tipe: string | null; urut: UrutKamarKosong },
+  { tipe, urut, hargaMaks }: { tipe: string | null; urut: UrutKamarKosong; hargaMaks?: number },
 ): T[] {
-  return kamar.filter((k) => !tipe || k.tipe === tipe).sort(PEMBANDING[urut]);
+  return kamar
+    .filter((k) => (!tipe || k.tipe === tipe) && (!hargaMaks || k.hargaSewa <= hargaMaks))
+    .sort(PEMBANDING[urut]);
+}
+
+export type FilterKamarKosong = { tipe: string | null; urut: UrutKamarKosong; hargaMaks?: number };
+
+/** Query `?tipe=&urut=&hargaMaks=` endpoint kamar kosong; nilai tidak dikenal ditolak dengan galat. */
+export function bacaFilterKamarKosong(params: URLSearchParams): { filter: FilterKamarKosong } | { galat: string } {
+  const tipe = params.get("tipe")?.trim() || null;
+  const urut = params.get("urut") || "nomor";
+  const harga = params.get("hargaMaks");
+  if (!PILIHAN_URUT_KOSONG.some((u) => u.value === urut)) return { galat: `Urutan tidak dikenal: ${urut}` };
+  if (harga !== null && !/^[1-9]\d{0,9}$/.test(harga)) return { galat: "hargaMaks harus bilangan bulat rupiah lebih dari 0." };
+  return {
+    filter: { tipe, urut: urut as UrutKamarKosong, ...(harga !== null ? { hargaMaks: Number(harga) } : {}) },
+  };
 }
 
 /** Jumlah hari kamar kosong sejak penghuni terakhir keluar, atau undefined bila tidak diketahui. */

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { hariKosong, parseUrutKosong, saringKamarKosong } from "./kamar-kosong.ts";
+import { bacaFilterKamarKosong, hariKosong, parseUrutKosong, saringKamarKosong } from "./kamar-kosong.ts";
 
 const kamar = [
   { nomorKamar: "A07", tipe: "Standar", hargaSewa: 500_000, kosongSejak: "2026-06-30" },
@@ -48,3 +48,19 @@ describe("hariKosong", () => {
     assert.equal(hariKosong(undefined, "2026-09-24"), undefined);
   });
 });
+
+describe("filter harga & bacaFilterKamarKosong", () => {
+  it("hargaMaks menyaring kamar yang lebih mahal", () => {
+    assert.deepEqual(nomor(saringKamarKosong(kamar, { tipe: null, urut: "nomor", hargaMaks: 500_000 })), ["A07", "A10", "A11"]);
+  });
+
+  it("membaca & memvalidasi query", () => {
+    const baca = (q: string) => bacaFilterKamarKosong(new URLSearchParams(q));
+    assert.deepEqual(baca(""), { filter: { tipe: null, urut: "nomor" } });
+    assert.deepEqual(baca("tipe=AC&urut=termurah&hargaMaks=800000"), { filter: { tipe: "AC", urut: "termurah", hargaMaks: 800_000 } });
+    assert.ok("galat" in baca("urut=acak"));
+    assert.ok("galat" in baca("hargaMaks=0"));
+    assert.ok("galat" in baca("hargaMaks=5jt"));
+  });
+});
+
