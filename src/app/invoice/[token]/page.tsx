@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CircleCheck, Clock, Eye, MessageCircle } from "lucide-react";
+import { CircleCheck, Clock, Eye, MessageCircle, Wallet } from "lucide-react";
 
 import { KosteraLogo } from "@/components/app-shell/kostera-logo";
 import { InvoiceStatusBadge, StatusBadge } from "@/components/status-badge";
@@ -156,24 +157,40 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
           {inv.dibayarPada ? ` pada ${formatTanggal(inv.dibayarPada)}` : ""}.
         </p>
       ) : inv.status === "perlu_review" ? (
-        <p className="flex items-start gap-2 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning">
-          <Eye className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          Pembayaranmu sedang diperiksa pemilik kos karena nominalnya belum cocok dengan
-          tagihan.
-        </p>
+        <div className="flex flex-col gap-3">
+          <p className="flex items-start gap-2 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning">
+            <Eye className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            Pembayaranmu sedang diperiksa pemilik kos karena nominalnya belum cocok dengan
+            tagihan.
+          </p>
+          {sisa > 0 && (
+            <Button asChild size="lg" className="h-11 text-base">
+              <Link href={`/invoice/${token}/bayar`}>
+                <Wallet data-icon="inline-start" />
+                Bayar sisa {formatRupiah(sisa)}
+              </Link>
+            </Button>
+          )}
+        </div>
       ) : (
         <section aria-labelledby="bayar-judul" className="flex flex-col gap-3 rounded-2xl border bg-card p-5">
           <h2 id="bayar-judul" className="font-semibold">
             Cara bayar
           </h2>
           <p className="text-sm text-muted-foreground">
-            Pembayaran online lewat QRIS dan virtual account segera tersedia di halaman ini.
-            Sementara itu, hubungi pemilik kos untuk membayar.
+            Bayar lewat QRIS atau transfer Virtual Account. Status jadi Lunas otomatis begitu
+            pembayaran diterima — tidak perlu kirim bukti transfer.
           </p>
-          <Button asChild size="lg" className="h-11 text-base">
+          <Button asChild size="lg" className="h-12 text-base">
+            <Link href={`/invoice/${token}/bayar`}>
+              <Wallet data-icon="inline-start" />
+              Bayar sekarang
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="h-11">
             <a href={linkWa} target="_blank" rel="noopener noreferrer">
               <MessageCircle data-icon="inline-start" />
-              Hubungi pemilik kos
+              Tanya pemilik kos
             </a>
           </Button>
         </section>
