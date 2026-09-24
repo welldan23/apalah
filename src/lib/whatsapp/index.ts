@@ -1,10 +1,16 @@
 // Adapter pengiriman WhatsApp. Semua pesan keluar lewat satu antarmuka supaya provider
 // bisa diganti lewat env WHATSAPP_PROVIDER tanpa mengubah pemanggil:
 // - "log" (default): tidak mengirim apa pun, hanya mencatat ke log server — untuk pengembangan.
-// - "waha" / "meta": ditambahkan bersama integrasi WhatsApp.
+// - "waha": WAHA self-hosted untuk sandbox/pilot (WAHA_URL, WAHA_API_KEY, WAHA_SESSION);
+//   WHATSAPP_NOMOR_UJI (dipisah koma) membatasi penerima selama uji coba.
+// - "meta": Meta Cloud API/BSP resmi untuk produksi — ditambahkan bersama integrasinya.
+
+import { normalisasiNomorWa } from "../nomor-wa.ts";
+import { buatPengirimWaha } from "./waha.ts";
 
 export type PesanWhatsApp = { ke: string; teks: string };
-export type HasilKirim = { ok: true } | { ok: false; galat: string };
+/** `id` = ID pesan dari provider, bila tersedia. */
+export type HasilKirim = { ok: true; id?: string } | { ok: false; galat: string };
 
 export type PengirimWhatsApp = {
   provider: string;
@@ -22,8 +28,20 @@ const pengirimLog: PengirimWhatsApp = {
   },
 };
 
-export function getPengirimWhatsApp(): PengirimWhatsApp {
-  const provider = process.env.WHATSAPP_PROVIDER ?? "log";
+type Env = Partial<Record<string, string>>;
+
+export function getPengirimWhatsApp(env: Env = process.env): PengirimWhatsApp {
+  const provider = env.WHATSAPP_PROVIDER || "log";
   if (provider === "log") return pengirimLog;
+  if (provider === "waha") {
+    if (!env.WAHA_URL) throw new Error("WHATSAPP_PROVIDER=waha butuh WAHA_URL");
+    const nomorUji = env.WHATSAPP_NOMOR_UJI?.split(",").flatMap((n) => normalisasiNomorWa(n) ?? []);
+    return buatPengirimWaha({
+      url: env.WAHA_URL,
+      apiKey: env.WAHA_API_KEY || undefined,
+      session: env.WAHA_SESSION || undefined,
+      nomorUji: nomorUji?.length ? nomorUji : undefined,
+    });
+  }
   throw new Error(`WHATSAPP_PROVIDER "${provider}" belum didukung`);
 }

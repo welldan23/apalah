@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "da78ddc36fa012b21eb5290bd44c9209b202da19",
+  "generatedForCommit": "32c80aba041fe9a35cf2040293b846ab7efc8261",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -70,7 +70,7 @@
     },
     {
       "path": "drizzle/0003_kosta_percakapan.sql",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "sql",
       "size": 4004
     },
@@ -94,13 +94,13 @@
     },
     {
       "path": "drizzle/meta/0003_snapshot.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 41767
     },
     {
       "path": "drizzle/meta/_journal.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 636
     },
@@ -277,6 +277,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 316
+    },
+    {
+      "path": "src/app/api/webhook/whatsapp/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1762
     },
     {
       "path": "src/app/globals.css",
@@ -706,7 +712,7 @@
     },
     {
       "path": "src/db/schema-kosta.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5199
     },
@@ -718,13 +724,13 @@
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 11919
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4065
     },
@@ -981,6 +987,18 @@
       "size": 1853
     },
     {
+      "path": "src/lib/kosta/terima-pesan.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2812
+    },
+    {
+      "path": "src/lib/kosta/terima-pesan.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1982
+    },
+    {
       "path": "src/lib/landing/content.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -1141,6 +1159,18 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1108
+    },
+    {
+      "path": "src/lib/whatsapp/webhook.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4230
+    },
+    {
+      "path": "src/lib/whatsapp/webhook.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4002
     },
     {
       "path": "tsconfig.json",
