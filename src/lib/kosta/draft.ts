@@ -25,6 +25,19 @@ const urutKamar = <T extends { nomorKamar: string }>(a: T, b: T) =>
   a.nomorKamar.localeCompare(b.nomorKamar, "id", { numeric: true });
 
 async function simpanDraft(db: Db, pemilik: Pemilik, data: DataDraftAksi): Promise<PreviewAksi> {
+  // Preview baru menggantikan preview lama yang belum diputuskan di percakapan yang sama,
+  // supaya jawaban "ya" tidak menyetujui preview yang sudah basi.
+  if (pemilik.conversationId) {
+    await db
+      .update(actionDrafts)
+      .set({ status: "dibatalkan", dikonfirmasiPada: new Date() })
+      .where(
+        and(
+          eq(actionDrafts.conversationId, pemilik.conversationId),
+          eq(actionDrafts.status, "menunggu_konfirmasi"),
+        ),
+      );
+  }
   const [draft] = await db
     .insert(actionDrafts)
     .values({

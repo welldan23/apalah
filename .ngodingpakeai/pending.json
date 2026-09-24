@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "eacb1e846a22b730c19d6cfd7c1834379443f983",
+  "generatedForCommit": "34021dc59f06fea50b5ea5092a92aff505fd8197",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -1054,15 +1054,15 @@
     },
     {
       "path": "src/lib/kosta/tool-baca.test.ts",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3509
+      "size": 4632
     },
     {
       "path": "src/lib/kosta/tool-baca.ts",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4001
+      "size": 5503
     },
     {
       "path": "src/lib/kosta/workspace.test.ts",
