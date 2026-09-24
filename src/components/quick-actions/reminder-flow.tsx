@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SheetClose } from "@/components/ui/sheet";
 import { formatPeriode, formatRupiah } from "@/lib/format";
 import { keteranganWaktu } from "@/lib/invoice";
-import { pesanReminder } from "@/lib/pesan";
+import { pesanPengingat } from "@/lib/pesan";
 import type { InvoiceRow } from "@/lib/types";
 
 type Hasil = { terkirim: number; gagal: string[]; simulasi: boolean };
@@ -43,6 +43,10 @@ export function ReminderFlow({
 
   const penerima = tagihan.filter((inv) => dipilih.has(inv.id));
   const total = penerima.reduce((jumlah, inv) => jumlah + inv.nominal, 0);
+  const lewat = penerima.filter((inv) => inv.jatuhTempo < hariIni).length;
+  const daftarPeriode = [...new Set(penerima.map((inv) => inv.periode))].sort();
+  const [contohId, setContohId] = useState<string | null>(null);
+  const contoh = penerima.find((inv) => inv.id === contohId) ?? penerima[0];
 
   function toggle(id: string, cek: boolean) {
     setDipilih((lama) => {
@@ -147,23 +151,45 @@ export function ReminderFlow({
         <PreviewRows
           rows={[
             ["Penerima", `${penerima.length} penyewa`],
-            ["Periode", formatPeriode(periode)],
+            ["Periode", daftarPeriode.length ? daftarPeriode.map(formatPeriode).join(", ") : formatPeriode(periode)],
             ["Total nominal", formatRupiah(total)],
-            ["Dikirim lewat", "WhatsApp"],
+            ...(lewat && lewat < penerima.length
+              ? [["Status", `${lewat} lewat jatuh tempo · ${penerima.length - lewat} belum`] as [string, string]]
+              : []),
+            ["Dikirim lewat", "WhatsApp, satu per satu"],
           ]}
         />
 
-        {penerima[0] && (
-          <section aria-labelledby="reminder-contoh">
-            <h3 id="reminder-contoh" className="mb-2 text-sm font-medium">
-              Contoh pesan untuk {penerima[0].namaPenghuni}
-            </h3>
+        {contoh && (
+          <section aria-labelledby="reminder-contoh" className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="reminder-contoh" className="text-sm font-medium">
+                Isi pesan
+              </h3>
+              {penerima.length > 1 && (
+                <select
+                  aria-label="Lihat pesan untuk penerima"
+                  className="h-10 max-w-[60%] rounded-lg border border-input bg-card px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  value={contoh.id}
+                  onChange={(e) => setContohId(e.target.value)}
+                >
+                  {penerima.map((inv) => (
+                    <option key={inv.id} value={inv.id}>
+                      {inv.nomorKamar} · {inv.namaPenghuni}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <div className="rounded-xl rounded-tl-sm bg-accent px-3 py-2.5 text-sm text-accent-foreground">
-              {pesanReminder(penerima[0], namaKos)}
+              {pesanPengingat(contoh, namaKos, hariIni)}
               <span className="mt-2 block w-fit rounded-md bg-card/70 px-2 py-1 text-xs font-medium">
-                Link invoice kamar {penerima[0].nomorKamar}
+                Link invoice kamar {contoh.nomorKamar}
               </span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Angka & tanggal diambil dari data tagihan, bukan dibuat AI. Tiap penyewa menerima pesan dengan datanya sendiri.
+            </p>
           </section>
         )}
 

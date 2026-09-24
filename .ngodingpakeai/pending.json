@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "d012a7a4295188e87e9550b6223869ee78aa45d2",
+  "generatedForCommit": "1f5b7c5273fc682e59e509c7f79cf252b8d50f82",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -223,6 +223,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1124
+    },
+    {
+      "path": "src/app/(app)/reminder/kirim/page.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1140
     },
     {
       "path": "src/app/(app)/reminder/page.tsx",
@@ -682,9 +688,9 @@
     },
     {
       "path": "src/components/quick-actions/reminder-flow.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 6254
+      "size": 6295
     },
     {
       "path": "src/components/quick-actions/rupiah-input.tsx",
@@ -706,13 +712,13 @@
     },
     {
       "path": "src/components/reminder/daftar-jadwal.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7503
     },
     {
       "path": "src/components/reminder/form-jadwal.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5283
     },
@@ -724,9 +730,15 @@
     },
     {
       "path": "src/components/reminder/perlu-diingatkan.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3090
+      "size": 3358
+    },
+    {
+      "path": "src/components/reminder/pilih-penerima.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 8660
     },
     {
       "path": "src/components/reminder/ringkasan-reminder.tsx",
@@ -1000,9 +1012,9 @@
     },
     {
       "path": "src/lib/data/halaman-reminder.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2437
+      "size": 3221
     },
     {
       "path": "src/lib/data/invoice-publik.test.ts",
@@ -1102,15 +1114,15 @@
     },
     {
       "path": "src/lib/data/reminder.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2550
+      "size": 3146
     },
     {
       "path": "src/lib/data/reminder.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3022
+      "size": 4437
     },
     {
       "path": "src/lib/data/session.ts",
@@ -1440,13 +1452,13 @@
       "path": "src/lib/reminder.test.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 2965
+      "size": 3401
     },
     {
       "path": "src/lib/reminder.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 4109
+      "size": 4553
     },
     {
       "path": "src/lib/rencana-kamar.test.ts",
