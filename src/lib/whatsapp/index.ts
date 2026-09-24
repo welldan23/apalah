@@ -28,6 +28,15 @@ const pengirimLog: PengirimWhatsApp = {
   },
 };
 
+/** Kirim tanpa melempar: galat jaringan/provider menjadi `{ ok: false, galat }` supaya bisa dicatat. */
+export async function kirimAman(wa: PengirimWhatsApp, pesan: PesanWhatsApp): Promise<HasilKirim> {
+  try {
+    return await wa.kirim(pesan);
+  } catch (e) {
+    return { ok: false, galat: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 type Env = Partial<Record<string, string>>;
 
 export function getPengirimWhatsApp(env: Env = process.env): PengirimWhatsApp {

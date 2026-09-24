@@ -5,7 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { pesanReminder } from "../pesan.ts";
-import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimAman, type HasilKirim, type PengirimWhatsApp } from "../whatsapp/index.ts";
 import { GalatAksi } from "./galat.ts";
 
 const { invoices, organizations, reminders, rooms, tenants } = schema;
@@ -74,27 +74,27 @@ export async function kirimReminder(
   }
 
   // Dikirim satu per satu supaya tidak membanjiri provider WhatsApp.
-  const hasil: { t: (typeof tagihan)[number]; ok: boolean }[] = [];
+  const hasil: { t: (typeof tagihan)[number]; kirim: HasilKirim }[] = [];
   for (const t of tagihan) {
     const teks = pesanReminder(t, kos.namaKos, `${baseUrl}/invoice/${t.tokenPublik}`);
-    const kirim = await wa.kirim({ ke: t.nomorWa, teks }).catch(() => ({ ok: false }) as const);
-    hasil.push({ t, ok: kirim.ok });
+    hasil.push({ t, kirim: await kirimAman(wa, { ke: t.nomorWa, teks }) });
   }
 
   await db.insert(reminders).values(
-    hasil.map(({ t, ok }) => ({
+    hasil.map(({ t, kirim }) => ({
       organizationId,
       invoiceId: t.id,
       tenantId: t.tenantId,
       jenis: "manual",
       kanal: "whatsapp",
-      status: ok ? ("terkirim" as const) : ("gagal" as const),
+      status: kirim.ok ? ("terkirim" as const) : ("gagal" as const),
+      galat: kirim.ok ? null : kirim.galat,
     })),
   );
 
   return {
-    terkirim: hasil.filter((h) => h.ok).length,
-    gagal: hasil.filter((h) => !h.ok).map((h) => h.t.nomorKamar),
+    terkirim: hasil.filter((h) => h.kirim.ok).length,
+    gagal: hasil.filter((h) => !h.kirim.ok).map((h) => h.t.nomorKamar),
     simulasi: wa.simulasi,
   };
 }

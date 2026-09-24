@@ -206,8 +206,12 @@ describe("aksi cepat dashboard", () => {
       const riwayat = await db.select().from(schema.reminders).where(eq(schema.reminders.jenis, "manual"));
       assert.equal(riwayat.length, 3);
       assert.deepEqual(
-        riwayat.map((r) => r.status).sort(),
-        ["gagal", "terkirim", "terkirim"],
+        riwayat.map((r) => [r.status, r.galat]).sort(),
+        [
+          ["gagal", "nomor tidak aktif"],
+          ["terkirim", null],
+          ["terkirim", null],
+        ],
       );
       assert.ok(riwayat.every((r) => r.jenis === "manual" && r.organizationId === ORG));
     });

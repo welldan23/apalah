@@ -14,6 +14,7 @@ import {
   pgEnum,
   pgTable,
   text,
+  time,
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -73,6 +74,8 @@ export const organizations = pgTable(
     ownerId: text()
       .notNull()
       .references(() => users.id),
+    /** Saklar utama pengingat bayar otomatis; jadwalnya di reminder_schedules. */
+    pengingatOtomatis: boolean().notNull().default(true),
     dibuatPada: waktu().notNull().defaultNow(),
   },
   (t) => [check("organizations_jumlah_kamar_tidak_negatif", sql`${t.jumlahKamar} >= 0`)],
@@ -299,6 +302,31 @@ export const payments = pgTable(
   ],
 );
 
+/** Jadwal pengingat bayar otomatis per kos, relatif terhadap jatuh tempo (offset -3 = H-3). */
+export const reminderSchedules = pgTable(
+  "reminder_schedules",
+  {
+    id: id(),
+    organizationId: text()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    offsetHari: integer().notNull(),
+    /** Jam kirim WIB. */
+    jamKirim: time().notNull(),
+    aktif: boolean().notNull().default(true),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("reminder_schedules_organisasi_offset_unik").on(t.organizationId, t.offsetHari),
+    check("reminder_schedules_offset", sql`${t.offsetHari} between -14 and 14`),
+    check("reminder_schedules_jam_kirim", sql`${t.jamKirim} between '06:00' and '21:00'`),
+  ],
+);
+
+/**
+ * Log pesan WhatsApp ke penyewa soal tagihan: pengingat bayar ("manual" / otomatis "H-3", "H", "H+3"),
+ * kirim tagihan ("tagihan"), dan konfirmasi lunas ("konfirmasi_lunas").
+ */
 export const reminders = pgTable(
   "reminders",
   {
@@ -312,13 +340,22 @@ export const reminders = pgTable(
     tenantId: text()
       .notNull()
       .references(() => tenants.id),
-    /** "manual" dari dashboard, atau jadwal otomatis: "H-3" / "H" / "H+3". */
     jenis: text().notNull(),
     kanal: text().notNull().default("whatsapp"),
     status: statusReminderEnum().notNull(),
+    /** Alasan gagal dari provider WhatsApp. */
+    galat: text(),
     terkirimPada: waktu().notNull().defaultNow(),
   },
-  (t) => [index("reminders_invoice").on(t.invoiceId)],
+  (t) => [
+    index("reminders_invoice").on(t.invoiceId),
+    index("reminders_organisasi_waktu").on(t.organizationId, t.terkirimPada),
+    // Pengingat otomatis (jenis "H…") paling banyak sekali per tagihan per jadwal — penjadwal
+    // yang jalan ulang tidak mengirim dobel.
+    uniqueIndex("reminders_otomatis_unik")
+      .on(t.invoiceId, t.jenis)
+      .where(sql`${t.jenis} like 'H%'`),
+  ],
 );
 
 /**

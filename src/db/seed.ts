@@ -15,6 +15,7 @@ import {
   mockRooms,
   mockTenants,
 } from "../lib/mock/kos-melati.ts";
+import { sisipkanJadwalBawaan } from "../lib/aksi/jadwal-pengingat.ts";
 import { mockPemilikLain, mockPercakapanKosta, mockWorkspaceLain } from "../lib/mock/kosta.ts";
 import { getDb, tutupDb, type Db } from "./index.ts";
 import * as schema from "./schema.ts";
@@ -82,6 +83,7 @@ export async function isiDataContoh(db: Db) {
     );
 
     await tx.insert(schema.reminders).values(mockReminders.map((r) => ({ ...r, terkirimPada: new Date(r.terkirimPada) })));
+    await sisipkanJadwalBawaan(tx, mockOrganization.id);
 
     // Kos lain yang juga dikelola owner contoh (sebagai owner / admin) — untuk pemilih workspace.
     await tx.insert(schema.users).values({ ...mockPemilikLain, nomorWaTerverifikasi: true });
@@ -92,6 +94,7 @@ export async function isiDataContoh(db: Db) {
         { organizationId: ws.id, userId: ownerId, peran: "owner" },
         ...(ws.peran === "admin" ? [{ organizationId: ws.id, userId: mockOwner.id, peran: "admin" as const }] : []),
       ]);
+      await sisipkanJadwalBawaan(tx, ws.id);
     }
 
     // Percakapan owner dengan Kosta, berakhir dengan preview pengingat yang menunggu konfirmasi.

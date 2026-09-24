@@ -6,6 +6,7 @@ import { and, count, eq } from "drizzle-orm";
 import { schema, type Db } from "../../db/index.ts";
 import { buatDaftarKamar, MAKS_KAMAR_PER_TIPE, periksaRencana, type RencanaTipe } from "../rencana-kamar.ts";
 import { GalatAksi, nominalValid } from "./galat.ts";
+import { sisipkanJadwalBawaan } from "./jadwal-pengingat.ts";
 
 const { members, organizations, rooms } = schema;
 
@@ -68,6 +69,7 @@ export async function tambahKamar(
         .values({ namaKos: input.kosBaru.namaKos, alamat: input.kosBaru.alamat, jumlahKamar: 0, ownerId: userId })
         .returning({ id: organizations.id });
       await tx.insert(members).values({ organizationId: kos.id, userId, peran: "owner" });
+      await sisipkanJadwalBawaan(tx, kos.id);
       tujuan = kos.id;
     }
 

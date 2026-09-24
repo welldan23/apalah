@@ -50,6 +50,13 @@
       "when": 1790274183365,
       "tag": "0006_kamar_aktif",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790278649290,
+      "tag": "0007_jadwal_pengingat",
+      "breakpoints": true
     }
   ]
 }
