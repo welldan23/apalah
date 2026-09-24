@@ -52,7 +52,7 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
     setInfo(undefined);
     if (nilai === KODE_CONTOH) {
       setStatus("berhasil");
-      router.push("/dashboard");
+      router.push(`/daftar/workspace?nomor=${nomorWa}`);
       return;
     }
     const total = salah + 1;
@@ -85,7 +85,7 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
         </span>
         <div>
           <p className="font-semibold">Nomor terverifikasi</p>
-          <p className="mt-1 text-sm text-muted-foreground">Menyiapkan workspace kos kamu…</p>
+          <p className="mt-1 text-sm text-muted-foreground">Tinggal isi data kos kamu…</p>
         </div>
       </section>
     );
