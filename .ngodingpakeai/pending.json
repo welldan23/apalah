@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "a075c914e6ad0062031d25f65722e839d0e84e28",
+  "generatedForCommit": "eacb1e846a22b730c19d6cfd7c1834379443f983",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -274,7 +274,7 @@
     },
     {
       "path": "src/app/api/kosta/draft/[id]/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1823
     },
@@ -448,7 +448,7 @@
     },
     {
       "path": "src/components/kosta/chat-kosta.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 10744
     },
@@ -730,13 +730,13 @@
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 11907
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5130
     },
@@ -874,7 +874,7 @@
     },
     {
       "path": "src/lib/data/kosta.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1330
     },
@@ -994,13 +994,13 @@
     },
     {
       "path": "src/lib/kosta/draft.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6486
     },
     {
       "path": "src/lib/kosta/draft.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 9453
     },
@@ -1024,7 +1024,7 @@
     },
     {
       "path": "src/lib/kosta/riwayat.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2822
     },
@@ -1051,6 +1051,18 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1982
+    },
+    {
+      "path": "src/lib/kosta/tool-baca.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3509
+    },
+    {
+      "path": "src/lib/kosta/tool-baca.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4001
     },
     {
       "path": "src/lib/kosta/workspace.test.ts",
@@ -1198,7 +1210,7 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6281
     },

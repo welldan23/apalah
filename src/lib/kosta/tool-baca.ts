@@ -5,6 +5,7 @@ import { and, asc, eq } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { getKamarKosong } from "../data/kamar.ts";
+import { getRekapPemasukan } from "../data/pemasukan.ts";
 import { formatPeriode, formatRupiah, formatTanggal, selisihHari } from "../format.ts";
 import { hariKosong } from "../kamar-kosong.ts";
 import type { LampiranKosta } from "@/lib/types";
@@ -105,5 +106,37 @@ export async function toolKamarKosong(
         };
       }),
     },
+  };
+}
+
+/**
+ * Rekap pemasukan satu periode (bawaan bulan berjalan): uang yang sudah masuk dari pembayaran
+ * terverifikasi, plus tagihan yang masih menunggu, jatuh tempo, dan perlu review.
+ */
+export async function toolRekapPemasukan(
+  db: Db,
+  organizationId: string,
+  { periode, hariIni }: { periode?: string; hariIni: string },
+): Promise<BalasanKosta> {
+  const p = periode ?? hariIni.slice(0, 7);
+  const { tagihan, pemasukan } = await getRekapPemasukan(db, organizationId, { periode: p });
+  if (tagihan.total.jumlah === 0 && pemasukan.jumlahPembayaran === 0) {
+    return { teks: `Belum ada tagihan maupun pembayaran untuk ${formatPeriode(p)}.` };
+  }
+
+  const baris: { label: string; nominal: number; catatan?: string }[] = [
+    { label: "Sudah masuk", nominal: pemasukan.bulanIni, catatan: `${pemasukan.jumlahPembayaran} pembayaran` },
+  ];
+  for (const [label, rekap, tambahan] of [
+    ["Menunggu", tagihan.menunggu, ""],
+    ["Jatuh tempo", tagihan.jatuhTempo, ""],
+    ["Perlu review", tagihan.perluReview, " · nominal bayar belum cocok"],
+  ] as const) {
+    if (rekap.jumlah > 0) baris.push({ label, nominal: rekap.nominal, catatan: `${rekap.jumlah} tagihan${tambahan}` });
+  }
+
+  return {
+    teks: `Ini rekap pemasukan ${p === hariIni.slice(0, 7) ? "bulan berjalan" : formatPeriode(p)}, dihitung dari pembayaran yang sudah terverifikasi.`,
+    lampiran: { jenis: "rekap", judul: `Pemasukan ${formatPeriode(p)}`, baris },
   };
 }
