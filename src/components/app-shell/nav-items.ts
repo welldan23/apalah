@@ -23,7 +23,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", labelPendek: "Beranda", icon: LayoutDashboard, siap: true, mobile: true },
-  { href: "/tagihan", label: "Tagihan & Invoice", labelPendek: "Tagihan", icon: ReceiptText, siap: false, mobile: true },
+  { href: "/tagihan", label: "Tagihan & Invoice", labelPendek: "Tagihan", icon: ReceiptText, siap: true, mobile: true },
   { href: "/kamar", label: "Kamar & Penghuni", labelPendek: "Kamar", icon: BedDouble, siap: false, mobile: true },
   { href: "/pembayaran", label: "Pembayaran", labelPendek: "Bayar", icon: Wallet, siap: false, mobile: true },
   { href: "/reminder", label: "Reminder", labelPendek: "Reminder", icon: BellRing, siap: false, mobile: false },

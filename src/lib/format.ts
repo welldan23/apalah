@@ -111,3 +111,10 @@ export function periodeBerikutnya(periode: string) {
   const d = new Date(Date.UTC(tahun, bulan, 1));
   return d.toISOString().slice(0, 7);
 }
+
+/** "2026-09" → "2026-08" */
+export function periodeSebelumnya(periode: string) {
+  const [tahun, bulan] = periode.split("-").map(Number);
+  const d = new Date(Date.UTC(tahun, bulan - 2, 1));
+  return d.toISOString().slice(0, 7);
+}

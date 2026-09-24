@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "a06b987326c90a0cbc631029b1b39a9a2b5897fa",
+  "generatedForCommit": "9fe767368c8dc1700c93beab3bd7115abe4ef81e",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -40,9 +40,9 @@
     },
     {
       "path": "README.md",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "markdown",
-      "size": 1963
+      "size": 2046
     },
     {
       "path": "components.json",
@@ -130,13 +130,13 @@
     },
     {
       "path": "src/app/(marketing)/layout.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 889
     },
     {
       "path": "src/app/(marketing)/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1479
     },
@@ -177,6 +177,12 @@
       "size": 538
     },
     {
+      "path": "src/app/api/landing/konten/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 316
+    },
+    {
       "path": "src/app/globals.css",
       "reason": "needs_summary",
       "language": "css",
@@ -184,19 +190,19 @@
     },
     {
       "path": "src/app/layout.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 940
     },
     {
       "path": "src/app/robots.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 338
     },
     {
       "path": "src/app/sitemap.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 262
     },
@@ -591,6 +597,18 @@
       "size": 9453
     },
     {
+      "path": "src/lib/landing/konten-publik.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1078
+    },
+    {
+      "path": "src/lib/landing/konten-publik.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1133
+    },
+    {
       "path": "src/lib/mock/kos-melati.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -610,7 +628,7 @@
     },
     {
       "path": "src/lib/situs.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 284
     },

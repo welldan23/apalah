@@ -11,6 +11,7 @@ import {
   formatTanggalPendek,
   formatWaktu,
   periodeBerikutnya,
+  periodeSebelumnya,
   selisihHari,
 } from "./format.ts";
 
@@ -69,6 +70,11 @@ describe("tanggal", () => {
     assert.equal(selisihHari("2026-09-24", "2026-09-15"), -9);
     assert.equal(selisihHari("2026-09-24", "2026-09-24"), 0);
     assert.equal(selisihHari("2026-09-24", "2026-10-01"), 7);
+  });
+
+  it("periodeSebelumnya melewati pergantian tahun", () => {
+    assert.equal(periodeSebelumnya("2026-09"), "2026-08");
+    assert.equal(periodeSebelumnya("2026-01"), "2025-12");
   });
 
   it("periodeBerikutnya melewati pergantian tahun", () => {
