@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { keteranganWaktu, parseUrutInvoice, urutkanInvoice } from "./invoice.ts";
+import {
+  keteranganWaktu,
+  parseUrutInvoice,
+  peringatanTagihan,
+  urutkanInvoice,
+} from "./invoice.ts";
 
 const baris = [
   { nomorKamar: "B10", namaPenghuni: "Arif", nominal: 650_000, jatuhTempo: "2026-09-16" },
@@ -51,5 +56,23 @@ describe("keteranganWaktu", () => {
     assert.equal(teks({ status: "menunggu", jatuhTempo: "2026-09-24" }), "Jatuh tempo hari ini");
     assert.equal(teks({ status: "menunggu", jatuhTempo: "2026-09-26" }), "2 hari lagi");
     assert.equal(keteranganWaktu({ status: "jatuh_tempo", jatuhTempo: "2026-09-15" }, "2026-09-24").telat, true);
+  });
+});
+
+describe("peringatanTagihan", () => {
+  const hariIni = "2026-09-24";
+
+  it("tanpa peringatan bila jatuh tempo di dalam periode dan belum lewat", () => {
+    assert.deepEqual(peringatanTagihan({ periode: "2026-10", jatuhTempo: "2026-10-10", hariIni }), []);
+  });
+
+  it("jatuh tempo sudah lewat", () => {
+    const [p] = peringatanTagihan({ periode: "2026-09", jatuhTempo: "2026-09-10", hariIni });
+    assert.match(p, /sudah lewat/);
+  });
+
+  it("jatuh tempo di luar periode", () => {
+    const [p] = peringatanTagihan({ periode: "2026-10", jatuhTempo: "2026-11-05", hariIni });
+    assert.match(p, /di luar periode Oktober 2026/);
   });
 });

@@ -30,6 +30,7 @@ export default async function TagihanPage({ searchParams }: PageProps<"/tagihan"
           <BuatTagihan
             periode={data.periode}
             periodeBerjalan={data.periodeBerjalan}
+            hariIni={data.hariIni}
             kamar={data.kamarTerisi}
           />
         </div>

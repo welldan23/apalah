@@ -1,6 +1,6 @@
 // Keterangan tampilan invoice yang dipakai beberapa halaman.
 
-import { formatTanggalPendek, selisihHari } from "./format.ts";
+import { formatPeriode, formatTanggal, formatTanggalPendek, selisihHari } from "./format.ts";
 import type { InvoiceRow } from "@/lib/types";
 
 /** Keterangan waktu: kapan dibayar, atau seberapa dekat/lewat jatuh tempo. */
@@ -48,4 +48,27 @@ const PEMBANDING: Record<Exclude<UrutInvoice, "prioritas">, (a: BarisUrut, b: Ba
 export function urutkanInvoice<T extends BarisUrut>(invoices: T[], urut: UrutInvoice): T[] {
   if (urut === "prioritas") return invoices;
   return [...invoices].sort(PEMBANDING[urut]);
+}
+
+/** Peringatan di preview Buat tagihan — tidak memblokir, hanya minta owner memastikan. */
+export function peringatanTagihan({
+  periode,
+  jatuhTempo,
+  hariIni,
+}: {
+  periode: string;
+  jatuhTempo: string;
+  hariIni: string;
+}) {
+  const peringatan: string[] = [];
+  if (jatuhTempo < hariIni) {
+    peringatan.push(
+      `Jatuh tempo ${formatTanggal(jatuhTempo)} sudah lewat. Pastikan tanggalnya benar sebelum membuat tagihan.`,
+    );
+  } else if (!jatuhTempo.startsWith(periode)) {
+    peringatan.push(
+      `Jatuh tempo ${formatTanggal(jatuhTempo)} berada di luar periode ${formatPeriode(periode)}. Pastikan sudah benar.`,
+    );
+  }
+  return peringatan;
 }

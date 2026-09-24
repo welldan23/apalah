@@ -25,6 +25,7 @@ import {
   formatTanggal,
   periodeBerikutnya,
 } from "@/lib/format";
+import { peringatanTagihan } from "@/lib/invoice";
 import type { RoomCell } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -36,10 +37,13 @@ type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal", stri
 export function InvoiceFlow({
   periode,
   periodeAwal = periodeBerikutnya(periode),
+  hariIni,
   kamar,
 }: {
   /** Periode berjalan (YYYY-MM). */
   periode: string;
+  /** Hari ini (YYYY-MM-DD, WIB) — untuk peringatan jatuh tempo yang sudah lewat. */
+  hariIni: string;
   /** Periode tagihan yang dipilih saat form dibuka; default periode berikutnya. */
   periodeAwal?: string;
   /** Kamar terisi yang bisa ditagih. */
@@ -94,6 +98,7 @@ export function InvoiceFlow({
   const penerima = tersedia.filter((k) => dipilih.has(k.id));
   const total = penerima.reduce((jumlah, k) => jumlah + nominalUntuk(k), 0);
   const semuaDipilih = penerima.length === tersedia.length;
+  const jumlahSudahDitagih = kamar.length - tersedia.length;
 
   function toggle(id: string, cek: boolean) {
     bersihkan("kamar");
@@ -158,9 +163,26 @@ export function InvoiceFlow({
               ["Penerima", `${penerima.length} penyewa`],
               ["Periode", formatPeriode(periodeTagihan)],
               ["Jatuh tempo", formatTanggal(jatuhTempo)],
+              [
+                "Nominal",
+                modeNominal === "sewa"
+                  ? "Sesuai harga sewa penghuni"
+                  : `${formatRupiah(nominalKhusus ?? 0)} per kamar`,
+              ],
               ["Total nominal", formatRupiah(total)],
+              ...(jumlahSudahDitagih > 0
+                ? [["Dilewati", `${jumlahSudahDitagih} kamar sudah ditagih`] as [string, string]]
+                : []),
             ]}
           />
+          {peringatanTagihan({ periode: periodeTagihan, jatuhTempo, hariIni }).map((pesan) => (
+            <p key={pesan} role="status" className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning">
+              {pesan}
+            </p>
+          ))}
+          <p className="text-xs text-muted-foreground">
+            Setiap penyewa mendapat link invoice publik. Status awal tagihan: Menunggu pembayaran.
+          </p>
           <section aria-labelledby="tagihan-penerima">
             <h3 id="tagihan-penerima" className="mb-2 text-sm font-medium">
               Rincian per kamar

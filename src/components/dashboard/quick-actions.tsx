@@ -61,7 +61,11 @@ export function QuickActions({
         title="Buat tagihan"
         description="Pilih kamar, nominal, dan jatuh tempo. Tagihan dibuat setelah kamu cek preview-nya."
       >
-        <InvoiceFlow periode={periode} kamar={kamar.filter((k) => k.status === "terisi")} />
+        <InvoiceFlow
+          periode={periode}
+          hariIni={hariIni}
+          kamar={kamar.filter((k) => k.status === "terisi")}
+        />
       </ActionSheet>
 
       <ActionSheet

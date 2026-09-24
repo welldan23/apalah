@@ -13,11 +13,13 @@ import type { RoomCell } from "@/lib/types";
 export function BuatTagihan({
   periode,
   periodeBerjalan,
+  hariIni,
   kamar,
 }: {
   /** Periode yang sedang dilihat. */
   periode: string;
   periodeBerjalan: string;
+  hariIni: string;
   /** Kamar terisi yang bisa ditagih. */
   kamar: RoomCell[];
 }) {
@@ -37,7 +39,12 @@ export function BuatTagihan({
         title="Buat tagihan"
         description="Pilih satu atau banyak kamar, nominal, dan jatuh tempo. Tagihan dibuat setelah kamu cek preview-nya."
       >
-        <InvoiceFlow periode={periodeBerjalan} periodeAwal={periodeAwal} kamar={kamar} />
+        <InvoiceFlow
+          periode={periodeBerjalan}
+          periodeAwal={periodeAwal}
+          hariIni={hariIni}
+          kamar={kamar}
+        />
       </ActionSheet>
     </>
   );
