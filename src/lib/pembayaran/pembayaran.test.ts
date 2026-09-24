@@ -10,6 +10,7 @@ import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
 import { bacaNotifikasiMidtrans, tandaTanganMidtransValid } from "./midtrans.ts";
 import { kirimKonfirmasiLunas } from "./konfirmasi.ts";
+import { kirimNotifikasiPerluReview } from "./notifikasi-review.ts";
 import { prosesNotifikasiPembayaran } from "./proses-notifikasi.ts";
 
 const KUNCI = "SB-Mid-server-uji";
@@ -177,6 +178,48 @@ describe("kirimKonfirmasiLunas", () => {
 
   it("tagihan yang belum lunas tidak dikonfirmasi", async () => {
     assert.equal(await kirimKonfirmasiLunas(db, "inv_2026-09_A05", { wa, baseUrl: "https://kostera.id" }), false);
+    assert.equal(terkirim.length, 1);
+  });
+});
+
+describe("kirimNotifikasiPerluReview", () => {
+  let db: Db;
+  let tutup: () => Promise<void>;
+  const terkirim: { ke: string; teks: string }[] = [];
+  const wa = {
+    provider: "uji",
+    simulasi: false,
+    async kirim(p: { ke: string; teks: string }) {
+      terkirim.push(p);
+      return { ok: true as const };
+    },
+  };
+
+  before(async () => {
+    ({ db, tutup } = await buatDbUji());
+    await isiDataContoh(db);
+  });
+  after(() => tutup());
+
+  it("owner dapat WhatsApp berisi selisih & link, tercatat di riwayat chat Kosta", async () => {
+    await prosesNotifikasiPembayaran(db, bacaNotifikasiMidtrans(notif("inv_2026-09_A08", "trx-r1", "settlement", 450_000))!);
+    assert.equal(await kirimNotifikasiPerluReview(db, "inv_2026-09_A08", { wa, baseUrl: "https://kostera.id" }), 1);
+    assert.equal(terkirim[0].ke, "6281234567890");
+    assert.equal(
+      terkirim[0].teks,
+      [
+        "Perlu diperiksa — Kos Melati",
+        "Pembayaran kamar A08 (Bagus Wicaksono) periode September 2026: diterima Rp450.000 dari tagihan Rp500.000 (kurang Rp50.000).",
+        "Status tidak diubah jadi Lunas sampai kamu memeriksanya.",
+        "Cek: https://kostera.id/pembayaran?status=perlu_review",
+      ].join("\n"),
+    );
+    const riwayat = await db.select().from(schema.waMessages).where(eq(schema.waMessages.conversationId, "wac_owner_kos_melati"));
+    assert.ok(riwayat.some((m) => m.arah === "keluar" && m.isi.startsWith("Perlu diperiksa — Kos Melati")));
+  });
+
+  it("tagihan yang tidak Perlu review tidak memicu notifikasi", async () => {
+    assert.equal(await kirimNotifikasiPerluReview(db, "inv_2026-09_A01", { wa, baseUrl: "https://kostera.id" }), 0);
     assert.equal(terkirim.length, 1);
   });
 });
