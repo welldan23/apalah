@@ -74,3 +74,28 @@ export function antrianPengingat(
     .sort((a, b) => a.tanggal.localeCompare(b.tanggal) || a.offset - b.offset)
     .map(({ tanggal, jenis, jam, jumlah, nominal }) => ({ tanggal, jenis, jam, jumlah, nominal }));
 }
+
+export const MAKS_JADWAL = 5;
+export const MAKS_OFFSET_HARI = 14;
+/** Jam kirim yang wajar untuk penyewa. */
+export const JAM_KIRIM = { paling_awal: "06:00", paling_akhir: "21:00" } as const;
+
+/**
+ * Galat jadwal baru/ubahan terhadap daftar jadwal yang ada (string kosong = valid).
+ * `indeksUbah` = posisi jadwal yang sedang diubah (dikecualikan dari cek bentrok).
+ */
+export function periksaJadwal(jadwal: JadwalPengingat, semua: JadwalPengingat[], indeksUbah?: number) {
+  if (!Number.isInteger(jadwal.offsetHari) || Math.abs(jadwal.offsetHari) > MAKS_OFFSET_HARI) {
+    return `Pilih 0–${MAKS_OFFSET_HARI} hari dari jatuh tempo.`;
+  }
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(jadwal.jam)) return "Isi jam kirim, mis. 09:00.";
+  if (jadwal.jam < JAM_KIRIM.paling_awal || jadwal.jam > JAM_KIRIM.paling_akhir) {
+    return "Jam kirim antara 06.00 dan 21.00 supaya tidak mengganggu penyewa.";
+  }
+  const lain = semua.filter((_, i) => i !== indeksUbah);
+  if (lain.some((j) => j.offsetHari === jadwal.offsetHari)) {
+    return `Sudah ada jadwal ${labelJadwal(jadwal.offsetHari)}. Ubah jadwal itu saja.`;
+  }
+  if (indeksUbah === undefined && semua.length >= MAKS_JADWAL) return `Maksimal ${MAKS_JADWAL} jadwal.`;
+  return "";
+}

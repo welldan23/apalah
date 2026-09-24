@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "ae6ee1892feb13a2ddcde26f28a56aa26543cc6b",
+  "generatedForCommit": "ecc2a562fd56f9a26b5ab5479e676bb4a39d6831",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -219,14 +219,20 @@
       "size": 1697
     },
     {
-      "path": "src/app/(app)/reminder/page.tsx",
+      "path": "src/app/(app)/reminder/jadwal/page.tsx",
       "reason": "new",
+      "language": "typescript",
+      "size": 1124
+    },
+    {
+      "path": "src/app/(app)/reminder/page.tsx",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1786
     },
     {
       "path": "src/app/(app)/tagihan/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2488
     },
@@ -430,7 +436,7 @@
     },
     {
       "path": "src/components/app-shell/nav-items.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1303
     },
@@ -694,33 +700,45 @@
     },
     {
       "path": "src/components/reminder/antrian-reminder.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3165
     },
     {
-      "path": "src/components/reminder/kartu-jadwal.tsx",
+      "path": "src/components/reminder/daftar-jadwal.tsx",
       "reason": "new",
       "language": "typescript",
-      "size": 2061
+      "size": 5066
+    },
+    {
+      "path": "src/components/reminder/kartu-jadwal.tsx",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 2322
     },
     {
       "path": "src/components/reminder/perlu-diingatkan.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3090
     },
     {
       "path": "src/components/reminder/ringkasan-reminder.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1519
     },
     {
       "path": "src/components/reminder/riwayat-reminder.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2274
+    },
+    {
+      "path": "src/components/saklar.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1034
     },
     {
       "path": "src/components/status-badge.tsx",
@@ -862,7 +880,7 @@
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5748
     },
@@ -880,7 +898,7 @@
     },
     {
       "path": "src/lib/aksi/aksi.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 9480
     },
@@ -928,7 +946,7 @@
     },
     {
       "path": "src/lib/aksi/status-tagihan.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6840
     },
@@ -976,9 +994,9 @@
     },
     {
       "path": "src/lib/data/halaman-reminder.ts",
-      "reason": "new",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1999
+      "size": 2437
     },
     {
       "path": "src/lib/data/invoice-publik.test.ts",
@@ -1078,13 +1096,13 @@
     },
     {
       "path": "src/lib/data/reminder.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2550
     },
     {
       "path": "src/lib/data/reminder.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3022
     },
@@ -1300,7 +1318,7 @@
     },
     {
       "path": "src/lib/mock/kos-melati.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 8309
     },
@@ -1336,7 +1354,7 @@
     },
     {
       "path": "src/lib/pembayaran/pembayaran.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 10829
     },
@@ -1414,13 +1432,13 @@
     },
     {
       "path": "src/lib/reminder.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2005
     },
     {
       "path": "src/lib/reminder.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2879
     },

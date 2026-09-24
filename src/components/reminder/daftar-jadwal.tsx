@@ -1,26 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Save } from "lucide-react";
+import { Check, Pencil, Plus, Save } from "lucide-react";
 
-import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
+import { ActionSheet, CatatanSimulasi } from "@/components/quick-actions/action-sheet";
+import { FormJadwal } from "@/components/reminder/form-jadwal";
 import { Saklar } from "@/components/saklar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { HalamanJadwalPengingat } from "@/lib/data/halaman-reminder";
-import { keteranganJadwal, labelJadwal, type JadwalPengingat } from "@/lib/reminder";
+import { keteranganJadwal, labelJadwal, MAKS_JADWAL, type JadwalPengingat } from "@/lib/reminder";
 import { cn } from "@/lib/utils";
 
 type Pengaturan = { otomatisAktif: boolean; jadwal: JadwalPengingat[] };
 
+const urutkan = (jadwal: JadwalPengingat[]) => [...jadwal].sort((a, b) => a.offsetHari - b.offsetHari);
+
 /** Daftar jadwal pengingat: saklar utama + saklar per jadwal, dengan jumlah pengingat minggu ini. */
 export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPengingat) {
-  const [pengaturan, setPengaturan] = useState<Pengaturan>({ otomatisAktif, jadwal });
-  const [tersimpan, setTersimpan] = useState<Pengaturan>({ otomatisAktif, jadwal });
+  const [pengaturan, setPengaturan] = useState<Pengaturan>({ otomatisAktif, jadwal: urutkan(jadwal) });
+  const [tersimpan, setTersimpan] = useState<Pengaturan>({ otomatisAktif, jadwal: urutkan(jadwal) });
   const [baruDisimpan, setBaruDisimpan] = useState(false);
+  /** null = tertutup; indeks undefined = tambah baru. */
+  const [form, setForm] = useState<{ indeks?: number } | null>(null);
   const berubah = JSON.stringify(pengaturan) !== JSON.stringify(tersimpan);
 
-  const urut = [...pengaturan.jadwal].sort((a, b) => a.offsetHari - b.offsetHari);
+  const urut = pengaturan.jadwal;
   const mingguIni = (offset: number) =>
     antrian.filter((a) => a.jenis === labelJadwal(offset)).reduce((jumlah, a) => jumlah + a.jumlah, 0);
   const jumlahAktif = pengaturan.jadwal.filter((j) => j.aktif).length;
@@ -32,6 +37,18 @@ export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPe
 
   const ubahJadwal = (offset: number, aktif: boolean) =>
     ubah({ jadwal: pengaturan.jadwal.map((j) => (j.offsetHari === offset ? { ...j, aktif } : j)) });
+
+  function simpanForm(baru: JadwalPengingat) {
+    const indeks = form?.indeks;
+    const daftar = indeks === undefined ? [...pengaturan.jadwal, baru] : pengaturan.jadwal.map((j, i) => (i === indeks ? baru : j));
+    ubah({ jadwal: urutkan(daftar) });
+    setForm(null);
+  }
+
+  function hapus(indeks: number) {
+    ubah({ jadwal: pengaturan.jadwal.filter((_, i) => i !== indeks) });
+    setForm(null);
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -53,7 +70,7 @@ export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPe
 
       <Card className="gap-0 py-0 shadow-none">
         <ul aria-label="Jadwal pengingat" className="divide-y">
-          {urut.map((j) => {
+          {urut.map((j, indeks) => {
             const id = `jadwal-${j.offsetHari}`;
             const aktif = pengaturan.otomatisAktif && j.aktif;
             const jumlah = mingguIni(j.offsetHari);
@@ -76,6 +93,16 @@ export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPe
                     {aktif && ` · ${jumlah ? `${jumlah} pengingat minggu ini` : "belum ada minggu ini"}`}
                   </p>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-10 shrink-0"
+                  aria-label={`Ubah jadwal ${labelJadwal(j.offsetHari)}`}
+                  aria-haspopup="dialog"
+                  onClick={() => setForm({ indeks })}
+                >
+                  <Pencil />
+                </Button>
                 <Saklar
                   nyala={j.aktif}
                   onUbah={(nyala) => ubahJadwal(j.offsetHari, nyala)}
@@ -85,8 +112,41 @@ export function DaftarJadwal({ otomatisAktif, jadwal, antrian }: HalamanJadwalPe
               </li>
             );
           })}
+          {urut.length === 0 && (
+            <li className="px-4 py-8 text-center text-sm text-muted-foreground">Belum ada jadwal. Tambahkan minimal satu.</li>
+          )}
         </ul>
+        <div className="border-t p-3">
+          <Button
+            variant="outline"
+            className="h-11 w-full bg-card sm:w-auto"
+            aria-haspopup="dialog"
+            disabled={urut.length >= MAKS_JADWAL}
+            onClick={() => setForm({})}
+          >
+            <Plus data-icon="inline-start" />
+            {urut.length >= MAKS_JADWAL ? `Maksimal ${MAKS_JADWAL} jadwal` : "Tambah jadwal"}
+          </Button>
+        </div>
       </Card>
+
+      <ActionSheet
+        open={form !== null}
+        onOpenChange={(buka) => !buka && setForm(null)}
+        title={form?.indeks === undefined ? "Tambah jadwal" : "Ubah jadwal"}
+        description="Kapan pengingat dikirim, relatif terhadap tanggal jatuh tempo penyewa."
+      >
+        {form && (
+          <FormJadwal
+            key={form.indeks ?? "baru"}
+            awal={form.indeks === undefined ? undefined : pengaturan.jadwal[form.indeks]}
+            semua={pengaturan.jadwal}
+            indeksUbah={form.indeks}
+            onSimpan={simpanForm}
+            onHapus={form.indeks === undefined ? undefined : () => hapus(form.indeks!)}
+          />
+        )}
+      </ActionSheet>
 
       <p className="text-xs text-muted-foreground">
         Setiap pengingat berisi nominal, jatuh tempo, dan link invoice. Tagihan yang sudah lunas tidak
