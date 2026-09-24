@@ -62,7 +62,11 @@ export async function isiDataContoh(db: Db) {
       mockInvoices.map((inv) => ({ invoiceId: inv.id, label: "Sewa kamar", nominal: inv.nominal })),
     );
     await tx.insert(schema.payments).values(
-      mockPayments.map((p) => ({ ...p, diverifikasiPada: new Date(p.diverifikasiPada) })),
+      mockPayments.map((p) => ({
+        ...p,
+        diverifikasiPada: new Date(p.diverifikasiPada),
+        dibuatPada: new Date(p.diverifikasiPada),
+      })),
     );
 
     // Kos lain yang juga dikelola owner contoh (sebagai owner / admin) — untuk pemilih workspace.

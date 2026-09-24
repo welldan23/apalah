@@ -216,6 +216,25 @@ export const invoiceSchedules = pgTable(
   ],
 );
 
+/**
+ * Notifikasi webhook payment gateway — jaminan idempotensi: event yang sama (provider + event_id)
+ * hanya tercatat & diproses sekali. `hasil` merekam keputusan pemrosesan untuk audit.
+ */
+export const webhookEvents = pgTable(
+  "webhook_events",
+  {
+    id: id(),
+    provider: text().notNull(),
+    eventId: text().notNull(),
+    payload: jsonb().$type<Record<string, unknown>>().notNull(),
+    diterimaPada: waktu().notNull().defaultNow(),
+    diprosesPada: waktu(),
+    /** Mis. "lunas", "perlu_review", "diabaikan: invoice tidak ditemukan". */
+    hasil: text(),
+  },
+  (t) => [uniqueIndex("webhook_events_provider_event_unik").on(t.provider, t.eventId)],
+);
+
 export const payments = pgTable(
   "payments",
   {
@@ -230,6 +249,11 @@ export const payments = pgTable(
     status: statusPembayaranEnum().notNull().default("pending"),
     /** Waktu verifikasi webhook gateway. */
     diverifikasiPada: waktu(),
+    /** Notifikasi gateway yang mencatat pembayaran ini. */
+    webhookEventId: text()
+      .unique("payments_webhook_event_unik")
+      .references(() => webhookEvents.id),
+    dibuatPada: waktu().notNull().defaultNow(),
   },
   (t) => [
     index("payments_invoice").on(t.invoiceId),
