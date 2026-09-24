@@ -1,8 +1,10 @@
-import { CircleAlert, CircleCheck } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, CircleAlert, CircleCheck } from "lucide-react";
 
 import { StatusBadge } from "@/components/status-badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { HalamanReminder } from "@/lib/data/halaman-reminder";
+import type { RiwayatReminder } from "@/lib/data/reminder";
 import { formatPeriode, formatRupiah, formatWaktu } from "@/lib/format";
 import { labelJenisReminder } from "@/lib/reminder";
 
@@ -13,6 +15,15 @@ export function RiwayatReminderTerbaru({ riwayat }: Pick<HalamanReminder, "riway
       <CardHeader className="border-b py-4">
         <CardTitle>Riwayat terbaru</CardTitle>
         <CardDescription>Pengingat yang sudah dikirim ke penyewa.</CardDescription>
+        <CardAction>
+          <Link
+            href="/reminder/riwayat"
+            className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-md px-2 text-sm font-medium text-primary hover:underline"
+          >
+            Lihat semua
+            <ChevronRight className="size-4" aria-hidden="true" />
+          </Link>
+        </CardAction>
       </CardHeader>
       <CardContent className="px-0">
         {riwayat.length === 0 ? (
@@ -31,20 +42,25 @@ export function RiwayatReminderTerbaru({ riwayat }: Pick<HalamanReminder, "riway
                     <span className="tabular-nums">{formatRupiah(r.nominal)}</span>
                   </p>
                 </div>
-                {r.status === "terkirim" ? (
-                  <StatusBadge tone="success" icon={CircleCheck} className="shrink-0">
-                    Terkirim
-                  </StatusBadge>
-                ) : (
-                  <StatusBadge tone="danger" icon={CircleAlert} className="shrink-0">
-                    Gagal
-                  </StatusBadge>
-                )}
+                <StatusKirim status={r.status} />
               </li>
             ))}
           </ul>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** Hasil kirim satu pengingat. */
+export function StatusKirim({ status }: Pick<RiwayatReminder, "status">) {
+  return status === "terkirim" ? (
+    <StatusBadge tone="success" icon={CircleCheck} className="shrink-0">
+      Terkirim
+    </StatusBadge>
+  ) : (
+    <StatusBadge tone="danger" icon={CircleAlert} className="shrink-0">
+      Gagal
+    </StatusBadge>
   );
 }

@@ -17,7 +17,7 @@ import {
 import { getWorkspaceSession } from "@/lib/data/session";
 import { antrianPengingat, JADWAL_BAWAAN, type AntrianPengingat, type JadwalPengingat } from "@/lib/reminder";
 import type { InvoiceRow } from "@/lib/types";
-import { hariIniWib } from "@/lib/waktu";
+import { hariIniWib, periodeValid } from "@/lib/waktu";
 
 export type HalamanReminder = {
   hariIni: string;
@@ -90,4 +90,33 @@ export async function getHalamanKirimReminder(): Promise<HalamanKirimReminder> {
     sekarang: new Date().toISOString(),
     kandidat: await getKandidatReminder(await getDb(), session.organization.id),
   };
+}
+
+/** Batas baris riwayat per bulan — jauh di atas 3 pengingat × jumlah kamar kos kecil–menengah. */
+const BATAS_RIWAYAT_BULANAN = 500;
+
+export type HalamanRiwayatReminder = {
+  /** Bulan kirim yang ditampilkan, YYYY-MM. */
+  periode: string;
+  periodeBerjalan: string;
+  statistik: StatistikReminder;
+  riwayat: RiwayatReminder[];
+  /** true bila riwayat terpotong di batas. */
+  terpotong: boolean;
+};
+
+/** Halaman Riwayat reminder: semua pengingat yang dikirim di satu bulan (WIB). Periode tidak valid = bulan ini. */
+export async function getHalamanRiwayatReminder(periodeDiminta?: string): Promise<HalamanRiwayatReminder> {
+  await connection();
+  const session = await getWorkspaceSession();
+  const org = session.organization.id;
+  const periodeBerjalan = hariIniWib().slice(0, 7);
+  const periode = periodeDiminta && periodeValid(periodeDiminta) ? periodeDiminta : periodeBerjalan;
+  const db = await getDb();
+
+  const [statistik, riwayat] = await Promise.all([
+    getStatistikReminder(db, org, periode),
+    getRiwayatReminder(db, org, { periode, batas: BATAS_RIWAYAT_BULANAN }),
+  ]);
+  return { periode, periodeBerjalan, statistik, riwayat, terpotong: riwayat.length === BATAS_RIWAYAT_BULANAN };
 }

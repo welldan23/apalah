@@ -108,3 +108,35 @@ export function bolehDiingatkan(terakhirDiingatkan: string | undefined, sekarang
   if (!terakhirDiingatkan) return true;
   return sekarang.getTime() - new Date(terakhirDiingatkan).getTime() >= JEDA_PENGINGAT_JAM * 3_600_000;
 }
+
+export const STATUS_RIWAYAT = ["semua", "terkirim", "gagal"] as const;
+export type StatusRiwayat = (typeof STATUS_RIWAYAT)[number];
+
+/** Nilai status dari URL; selain "terkirim"/"gagal" dianggap "semua". */
+export const parseStatusRiwayat = (nilai: string | null): StatusRiwayat =>
+  nilai === "terkirim" || nilai === "gagal" ? nilai : "semua";
+
+/** Posisi jenis di pilihan filter: Manual dulu, lalu H-x → H → H+x, jenis lain di akhir. */
+function posisiJenis(jenis: string) {
+  if (jenis === "manual") return -Infinity;
+  const cocok = /^H([+-]\d+)?$/.exec(jenis);
+  return cocok ? Number(cocok[1] ?? 0) : Infinity;
+}
+
+/** Jenis unik yang ada di riwayat, urut untuk pilihan filter. */
+export const jenisDiRiwayat = (riwayat: { jenis: string }[]) =>
+  [...new Set(riwayat.map((r) => r.jenis))].sort((a, b) => posisiJenis(a) - posisiJenis(b) || a.localeCompare(b));
+
+/** Saring riwayat pengingat per status, jenis ("" = semua), dan kata kunci nama penghuni / nomor kamar. */
+export function saringRiwayatReminder<T extends { status: string; jenis: string; namaPenghuni: string; nomorKamar: string }>(
+  riwayat: T[],
+  { status, jenis, cari }: { status: StatusRiwayat; jenis: string; cari: string },
+) {
+  const kunci = cari.trim().toLowerCase();
+  return riwayat.filter(
+    (r) =>
+      (status === "semua" || r.status === status) &&
+      (!jenis || r.jenis === jenis) &&
+      (!kunci || r.namaPenghuni.toLowerCase().includes(kunci) || r.nomorKamar.toLowerCase().includes(kunci)),
+  );
+}

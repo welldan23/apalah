@@ -1,7 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { antrianPengingat, bolehDiingatkan, JADWAL_BAWAAN, keteranganJadwal, labelJadwal, labelJenisReminder, periksaJadwal } from "./reminder.ts";
+import {
+  antrianPengingat,
+  bolehDiingatkan,
+  JADWAL_BAWAAN,
+  jenisDiRiwayat,
+  keteranganJadwal,
+  labelJadwal,
+  labelJenisReminder,
+  parseStatusRiwayat,
+  periksaJadwal,
+  saringRiwayatReminder,
+} from "./reminder.ts";
 
 describe("label jadwal pengingat", () => {
   it("H-3 / H / H+3 dan kalimatnya", () => {
@@ -58,5 +69,32 @@ describe("bolehDiingatkan", () => {
     assert.equal(bolehDiingatkan(undefined, sekarang), true);
     assert.equal(bolehDiingatkan("2026-09-23T09:00:00+07:00", sekarang), true);
     assert.equal(bolehDiingatkan("2026-09-23T10:00:00+07:00", sekarang), false);
+  });
+});
+
+describe("saring riwayat reminder", () => {
+  const riwayat = [
+    { id: "1", jenis: "H+3", status: "terkirim", namaPenghuni: "Rizky Ramadhan", nomorKamar: "A05" },
+    { id: "2", jenis: "manual", status: "gagal", namaPenghuni: "Dewi Lestari", nomorKamar: "B06" },
+    { id: "3", jenis: "H", status: "gagal", namaPenghuni: "Tiara Ramadhani", nomorKamar: "B16" },
+    { id: "4", jenis: "H-3", status: "terkirim", namaPenghuni: "Budi", nomorKamar: "C05" },
+    { id: "5", jenis: "H-7", status: "terkirim", namaPenghuni: "Sari", nomorKamar: "A03" },
+  ];
+  const id = (hasil: { id: string }[]) => hasil.map((r) => r.id);
+
+  it("status, jenis, dan kata kunci (nama/kamar, tanpa beda huruf besar) digabung", () => {
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "semua", jenis: "", cari: "" })), ["1", "2", "3", "4", "5"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "gagal", jenis: "", cari: "" })), ["2", "3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "semua", jenis: "manual", cari: "" })), ["2"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "semua", jenis: "", cari: " ramadhan" })), ["1", "3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "gagal", jenis: "", cari: "b1" })), ["3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { status: "terkirim", jenis: "H", cari: "" })), []);
+  });
+
+  it("pilihan jenis urut Manual, H-x → H+x; status dari URL", () => {
+    assert.deepEqual(jenisDiRiwayat([...riwayat, { jenis: "H-3" }, { jenis: "lain" }]), ["manual", "H-7", "H-3", "H", "H+3", "lain"]);
+    assert.equal(parseStatusRiwayat("gagal"), "gagal");
+    assert.equal(parseStatusRiwayat("lunas"), "semua");
+    assert.equal(parseStatusRiwayat(null), "semua");
   });
 });

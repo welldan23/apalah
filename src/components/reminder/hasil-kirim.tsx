@@ -83,7 +83,7 @@ export function HasilKirim({
         {hasil.simulasi && (
           <CatatanSimulasi>Mode pengembangan: provider WhatsApp belum disambungkan, pesan hanya dicatat di log server.</CatatanSimulasi>
         )}
-        <Link href="/reminder" className="self-center text-sm font-medium text-primary hover:underline">
+        <Link href="/reminder/riwayat" className="self-center text-sm font-medium text-primary hover:underline">
           Lihat riwayat reminder
         </Link>
       </SheetBody>
