@@ -75,8 +75,9 @@ export const mockPercakapanKosta: PesanKosta[] = [
       judul: "Pemasukan September 2026",
       baris: [
         { label: "Sudah masuk", nominal: 12_500_000, catatan: "19 pembayaran" },
-        { label: "Menunggu", nominal: 7_650_000, catatan: "12 tagihan" },
+        { label: "Menunggu", nominal: 6_850_000, catatan: "11 tagihan" },
         { label: "Jatuh tempo", nominal: 1_950_000, catatan: "3 tagihan" },
+        { label: "Perlu review", nominal: 800_000, catatan: "1 tagihan · nominal bayar belum cocok" },
       ],
     },
   },

@@ -27,8 +27,12 @@ export async function isiDataContoh(db: Db) {
     .where(eq(schema.organizations.id, mockOrganization.id));
   if (ada) return false;
 
-  // Invoice lunas dibayar tepat saat pembayarannya diverifikasi gateway.
-  const dibayarPada = new Map(mockPayments.map((p) => [p.invoiceId, new Date(p.diverifikasiPada)]));
+  // Invoice lunas dibayar tepat saat pembayaran valid-nya diverifikasi gateway.
+  const dibayarPada = new Map(
+    mockPayments
+      .filter((p) => p.status === "valid")
+      .map((p) => [p.invoiceId, new Date(p.diverifikasiPada)]),
+  );
 
   await db.transaction(async (tx) => {
     await tx.insert(schema.users).values({

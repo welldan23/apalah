@@ -4,10 +4,18 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPeriode, periodeBerikutnya, periodeSebelumnya } from "@/lib/format";
 
-const href = (periode: string) => `/tagihan?periode=${periode}`;
-
 /** Pindah periode tagihan: bulan sebelumnya / berikutnya, plus kembali ke bulan ini. */
-export function PeriodeNav({ periode, periodeBerjalan }: { periode: string; periodeBerjalan: string }) {
+export function PeriodeNav({
+  periode,
+  periodeBerjalan,
+  basePath = "/tagihan",
+}: {
+  periode: string;
+  periodeBerjalan: string;
+  /** Halaman tujuan, mis. "/tagihan" atau "/pembayaran". */
+  basePath?: string;
+}) {
+  const href = (p: string) => `${basePath}?periode=${p}`;
   return (
     <nav aria-label="Pilih periode" className="flex items-center gap-1">
       <Button asChild variant="outline" size="icon-lg" className="size-10">
@@ -25,7 +33,7 @@ export function PeriodeNav({ periode, periodeBerjalan }: { periode: string; peri
       </Button>
       {periode !== periodeBerjalan && (
         <Button asChild variant="ghost" size="lg" className="h-10">
-          <Link href="/tagihan">Bulan ini</Link>
+          <Link href={basePath}>Bulan ini</Link>
         </Button>
       )}
     </nav>

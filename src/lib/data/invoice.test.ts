@@ -77,9 +77,9 @@ describe("getDaftarInvoice", () => {
     const hitung = async (status: Parameters<typeof getDaftarInvoice>[2]["status"]) =>
       (await getDaftarInvoice(db, ORG, { periode: SEP, status })).length;
     assert.equal(await hitung("jatuh_tempo"), 3);
-    assert.equal(await hitung("menunggu"), 12);
+    assert.equal(await hitung("menunggu"), 11);
     assert.equal(await hitung("lunas"), 19);
-    assert.equal(await hitung("perlu_review"), 0);
+    assert.equal(await hitung("perlu_review"), 1);
   });
 
   it("baris membawa nama penghuni, nomor kamar, dan tanggal WIB", async () => {

@@ -27,6 +27,8 @@ npm run dev
 | `npm run db:migrate` | Jalankan migrasi ke database aktif (aman diulang) |
 | `npm run db:seed` | Isi data contoh Kos Melati bila belum ada |
 
+Untuk mengulang data contoh di database lokal, hapus folder `.data/` lalu jalankan `npm run dev`.
+
 Buka http://localhost:3000 — otomatis diarahkan ke `/dashboard`.
 
 ## Struktur

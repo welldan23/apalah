@@ -102,8 +102,9 @@ describe("getRekapPemasukan", () => {
     assert.deepEqual(tagihan, {
       total: { jumlah: 34, nominal: 22_100_000 },
       lunas: { jumlah: 19, nominal: 12_500_000 },
-      menunggu: { jumlah: 12, nominal: 7_650_000 },
+      menunggu: { jumlah: 11, nominal: 6_850_000 },
       jatuhTempo: { jumlah: 3, nominal: 1_950_000 },
+      perluReview: { jumlah: 1, nominal: 800_000 },
     });
   });
 

@@ -137,6 +137,7 @@ export type RekapTagihanPerStatus = {
   lunas: RekapTagihan;
   menunggu: RekapTagihan;
   jatuhTempo: RekapTagihan;
+  perluReview: RekapTagihan;
 };
 
 export type Pemasukan = {

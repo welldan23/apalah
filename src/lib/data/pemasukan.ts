@@ -74,6 +74,7 @@ export async function getRekapPemasukan(
       lunas: rekap("lunas"),
       menunggu: rekap("menunggu"),
       jatuhTempo: rekap("jatuh_tempo"),
+      perluReview: rekap("perlu_review"),
     },
     pemasukan: {
       bulanIni: total.nominal,

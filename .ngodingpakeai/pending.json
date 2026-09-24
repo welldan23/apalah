@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "7d33f4a15f2cb488efacb15d3d5a881151fe4699",
+  "generatedForCommit": "b4ae215d2e97fc511e8d12a61678bea9be39613a",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -124,7 +124,7 @@
     },
     {
       "path": "src/app/(app)/kosta/page.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
       "size": 706
     },
@@ -304,7 +304,7 @@
     },
     {
       "path": "src/components/kosta/bubble-pesan.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3522
     },
@@ -312,19 +312,25 @@
       "path": "src/components/kosta/chat-kosta.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 8722
+      "size": 10566
     },
     {
       "path": "src/components/kosta/kartu-preview-aksi.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3526
     },
     {
       "path": "src/components/kosta/konfirmasi-aksi.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1085
+    },
+    {
+      "path": "src/components/kosta/panel-riwayat.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2359
     },
     {
       "path": "src/components/kosta/pemilih-workspace.tsx",
@@ -694,13 +700,13 @@
     },
     {
       "path": "src/lib/draft-aksi.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 845
     },
     {
       "path": "src/lib/draft-aksi.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 703
     },
@@ -754,9 +760,9 @@
     },
     {
       "path": "src/lib/mock/kosta.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2858
+      "size": 3882
     },
     {
       "path": "src/lib/nomor-wa.ts",
@@ -769,6 +775,18 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 884
+    },
+    {
+      "path": "src/lib/riwayat-kosta.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2001
+    },
+    {
+      "path": "src/lib/riwayat-kosta.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1643
     },
     {
       "path": "src/lib/situs.ts",

@@ -1,6 +1,7 @@
 // Data tiruan (stub) untuk tahap frontend: satu kos contoh, "Kos Melati".
 // Angkanya sengaja disusun agar cocok dengan contoh di PRD:
-// 40 kamar, 34 terisi, 3 tagihan jatuh tempo, Rp12,5jt masuk bulan ini.
+// 40 kamar, 34 terisi, 3 tagihan jatuh tempo, Rp12,5jt masuk bulan ini — plus satu
+// pembayaran yang nominalnya tidak cocok (C09) untuk contoh status Perlu Review.
 // Akan diganti query database saat lapisan backend dibangun.
 
 import type {
@@ -70,7 +71,7 @@ const PENGHUNI: TenantSeed[] = [
   ["C06", "Wayan Aditya", "2026-05-11", "lunas", "2026-09-10"],
   ["C07", "Kadek Sri Wahyuni", "2025-10-14", "lunas", "2026-09-14"],
   ["C08", "Ilham Syahputra", "2026-07-25", "menunggu"],
-  ["C09", "Grace Natalia", "2025-03-27", "menunggu"],
+  ["C09", "Grace Natalia", "2025-03-27", "perlu_review"],
   ["C11", "Bima Aryasatya", "2025-11-28", "menunggu"],
   ["C12", "Aulia Rahmah", "2026-08-30", "menunggu"],
 ];
@@ -145,7 +146,7 @@ export const mockInvoices: Invoice[] = PENGHUNI.map(
 const METODE_BAYAR = ["QRIS", "VA BCA", "VA Mandiri", "QRIS", "VA BRI"] as const;
 
 // Pembayaran tercatat dari webhook gateway (status valid) untuk invoice yang lunas.
-export const mockPayments: Payment[] = mockInvoices
+const pembayaranLunas: Payment[] = mockInvoices
   .filter((inv) => inv.status === "lunas" && inv.dibayarPada)
   .map((inv, i) => {
     const jam = String(8 + ((i * 5) % 13)).padStart(2, "0");
@@ -161,3 +162,17 @@ export const mockPayments: Payment[] = mockInvoices
       diverifikasiPada: `${inv.dibayarPada}T${jam}:${menit}:00+07:00`,
     };
   });
+
+// Nominal tidak cocok: Grace (C09) membayar Rp750.000 untuk tagihan Rp800.000 → invoice Perlu Review.
+const pembayaranTidakCocok: Payment = {
+  id: `pay_inv_${MOCK_PERIODE}_C09`,
+  invoiceId: `inv_${MOCK_PERIODE}_C09`,
+  nominalDibayar: 750_000,
+  metode: "QRIS",
+  provider: "midtrans",
+  referensiProvider: `demo-ref-inv_${MOCK_PERIODE}_C09`,
+  status: "tidak_cocok",
+  diverifikasiPada: `${MOCK_PERIODE}-23T19:42:00+07:00`,
+};
+
+export const mockPayments: Payment[] = [...pembayaranLunas, pembayaranTidakCocok];
