@@ -1,11 +1,12 @@
 // Data pengingat bayar dari tabel reminders — riwayat & statistik per kos.
 // Pesan non-pengingat (kirim tagihan, konfirmasi lunas) tidak ikut dihitung.
 
-import { and, desc, eq, gte, inArray, lt, max, ne, notInArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lt, max, ne, notInArray, or, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { periodeBerikutnya } from "../format.ts";
-import { GALAT_TERPUTUS, JENIS_BUKAN_PENGINGAT } from "../reminder.ts";
+import { GALAT_TERPUTUS, JENIS_BUKAN_PENGINGAT, parseStatusRiwayat, STATUS_RIWAYAT, type StatusRiwayat } from "../reminder.ts";
+import { periodeValid } from "../waktu.ts";
 import { getDaftarInvoice } from "./invoice.ts";
 import type { InvoiceRow } from "@/lib/types";
 
@@ -21,6 +22,8 @@ export type RiwayatReminder = {
   namaPenghuni: string;
   periode: string;
   nominal: number;
+  /** Alasan gagal dari provider WhatsApp. */
+  galat?: string;
 };
 
 const awalBulanWib = (periode: string) => new Date(`${periode}-01T00:00:00+07:00`);
@@ -32,17 +35,37 @@ const awalBulanWib = (periode: string) => new Date(`${periode}-01T00:00:00+07:00
 export const kontakPenyewa = () =>
   and(ne(reminders.jenis, "konfirmasi_lunas"), or(eq(reminders.status, "terkirim"), eq(reminders.galat, GALAT_TERPUTUS)));
 
-/** Pengingat terbaru di atas; `periode` membatasi ke bulan kirim (WIB). */
+/** Posisi baris terakhir yang sudah dibaca — halaman berikutnya dimulai setelahnya. */
+export type KursorRiwayat = { terkirimPada: string; id: string };
+
+export type FilterRiwayatReminder = {
+  /** Bulan kirim (WIB), YYYY-MM. */
+  periode?: string;
+  status?: "terkirim" | "gagal";
+  jenis?: string;
+  /** Periode tagihan, YYYY-MM. */
+  periodeTagihan?: string;
+  /** Nama penghuni atau nomor kamar, tanpa beda huruf besar/kecil. */
+  cari?: string;
+  sebelum?: KursorRiwayat;
+  batas?: number;
+};
+
+/** Pengingat terbaru di atas (waktu kirim, lalu id), bisa disaring & dibaca per halaman. */
 export async function getRiwayatReminder(
   db: Db,
   organizationId: string,
-  { periode, batas = 50 }: { periode?: string; batas?: number } = {},
+  { periode, status, jenis, periodeTagihan, cari, sebelum, batas = 50 }: FilterRiwayatReminder = {},
 ): Promise<RiwayatReminder[]> {
+  // Wildcard LIKE dari pengguna dianggap huruf biasa.
+  const pola = cari?.trim() ? `%${cari.trim().replace(/[\\%_]/g, "\\$&")}%` : undefined;
+  const waktuSebelum = sebelum ? new Date(sebelum.terkirimPada) : undefined;
   const baris = await db
     .select({
       id: reminders.id,
       jenis: reminders.jenis,
       status: reminders.status,
+      galat: reminders.galat,
       terkirimPada: reminders.terkirimPada,
       nomorKamar: rooms.nomorKamar,
       namaPenghuni: tenants.nama,
@@ -59,12 +82,86 @@ export async function getRiwayatReminder(
         notInArray(reminders.jenis, [...JENIS_BUKAN_PENGINGAT]),
         periode ? gte(reminders.terkirimPada, awalBulanWib(periode)) : undefined,
         periode ? lt(reminders.terkirimPada, awalBulanWib(periodeBerikutnya(periode))) : undefined,
+        status ? eq(reminders.status, status) : undefined,
+        jenis ? eq(reminders.jenis, jenis) : undefined,
+        periodeTagihan ? eq(invoices.periode, periodeTagihan) : undefined,
+        pola ? or(ilike(tenants.nama, pola), ilike(rooms.nomorKamar, pola)) : undefined,
+        sebelum && waktuSebelum
+          ? or(
+              lt(reminders.terkirimPada, waktuSebelum),
+              and(eq(reminders.terkirimPada, waktuSebelum), lt(reminders.id, sebelum.id)),
+            )
+          : undefined,
       ),
     )
-    .orderBy(desc(reminders.terkirimPada))
+    .orderBy(desc(reminders.terkirimPada), desc(reminders.id))
     .limit(batas);
-  return baris.map((b) => ({ ...b, terkirimPada: b.terkirimPada.toISOString() }));
+  return baris.map(({ galat, ...b }) => ({ ...b, terkirimPada: b.terkirimPada.toISOString(), ...(galat ? { galat } : {}) }));
 }
+
+export type QueryRiwayatReminder = {
+  /** Bulan kirim YYYY-MM, atau "semua". */
+  periode: string;
+  status: StatusRiwayat;
+  /** "" = semua jenis. */
+  jenis: string;
+  /** Periode tagihan YYYY-MM; "" = semua. */
+  tagihan: string;
+  q: string;
+  batas: number;
+  /** Kursor "ISO|id" dari `berikutnya` respons sebelumnya; "" = halaman pertama. */
+  sebelum: string;
+};
+
+export const MAKS_BATAS_RIWAYAT = 200;
+
+/**
+ * Baca query `?periode=&status=&jenis=&tagihan=&q=&batas=&sebelum=` endpoint riwayat reminder.
+ * Periode kosong = bulan berjalan; nilai yang tidak dikenal ditolak dengan pesan galat.
+ */
+export function bacaFilterRiwayatReminder(
+  params: URLSearchParams,
+  periodeBerjalan: string,
+): { query: QueryRiwayatReminder; filter: FilterRiwayatReminder } | { galat: string } {
+  const periode = params.get("periode") || periodeBerjalan;
+  const statusMentah = params.get("status") || "semua";
+  const jenis = (params.get("jenis") ?? "").trim();
+  const tagihan = params.get("tagihan") ?? "";
+  const q = (params.get("q") ?? "").trim();
+  const batasMentah = params.get("batas") || "50";
+  const sebelum = params.get("sebelum") ?? "";
+
+  if (periode !== "semua" && !periodeValid(periode)) return { galat: 'Periode harus berformat YYYY-MM atau "semua".' };
+  if (!(STATUS_RIWAYAT as readonly string[]).includes(statusMentah)) return { galat: `Status tidak dikenal: ${statusMentah}` };
+  if (jenis.length > 20) return { galat: "Jenis maksimal 20 karakter." };
+  if (tagihan && !periodeValid(tagihan)) return { galat: "Periode tagihan harus berformat YYYY-MM." };
+  if (q.length > 100) return { galat: "Kata kunci maksimal 100 karakter." };
+  const batas = Number(batasMentah);
+  if (!Number.isInteger(batas) || batas < 1 || batas > MAKS_BATAS_RIWAYAT) return { galat: `Batas harus 1–${MAKS_BATAS_RIWAYAT}.` };
+  let kursor: KursorRiwayat | undefined;
+  if (sebelum) {
+    const [terkirimPada, id] = sebelum.split("|");
+    if (!terkirimPada || !id || Number.isNaN(Date.parse(terkirimPada))) return { galat: "Kursor sebelum tidak valid." };
+    kursor = { terkirimPada, id };
+  }
+
+  const status = parseStatusRiwayat(statusMentah);
+  return {
+    query: { periode, status, jenis, tagihan, q, batas, sebelum },
+    filter: {
+      periode: periode === "semua" ? undefined : periode,
+      status: status === "semua" ? undefined : status,
+      jenis: jenis || undefined,
+      periodeTagihan: tagihan || undefined,
+      cari: q || undefined,
+      sebelum: kursor,
+      batas,
+    },
+  };
+}
+
+/** Kursor untuk halaman sesudah `r`. */
+export const kursorSetelah = (r: Pick<RiwayatReminder, "terkirimPada" | "id">) => `${r.terkirimPada}|${r.id}`;
 
 export type StatistikReminder = { terkirim: number; gagal: number; penyewa: number };
 

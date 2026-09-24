@@ -189,6 +189,7 @@ export function TabelRiwayatReminder({ riwayat, periode }: { riwayat: RiwayatRem
                     {labelJenisReminder(r.jenis)} · {formatWaktu(r.terkirimPada)}
                   </p>
                   <p className="text-xs text-muted-foreground">Tagihan {formatPeriode(r.periode)}</p>
+                  {r.galat && <p className="mt-0.5 text-xs text-danger">{r.galat}</p>}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className="font-semibold tabular-nums">{formatRupiah(r.nominal)}</span>
@@ -222,6 +223,11 @@ export function TabelRiwayatReminder({ riwayat, periode }: { riwayat: RiwayatRem
                   <TableCell className="text-right font-medium tabular-nums">{formatRupiah(r.nominal)}</TableCell>
                   <TableCell className="pr-4">
                     <StatusKirim status={r.status} />
+                    {r.galat && (
+                      <span title={r.galat} className="mt-1 block max-w-48 truncate text-xs text-danger">
+                        {r.galat}
+                      </span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
