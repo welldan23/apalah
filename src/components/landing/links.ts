@@ -1,5 +1,6 @@
-// Tujuan CTA landing. Sementara menuju dashboard contoh; setelah alur daftar
-// nomor WhatsApp + OTP (Fase 3) tersedia, "Mulai gratis" diarahkan ke sana.
+// Tujuan CTA landing. Semua ajakan daftar ("Mulai gratis", "Daftarkan kos") memakai
+// HREF_MULAI. Sementara menuju dashboard contoh; setelah halaman Daftar Kos
+// (nomor WhatsApp + OTP) tersedia, cukup ubah konstanta ini.
 export const HREF_MULAI = "/dashboard";
 export const HREF_MASUK = "/dashboard";
 

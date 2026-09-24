@@ -295,7 +295,17 @@ export const FAQ: { tanya: string; jawab: string }[] = [
   },
 ];
 
-export const CTA_PENUTUP = {
+export type Cta = { judul: string; deskripsi: string; tombol: string };
+
+/** CTA di tengah halaman, setelah cara kerja. */
+export const CTA_TENGAH: Cta = {
+  judul: "Daftarkan kos kamu, gratis",
+  deskripsi:
+    "Isi nama kos, jumlah kamar, dan nomor WhatsApp. Ruang kerja kos langsung siap tanpa langkah teknis.",
+  tombol: "Daftarkan kos",
+};
+
+export const CTA_PENUTUP: Cta = {
   judul: "Rapikan tagihan kos mulai bulan ini",
   deskripsi: "Daftar pakai nomor WhatsApp, tambahkan kamar, dan kirim tagihan pertamamu hari ini.",
   tombol: "Mulai gratis",

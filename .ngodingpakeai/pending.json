@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "a1a97944b3e5d46f946b5ad9516b3d2a27095ec7",
+  "generatedForCommit": "26acd74d3325224dd70b9086ff3f975a1711ee57",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -100,7 +100,7 @@
     },
     {
       "path": "src/app/(marketing)/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 913
     },
@@ -202,15 +202,15 @@
     },
     {
       "path": "src/components/landing/dashboard-preview-section.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5875
     },
     {
       "path": "src/components/landing/faq-section.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1267
+      "size": 1397
     },
     {
       "path": "src/components/landing/hero-section.tsx",
@@ -400,7 +400,7 @@
     },
     {
       "path": "src/lib/landing/content.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 9102
     },
