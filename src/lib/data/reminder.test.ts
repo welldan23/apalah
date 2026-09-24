@@ -5,7 +5,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
-import { getRiwayatReminder, getStatistikReminder } from "./reminder.ts";
+import { getKandidatReminder, getRiwayatReminder, getStatistikReminder } from "./reminder.ts";
 
 const ORG = "org_kos_melati";
 
@@ -59,4 +59,15 @@ describe("data reminder", () => {
     assert.deepEqual(await getStatistikReminder(db, ORG, "2026-09"), { terkirim: 2, gagal: 1, penyewa: 1 });
     assert.deepEqual(await getStatistikReminder(db, "org_kos_mawar", "2026-09"), { terkirim: 0, gagal: 0, penyewa: 0 });
   });
+
+  it("kandidat: tagihan belum lunas + terakhir diingatkan (yang gagal tidak dihitung)", async () => {
+    const kandidat = await getKandidatReminder(db, ORG);
+    assert.equal(kandidat.length, 14); // 11 menunggu + 3 jatuh tempo
+    assert.ok(kandidat.every((k) => ["menunggu", "terkirim", "jatuh_tempo"].includes(k.status)));
+    const peta = new Map(kandidat.map((k) => [k.nomorKamar, k.terakhirDiingatkan]));
+    assert.equal(peta.get("A05"), "2026-09-22T12:00:00.000Z");
+    assert.equal(peta.get("B06"), undefined);
+    assert.equal(peta.get("A03"), undefined);
+  });
 });
+

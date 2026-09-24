@@ -15,7 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SheetClose } from "@/components/ui/sheet";
-import { formatPeriode, formatRupiah, selisihHari } from "@/lib/format";
+import { formatPeriode, formatRupiah } from "@/lib/format";
+import { keteranganWaktu } from "@/lib/invoice";
 import { pesanReminder } from "@/lib/pesan";
 import type { InvoiceRow } from "@/lib/types";
 
@@ -110,11 +111,11 @@ export function ReminderFlow({
       <SheetBody>
         <section aria-labelledby="reminder-penerima">
           <h3 id="reminder-penerima" className="mb-2 text-sm font-medium">
-            Penerima · tagihan jatuh tempo
+            Penerima
           </h3>
           <ul className="divide-y rounded-lg border bg-card">
             {tagihan.map((inv) => {
-              const lewat = -selisihHari(hariIni, inv.jatuhTempo);
+              const waktu = keteranganWaktu(inv, hariIni);
               const id = `reminder-${inv.id}`;
               return (
                 <li key={inv.id}>
@@ -130,7 +131,7 @@ export function ReminderFlow({
                       </span>
                       <span className="block text-xs text-muted-foreground">
                         Kamar {inv.nomorKamar} ·{" "}
-                        <span className="text-danger">lewat {lewat} hari</span>
+                        <span className={waktu.telat ? "text-danger" : undefined}>{waktu.teks.toLowerCase()}</span>
                       </span>
                     </span>
                     <span className="text-sm font-medium tabular-nums">

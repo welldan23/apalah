@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Send } from "lucide-react";
 
 import { ActionSheet } from "@/components/quick-actions/action-sheet";
@@ -55,6 +56,11 @@ export function PerluDiingatkan({ menunggak, hariIni, periode, namaKos }: Pick<H
           </ul>
         </CardContent>
       )}
+      <div className="border-t px-4 py-3">
+        <Link href="/reminder/kirim" className="text-sm font-medium text-primary hover:underline">
+          Pilih penerima lain, termasuk yang belum jatuh tempo →
+        </Link>
+      </div>
 
       <ActionSheet
         open={buka}

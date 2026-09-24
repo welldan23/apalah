@@ -99,3 +99,12 @@ export function periksaJadwal(jadwal: JadwalPengingat, semua: JadwalPengingat[],
   if (indeksUbah === undefined && semua.length >= MAKS_JADWAL) return `Maksimal ${MAKS_JADWAL} jadwal.`;
   return "";
 }
+
+/** Satu penyewa tidak diingatkan lebih dari sekali dalam rentang ini. */
+export const JEDA_PENGINGAT_JAM = 24;
+
+/** true bila tagihan boleh diingatkan lagi (belum pernah, atau terakhir ≥ 24 jam lalu). */
+export function bolehDiingatkan(terakhirDiingatkan: string | undefined, sekarang: Date) {
+  if (!terakhirDiingatkan) return true;
+  return sekarang.getTime() - new Date(terakhirDiingatkan).getTime() >= JEDA_PENGINGAT_JAM * 3_600_000;
+}

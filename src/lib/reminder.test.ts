@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { antrianPengingat, JADWAL_BAWAAN, keteranganJadwal, labelJadwal, labelJenisReminder, periksaJadwal } from "./reminder.ts";
+import { antrianPengingat, bolehDiingatkan, JADWAL_BAWAAN, keteranganJadwal, labelJadwal, labelJenisReminder, periksaJadwal } from "./reminder.ts";
 
 describe("label jadwal pengingat", () => {
   it("H-3 / H / H+3 dan kalimatnya", () => {
@@ -49,5 +49,14 @@ describe("periksaJadwal", () => {
     assert.match(periksaJadwal(j(3), JADWAL_BAWAAN, 0), /Sudah ada jadwal H\+3/);
     const lima = [j(-5), j(-3), j(0), j(3), j(5)];
     assert.match(periksaJadwal(j(7), lima), /Maksimal 5 jadwal/);
+  });
+});
+
+describe("bolehDiingatkan", () => {
+  const sekarang = new Date("2026-09-24T09:00:00+07:00");
+  it("belum pernah atau sudah ≥ 24 jam → boleh; kurang dari 24 jam → tidak", () => {
+    assert.equal(bolehDiingatkan(undefined, sekarang), true);
+    assert.equal(bolehDiingatkan("2026-09-23T09:00:00+07:00", sekarang), true);
+    assert.equal(bolehDiingatkan("2026-09-23T10:00:00+07:00", sekarang), false);
   });
 });

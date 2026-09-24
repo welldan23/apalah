@@ -6,7 +6,14 @@ import { connection } from "next/server";
 
 import { getDb } from "@/db";
 import { getDaftarInvoice } from "@/lib/data/invoice";
-import { getRiwayatReminder, getStatistikReminder, type RiwayatReminder, type StatistikReminder } from "@/lib/data/reminder";
+import {
+  getKandidatReminder,
+  getRiwayatReminder,
+  getStatistikReminder,
+  type KandidatReminder,
+  type RiwayatReminder,
+  type StatistikReminder,
+} from "@/lib/data/reminder";
 import { getWorkspaceSession } from "@/lib/data/session";
 import { antrianPengingat, JADWAL_BAWAAN, type AntrianPengingat, type JadwalPengingat } from "@/lib/reminder";
 import type { InvoiceRow } from "@/lib/types";
@@ -60,4 +67,27 @@ export type HalamanJadwalPengingat = Pick<HalamanReminder, "hariIni" | "otomatis
 export async function getHalamanJadwalPengingat(): Promise<HalamanJadwalPengingat> {
   const { hariIni, otomatisAktif, jadwal, antrian } = await getHalamanReminder();
   return { hariIni, otomatisAktif, jadwal, antrian };
+}
+
+export type HalamanKirimReminder = {
+  hariIni: string;
+  periode: string;
+  namaKos: string;
+  /** Waktu server (ISO) — acuan jeda 24 jam antar pengingat. */
+  sekarang: string;
+  kandidat: KandidatReminder[];
+};
+
+/** Halaman Kirim reminder massal: tagihan belum lunas + kapan terakhir penyewanya diingatkan. */
+export async function getHalamanKirimReminder(): Promise<HalamanKirimReminder> {
+  await connection();
+  const session = await getWorkspaceSession();
+  const hariIni = hariIniWib();
+  return {
+    hariIni,
+    periode: hariIni.slice(0, 7),
+    namaKos: session.organization.namaKos,
+    sekarang: new Date().toISOString(),
+    kandidat: await getKandidatReminder(await getDb(), session.organization.id),
+  };
 }

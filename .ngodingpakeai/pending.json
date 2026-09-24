@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "ecc2a562fd56f9a26b5ab5479e676bb4a39d6831",
+  "generatedForCommit": "d012a7a4295188e87e9550b6223869ee78aa45d2",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -220,7 +220,7 @@
     },
     {
       "path": "src/app/(app)/reminder/jadwal/page.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1124
     },
@@ -706,13 +706,19 @@
     },
     {
       "path": "src/components/reminder/daftar-jadwal.tsx",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 7503
+    },
+    {
+      "path": "src/components/reminder/form-jadwal.tsx",
       "reason": "new",
       "language": "typescript",
-      "size": 5066
+      "size": 5283
     },
     {
       "path": "src/components/reminder/kartu-jadwal.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2322
     },
@@ -736,7 +742,7 @@
     },
     {
       "path": "src/components/saklar.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1034
     },
@@ -994,7 +1000,7 @@
     },
     {
       "path": "src/lib/data/halaman-reminder.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2437
     },
@@ -1432,15 +1438,15 @@
     },
     {
       "path": "src/lib/reminder.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2005
+      "size": 2965
     },
     {
       "path": "src/lib/reminder.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2879
+      "size": 4109
     },
     {
       "path": "src/lib/rencana-kamar.test.ts",

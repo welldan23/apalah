@@ -1,11 +1,13 @@
 // Data pengingat bayar dari tabel reminders — riwayat & statistik per kos.
 // Pesan non-pengingat (kirim tagihan, konfirmasi lunas) tidak ikut dihitung.
 
-import { and, desc, eq, gte, lt, notInArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, max, notInArray, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { periodeBerikutnya } from "../format.ts";
 import { JENIS_BUKAN_PENGINGAT } from "../reminder.ts";
+import { getDaftarInvoice } from "./invoice.ts";
+import type { InvoiceRow } from "@/lib/types";
 
 const { invoices, reminders, rooms, tenants } = schema;
 
@@ -77,4 +79,40 @@ export async function getStatistikReminder(db: Db, organizationId: string, perio
       ),
     );
   return s;
+}
+
+export type KandidatReminder = InvoiceRow & {
+  /** ISO datetime pesan terakhir yang terkirim ke penyewa untuk tagihan ini. */
+  terakhirDiingatkan?: string;
+};
+
+/**
+ * Tagihan yang belum lunas (menunggu, terkirim, jatuh tempo) — kandidat penerima reminder massal —
+ * beserta kapan terakhir penyewanya dihubungi soal tagihan itu.
+ */
+export async function getKandidatReminder(db: Db, organizationId: string): Promise<KandidatReminder[]> {
+  const tagihan = (await getDaftarInvoice(db, organizationId, {})).filter((t) =>
+    ["menunggu", "terkirim", "jatuh_tempo"].includes(t.status),
+  );
+  if (tagihan.length === 0) return [];
+  const terakhir = await db
+    .select({ invoiceId: reminders.invoiceId, waktu: max(reminders.terkirimPada) })
+    .from(reminders)
+    .where(
+      and(
+        eq(reminders.organizationId, organizationId),
+        eq(reminders.status, "terkirim"),
+        notInArray(reminders.jenis, ["konfirmasi_lunas"]),
+        inArray(
+          reminders.invoiceId,
+          tagihan.map((t) => t.id),
+        ),
+      ),
+    )
+    .groupBy(reminders.invoiceId);
+  const peta = new Map(terakhir.map((r) => [r.invoiceId, r.waktu]));
+  return tagihan.map((t) => {
+    const waktu = peta.get(t.id);
+    return waktu ? { ...t, terakhirDiingatkan: waktu.toISOString() } : t;
+  });
 }
