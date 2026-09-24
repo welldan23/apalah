@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "00bf9d10aa3d1a63bf08a558fc7fe13aee708478",
+  "generatedForCommit": "407eef679a2577fed30fb04ba975ba6f0e2d3074",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -40,9 +40,9 @@
     },
     {
       "path": "README.md",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "markdown",
-      "size": 1633
+      "size": 1963
     },
     {
       "path": "components.json",
@@ -57,16 +57,28 @@
       "size": 6459
     },
     {
+      "path": "drizzle/0001_aksi_cepat.sql",
+      "reason": "new",
+      "language": "sql",
+      "size": 1277
+    },
+    {
       "path": "drizzle/meta/0000_snapshot.json",
       "reason": "needs_summary",
       "language": "json",
       "size": 20689
     },
     {
-      "path": "drizzle/meta/_journal.json",
-      "reason": "needs_summary",
+      "path": "drizzle/meta/0001_snapshot.json",
+      "reason": "new",
       "language": "json",
-      "size": 209
+      "size": 24577
+    },
+    {
+      "path": "drizzle/meta/_journal.json",
+      "reason": "changed",
+      "language": "json",
+      "size": 347
     },
     {
       "path": "drizzle.config.ts",
@@ -129,6 +141,24 @@
       "size": 1092
     },
     {
+      "path": "src/app/api/dashboard/aksi/penghuni/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 823
+    },
+    {
+      "path": "src/app/api/dashboard/aksi/reminder/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 979
+    },
+    {
+      "path": "src/app/api/dashboard/aksi/tagihan/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 805
+    },
+    {
       "path": "src/app/api/dashboard/invoices/route.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -136,7 +166,7 @@
     },
     {
       "path": "src/app/api/dashboard/pemasukan/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 890
     },
@@ -310,21 +340,21 @@
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3756
+      "size": 4577
     },
     {
       "path": "src/components/quick-actions/invoice-flow.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 11101
+      "size": 12152
     },
     {
       "path": "src/components/quick-actions/reminder-flow.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5711
+      "size": 6254
     },
     {
       "path": "src/components/quick-actions/rupiah-input.tsx",
@@ -334,9 +364,9 @@
     },
     {
       "path": "src/components/quick-actions/tenant-flow.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 8851
+      "size": 8954
     },
     {
       "path": "src/components/status-badge.tsx",
@@ -430,9 +460,9 @@
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5197
+      "size": 6082
     },
     {
       "path": "src/db/seed.ts",
@@ -453,8 +483,38 @@
       "size": 460
     },
     {
+      "path": "src/lib/aksi/aksi.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 7119
+    },
+    {
+      "path": "src/lib/aksi/galat.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1767
+    },
+    {
+      "path": "src/lib/aksi/penghuni.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2522
+    },
+    {
+      "path": "src/lib/aksi/reminder.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3460
+    },
+    {
+      "path": "src/lib/aksi/tagihan.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3602
+    },
+    {
       "path": "src/lib/data/dashboard.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1428
     },
@@ -478,19 +538,19 @@
     },
     {
       "path": "src/lib/data/kos.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1995
+      "size": 2113
     },
     {
       "path": "src/lib/data/pemasukan.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4194
     },
     {
       "path": "src/lib/data/pemasukan.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2952
     },
@@ -525,10 +585,22 @@
       "size": 6072
     },
     {
+      "path": "src/lib/nomor-wa.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 585
+    },
+    {
+      "path": "src/lib/pesan.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 884
+    },
+    {
       "path": "src/lib/types.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 3831
+      "size": 3942
     },
     {
       "path": "src/lib/utils.ts",
@@ -547,6 +619,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 793
+    },
+    {
+      "path": "src/lib/whatsapp/index.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1108
     },
     {
       "path": "tsconfig.json",

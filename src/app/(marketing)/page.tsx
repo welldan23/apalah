@@ -9,8 +9,22 @@ import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { CTA_PENUTUP, CTA_TENGAH } from "@/lib/landing/content";
 
+const JUDUL = "Kostera — Tagihan kos rapi, pembayaran lebih pasti";
+const DESKRIPSI =
+  "Kelola tagihan, pembayaran, dan kamar kos dalam satu tempat. Kosta, asisten AI di WhatsApp, bantu cek tunggakan dan siapkan pengingat.";
+
 export const metadata: Metadata = {
-  title: { absolute: "Kostera — Tagihan kos rapi, pembayaran lebih pasti" },
+  title: { absolute: JUDUL },
+  description: DESKRIPSI,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: "/",
+    siteName: "Kostera",
+    title: JUDUL,
+    description: DESKRIPSI,
+  },
 };
 
 export default function LandingPage() {
