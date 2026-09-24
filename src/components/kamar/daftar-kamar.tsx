@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutGrid, List, Search } from "lucide-react";
+import { LayoutGrid, List, Search, UserPlus } from "lucide-react";
 
 import { KartuKamar } from "@/components/kamar/kartu-kamar";
+import { SheetTambahPenghuni } from "@/components/kamar/tambah-penghuni";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,7 +36,7 @@ const parseFilter = (v: string | null): FilterKamar =>
 type Tampilan = "kartu" | "daftar";
 
 /** Kartu kamar dikelompokkan per tipe, lengkap dengan harga & hunian tiap tipe. */
-function GridKamar({ kamar }: { kamar: KamarPenghuni[] }) {
+function GridKamar({ kamar, onIsi }: { kamar: KamarPenghuni[]; onIsi: (roomId: string) => void }) {
   const perTipe = new Map<string, KamarPenghuni[]>();
   for (const k of kamar) perTipe.set(k.tipe, [...(perTipe.get(k.tipe) ?? []), k]);
 
@@ -56,7 +59,7 @@ function GridKamar({ kamar }: { kamar: KamarPenghuni[] }) {
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {daftar.map((k) => (
               <li key={k.id}>
-                <KartuKamar kamar={k} />
+                <KartuKamar kamar={k} onIsi={() => onIsi(k.id)} />
               </li>
             ))}
           </ul>
@@ -98,7 +101,9 @@ function Sewa({ kamar }: { kamar: KamarPenghuni }) {
 }
 
 /** Daftar kamar & penghuni: saring terisi/kosong dan cari kamar/penghuni (tersimpan di URL). */
-export function DaftarKamar({ kamar }: { kamar: KamarPenghuni[] }) {
+export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIni: string }) {
+  const [isiKamar, setIsiKamar] = useState<string | null>(null);
+  const kamarKosong = kamar.filter((k) => k.status === "kosong");
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const filter = parseFilter(searchParams.get("status"));
@@ -198,7 +203,7 @@ export function DaftarKamar({ kamar }: { kamar: KamarPenghuni[] }) {
           Tidak ada kamar yang cocok{kataKunci ? ` dengan “${cari.trim()}”` : ""}.
         </p>
       ) : tampilan === "kartu" ? (
-        <GridKamar kamar={tersaring} />
+        <GridKamar kamar={tersaring} onIsi={setIsiKamar} />
       ) : (
         <>
           {/* Mobile: kartu */}
@@ -257,7 +262,16 @@ export function DaftarKamar({ kamar }: { kamar: KamarPenghuni[] }) {
                         </span>
                       </>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-haspopup="dialog"
+                        aria-label={`Isi kamar ${k.nomorKamar}`}
+                        onClick={() => setIsiKamar(k.id)}
+                      >
+                        <UserPlus data-icon="inline-start" />
+                        Isi kamar
+                      </Button>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -272,6 +286,14 @@ export function DaftarKamar({ kamar }: { kamar: KamarPenghuni[] }) {
           </Table>
         </>
       )}
+
+      <SheetTambahPenghuni
+        open={isiKamar !== null}
+        onOpenChange={(buka) => !buka && setIsiKamar(null)}
+        hariIni={hariIni}
+        kamarKosong={kamarKosong}
+        roomIdAwal={isiKamar ?? undefined}
+      />
     </Card>
   );
 }

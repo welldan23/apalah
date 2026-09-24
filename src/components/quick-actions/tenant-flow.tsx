@@ -29,18 +29,23 @@ type Galat = Partial<Record<"nama" | "nomorWa" | "kamar" | "tanggalMasuk" | "har
 export function TenantFlow({
   hariIni,
   kamarKosong,
+  roomIdAwal,
 }: {
   hariIni: string;
   kamarKosong: RoomCell[];
+  /** Kamar yang langsung terpilih, mis. dari tombol "Isi kamar". */
+  roomIdAwal?: string;
 }) {
   const router = useRouter();
   const [langkah, setLangkah] = useState<Langkah>("isi");
   const [galatServer, setGalatServer] = useState<string | null>(null);
   const [nama, setNama] = useState("");
   const [nomorWa, setNomorWa] = useState("");
-  const [roomId, setRoomId] = useState("");
+  const [roomId, setRoomId] = useState(roomIdAwal ?? "");
   const [tanggalMasuk, setTanggalMasuk] = useState(hariIni);
-  const [hargaSewa, setHargaSewa] = useState<number | null>(null);
+  const [hargaSewa, setHargaSewa] = useState<number | null>(
+    () => kamarKosong.find((k) => k.id === roomIdAwal)?.hargaSewa ?? null,
+  );
   const [galat, setGalat] = useState<Galat>({});
 
   const kamar = kamarKosong.find((k) => k.id === roomId);
@@ -108,6 +113,7 @@ export function TenantFlow({
               ["Kamar", kamar ? `${kamar.nomorKamar} · ${kamar.tipe}` : "—"],
               ["Tanggal masuk", formatTanggal(tanggalMasuk)],
               ["Harga sewa", `${formatRupiah(hargaSewa ?? 0)}/bulan`],
+              ["Jatuh tempo", `Tiap tanggal ${Number(tanggalMasuk.slice(8, 10))}, ikut tanggal masuk`],
             ]}
           />
           <GalatServer pesan={galatServer} />

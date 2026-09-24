@@ -1,9 +1,19 @@
+import { UserPlus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import type { KamarPenghuni } from "@/lib/data/kamar";
 import { formatRupiahSingkat, formatTanggal } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /** Kartu satu kamar: nomor, status, penghuni aktif (atau siap ditawarkan), sewa. */
-export function KartuKamar({ kamar }: { kamar: KamarPenghuni }) {
+export function KartuKamar({
+  kamar,
+  onIsi,
+}: {
+  kamar: KamarPenghuni;
+  /** Buka form tambah penghuni untuk kamar kosong ini. */
+  onIsi?: () => void;
+}) {
   const kosong = kamar.status === "kosong";
   const sewa = kamar.penghuni?.hargaSewa ?? kamar.hargaSewa;
 
@@ -39,6 +49,19 @@ export function KartuKamar({ kamar }: { kamar: KamarPenghuni }) {
       <p className="text-xs text-muted-foreground">
         <span className="font-medium text-foreground tabular-nums">{formatRupiahSingkat(sewa)}</span>/bln
       </p>
+      {kosong && onIsi && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 bg-card"
+          aria-haspopup="dialog"
+          aria-label={`Isi kamar ${kamar.nomorKamar}`}
+          onClick={onIsi}
+        >
+          <UserPlus data-icon="inline-start" />
+          Isi kamar
+        </Button>
+      )}
     </article>
   );
 }

@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "9ca16cc8359f29d13eb0aaa4a1ce863f6fd189e7",
+  "generatedForCommit": "700895e24b99a9151cb91d4db36696a728e289fb",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -124,9 +124,15 @@
     },
     {
       "path": "src/app/(app)/kamar/page.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 855
+      "size": 1335
+    },
+    {
+      "path": "src/app/(app)/kamar/tambah/page.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1120
     },
     {
       "path": "src/app/(app)/kosta/page.tsx",
@@ -316,15 +322,21 @@
     },
     {
       "path": "src/components/kamar/daftar-kamar.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 10999
     },
     {
       "path": "src/components/kamar/kartu-kamar.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1769
+    },
+    {
+      "path": "src/components/kamar/wizard-tambah-kamar.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 14925
     },
     {
       "path": "src/components/kosta/bubble-pesan.tsx",
@@ -789,6 +801,12 @@
       "size": 1537
     },
     {
+      "path": "src/lib/data/tambah-kamar.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1296
+    },
+    {
       "path": "src/lib/draft-aksi.test.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -865,6 +883,18 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 884
+    },
+    {
+      "path": "src/lib/rencana-kamar.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2093
+    },
+    {
+      "path": "src/lib/rencana-kamar.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2196
     },
     {
       "path": "src/lib/riwayat-kosta.test.ts",
