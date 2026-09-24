@@ -1,13 +1,13 @@
-// Aksi penghuni: tambah penghuni baru di kamar kosong (kamar jadi terisi) dan pindah kamar.
+// Aksi penghuni: tambah penghuni baru di kamar kosong (kamar jadi terisi), pindah kamar, dan keluar.
 // Setiap perubahan hunian dicatat di riwayat_hunian.
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { normalisasiNomorWa } from "../nomor-wa.ts";
 import { GalatAksi, nominalValid, tanggalValid } from "./galat.ts";
 
-const { riwayatHunian, rooms, tenants } = schema;
+const { invoices, riwayatHunian, rooms, tenants } = schema;
 
 export type InputTambahPenghuni = {
   nama: string;
@@ -158,5 +158,67 @@ export async function pindahKamar(db: Db, organizationId: string, input: InputPi
     });
 
     return { nama: penghuni.nama, dari: penghuni.nomorKamar, ke: tujuan.nomorKamar, hargaSewa };
+  });
+}
+
+export type InputKeluarPenghuni = { roomId: string; tanggal: string; alasan?: string };
+
+export function bacaInputKeluarPenghuni(body: Record<string, unknown>): InputKeluarPenghuni {
+  const { roomId, tanggal, alasan } = body;
+  if (typeof roomId !== "string" || !roomId) throw new GalatAksi("Pilih kamar penghuni yang keluar.");
+  if (!tanggalValid(tanggal)) throw new GalatAksi("Tanggal keluar tidak valid.");
+  const alasanBersih = typeof alasan === "string" ? alasan.trim().slice(0, 100) : "";
+  return { roomId, tanggal, ...(alasanBersih ? { alasan: alasanBersih } : {}) };
+}
+
+/**
+ * Catat penghuni keluar: status keluar (tanggal & alasan), kamar kosong, riwayat hunian ditutup.
+ * Tagihan yang belum lunas tetap tercatat dan bisa ditagih; tagihan bulanan berhenti terbit.
+ */
+export async function keluarPenghuni(db: Db, organizationId: string, input: InputKeluarPenghuni, hariIni: string) {
+  if (input.tanggal > hariIni) {
+    throw new GalatAksi("Tanggal keluar tidak boleh di masa depan. Catat saat penghuni benar-benar keluar.");
+  }
+  return db.transaction(async (tx) => {
+    const [penghuni] = await tx
+      .select({ id: tenants.id, nama: tenants.nama, tanggalMasuk: tenants.tanggalMasuk, nomorKamar: rooms.nomorKamar })
+      .from(tenants)
+      .innerJoin(rooms, eq(rooms.id, tenants.roomId))
+      .where(and(eq(tenants.organizationId, organizationId), eq(tenants.roomId, input.roomId), eq(tenants.status, "aktif")))
+      .for("update");
+    if (!penghuni) throw new GalatAksi("Tidak ada penghuni aktif di kamar ini.", 404);
+
+    const [hunian] = await tx
+      .select({ id: riwayatHunian.id, tanggalMulai: riwayatHunian.tanggalMulai })
+      .from(riwayatHunian)
+      .where(and(eq(riwayatHunian.tenantId, penghuni.id), isNull(riwayatHunian.tanggalSelesai)));
+    const mulai = hunian?.tanggalMulai ?? penghuni.tanggalMasuk;
+    if (input.tanggal < mulai) throw new GalatAksi("Tanggal keluar tidak boleh sebelum tanggal mulai menghuni kamar ini.");
+
+    await tx
+      .update(tenants)
+      .set({ status: "keluar", tanggalKeluar: input.tanggal, alasanKeluar: input.alasan ?? null })
+      .where(eq(tenants.id, penghuni.id));
+    await tx.update(rooms).set({ status: "kosong" }).where(eq(rooms.id, input.roomId));
+    if (hunian) {
+      await tx
+        .update(riwayatHunian)
+        .set({ tanggalSelesai: input.tanggal, alasanSelesai: "keluar" })
+        .where(eq(riwayatHunian.id, hunian.id));
+    }
+
+    const [terbuka] = await tx
+      .select({
+        jumlah: sql<number>`count(*)`.mapWith(Number),
+        nominal: sql<number>`coalesce(sum(${invoices.nominal}), 0)`.mapWith(Number),
+      })
+      .from(invoices)
+      .where(
+        and(
+          eq(invoices.tenantId, penghuni.id),
+          inArray(invoices.status, ["draft", "terkirim", "menunggu", "jatuh_tempo", "perlu_review"]),
+        ),
+      );
+    return { nama: penghuni.nama, nomorKamar: penghuni.nomorKamar, tagihanTerbuka: terbuka };
   });
 }

@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "fb42f81022db0a748d05185b62760a99d3100382",
+  "generatedForCommit": "c5fba92dc994c893d0eb39a72acd8dc4c5e6229f",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -88,7 +88,7 @@
     },
     {
       "path": "drizzle/0006_kamar_aktif.sql",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "sql",
       "size": 469
     },
@@ -130,13 +130,13 @@
     },
     {
       "path": "drizzle/meta/0006_snapshot.json",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "json",
       "size": 49842
     },
     {
       "path": "drizzle/meta/_journal.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 1063
     },
@@ -184,7 +184,7 @@
     },
     {
       "path": "src/app/(app)/kamar/kosong/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1240
     },
@@ -261,6 +261,12 @@
       "size": 823
     },
     {
+      "path": "src/app/api/dashboard/aksi/pindah-kamar/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 785
+    },
+    {
       "path": "src/app/api/dashboard/aksi/reminder/route.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -286,13 +292,13 @@
     },
     {
       "path": "src/app/api/dashboard/kamar/[id]/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 872
     },
     {
       "path": "src/app/api/dashboard/kamar/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1185
     },
@@ -462,7 +468,7 @@
       "path": "src/components/kamar/daftar-kamar-kosong.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 11996
+      "size": 12155
     },
     {
       "path": "src/components/kamar/daftar-kamar.tsx",
@@ -490,9 +496,9 @@
     },
     {
       "path": "src/components/kamar/pindah-kamar.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 7684
+      "size": 8302
     },
     {
       "path": "src/components/kamar/tambah-penghuni.tsx",
@@ -502,7 +508,7 @@
     },
     {
       "path": "src/components/kamar/wizard-tambah-kamar.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 15781
     },
@@ -640,7 +646,7 @@
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4625
     },
@@ -802,7 +808,7 @@
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 14510
     },
@@ -838,13 +844,13 @@
     },
     {
       "path": "src/lib/aksi/kamar.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4977
     },
     {
       "path": "src/lib/aksi/kamar.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5965
     },
@@ -852,7 +858,13 @@
       "path": "src/lib/aksi/penghuni.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 2839
+      "size": 6810
+    },
+    {
+      "path": "src/lib/aksi/pindah-kamar.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4621
     },
     {
       "path": "src/lib/aksi/reminder.ts",
@@ -898,7 +910,7 @@
     },
     {
       "path": "src/lib/data/halaman-kamar-kosong.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1073
     },
@@ -942,7 +954,7 @@
       "path": "src/lib/data/kamar.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 6398
+      "size": 6818
     },
     {
       "path": "src/lib/data/kos.test.ts",
@@ -952,7 +964,7 @@
     },
     {
       "path": "src/lib/data/kos.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2141
     },
@@ -1024,7 +1036,7 @@
     },
     {
       "path": "src/lib/data/tambah-kamar.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1480
     },
@@ -1180,7 +1192,7 @@
     },
     {
       "path": "src/lib/kosta/tool-baca.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7802
     },

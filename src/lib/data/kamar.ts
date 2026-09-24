@@ -39,6 +39,7 @@ export type PenghuniNonaktif = {
   nomorKamar: string;
   tanggalMasuk: string;
   tanggalKeluar?: string;
+  alasanKeluar?: string;
   hargaSewa: number;
 };
 
@@ -130,13 +131,14 @@ export async function getPenghuniNonaktif(db: Db, organizationId: string): Promi
       nomorKamar: rooms.nomorKamar,
       tanggalMasuk: tenants.tanggalMasuk,
       tanggalKeluar: tenants.tanggalKeluar,
+      alasanKeluar: tenants.alasanKeluar,
       hargaSewa: tenants.hargaSewa,
     })
     .from(tenants)
     .innerJoin(rooms, eq(rooms.id, tenants.roomId))
     .where(and(eq(tenants.organizationId, organizationId), eq(tenants.status, "keluar")))
     .orderBy(desc(tenants.tanggalKeluar));
-  return baris.map((b) => ({ ...b, tanggalKeluar: b.tanggalKeluar ?? undefined }));
+  return baris.map((b) => ({ ...b, tanggalKeluar: b.tanggalKeluar ?? undefined, alasanKeluar: b.alasanKeluar ?? undefined }));
 }
 
 /** Kamar kosong urut nomor, beserta kapan & siapa penghuni terakhir yang meninggalkannya. */

@@ -32,6 +32,7 @@ export function DaftarNonaktif({ penghuni }: { penghuni: PenghuniNonaktif[] }) {
                   Kamar {p.nomorKamar} · {formatTanggal(p.tanggalMasuk)} –{" "}
                   {p.tanggalKeluar ? formatTanggal(p.tanggalKeluar) : "?"}
                 </p>
+                {p.alasanKeluar && <p className="text-xs text-muted-foreground">{p.alasanKeluar}</p>}
               </div>
               {p.tanggalKeluar && (
                 <span className="shrink-0 text-xs text-muted-foreground">

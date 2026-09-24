@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { LogOut, TriangleAlert } from "lucide-react";
 
 import {
-  CatatanSimulasi,
+  GalatServer,
   PreviewRows,
   SelesaiState,
   SheetActions,
   SheetBody,
+  kirimAksi,
 } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +24,28 @@ const ALASAN = ["Selesai kontrak", "Pindah ke luar kota", "Pindah kos lain", "La
 
 /** Keluar penghuni: tanggal & alasan → preview (dengan peringatan tagihan belum lunas) → konfirmasi. */
 export function KeluarPenghuniFlow({ kamar, hariIni }: { kamar: KamarPenghuni; hariIni: string }) {
-  const [langkah, setLangkah] = useState<"isi" | "preview" | "selesai">("isi");
+  const [langkah, setLangkah] = useState<"isi" | "preview" | "menyimpan" | "selesai">("isi");
   const [tanggal, setTanggal] = useState(hariIni);
   const [alasan, setAlasan] = useState<string>(ALASAN[0]);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
+  const router = useRouter();
 
   const penghuni = kamar.penghuni;
   if (!penghuni) return null;
   const { tagihanTerbuka } = penghuni;
+
+  async function konfirmasi() {
+    setLangkah("menyimpan");
+    setGalatServer(null);
+    try {
+      await kirimAksi("/api/dashboard/aksi/keluar-penghuni", { roomId: kamar.id, tanggal, alasan });
+      setLangkah("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+      setLangkah("preview");
+    }
+  }
 
   const peringatanTagihan = tagihanTerbuka.jumlah > 0 && (
     <p role="status" className="flex items-start gap-2 rounded-lg bg-warning-soft px-3 py-2.5 text-sm text-warning">
@@ -43,12 +60,11 @@ export function KeluarPenghuniFlow({ kamar, hariIni }: { kamar: KamarPenghuni; h
       <SelesaiState
         judul={`${penghuni.nama} keluar dari kamar ${kamar.nomorKamar}`}
         pesan="Kamar kini kosong dan penghuni dipindah ke daftar nonaktif. Tagihan bulanan untuknya berhenti terbit."
-        catatan="Mode contoh: belum benar-benar disimpan ke server."
       />
     );
   }
 
-  if (langkah === "preview") {
+  if (langkah === "preview" || langkah === "menyimpan") {
     return (
       <>
         <SheetBody>
@@ -66,15 +82,15 @@ export function KeluarPenghuniFlow({ kamar, hariIni }: { kamar: KamarPenghuni; h
             Kamar {kamar.nomorKamar} jadi kosong dan siap ditawarkan. Data penghuni tetap tersimpan
             di daftar nonaktif.
           </p>
-          <CatatanSimulasi>Mode contoh: belum tersimpan ke server.</CatatanSimulasi>
+          <GalatServer pesan={galatServer} />
         </SheetBody>
         <SheetActions>
-          <Button size="lg" variant="outline" onClick={() => setLangkah("isi")}>
+          <Button size="lg" variant="outline" disabled={langkah === "menyimpan"} onClick={() => setLangkah("isi")}>
             Ubah
           </Button>
-          <Button size="lg" onClick={() => setLangkah("selesai")}>
+          <Button size="lg" disabled={langkah === "menyimpan"} onClick={konfirmasi}>
             <LogOut data-icon="inline-start" />
-            Konfirmasi keluar
+            {langkah === "menyimpan" ? "Menyimpan…" : "Konfirmasi keluar"}
           </Button>
         </SheetActions>
       </>
@@ -98,6 +114,7 @@ export function KeluarPenghuniFlow({ kamar, hariIni }: { kamar: KamarPenghuni; h
             id="keluar-tanggal"
             type="date"
             min={penghuni.tanggalMasuk}
+            max={hariIni}
             className="h-10 bg-card"
             value={tanggal}
             onChange={(e) => setTanggal(e.target.value)}
