@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "dbddecb695f0bf85e5339bbed89d2a6b0adbaa50",
+  "generatedForCommit": "225d50282351d88ffd6064c136b0baf0eb53e606",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -121,6 +121,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 2702
+    },
+    {
+      "path": "src/app/(app)/kosta/page.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 706
     },
     {
       "path": "src/app/(app)/layout.tsx",
@@ -244,9 +250,9 @@
     },
     {
       "path": "src/components/app-shell/nav-items.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1307
+      "size": 1306
     },
     {
       "path": "src/components/app-shell/user-avatar.tsx",
@@ -295,6 +301,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1085
+    },
+    {
+      "path": "src/components/kosta/chat-kosta.tsx",
+      "reason": "new",
+      "language": "typescript",
+      "size": 6226
     },
     {
       "path": "src/components/landing/benefits-section.tsx",
@@ -376,13 +388,13 @@
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4590
     },
     {
       "path": "src/components/quick-actions/invoice-flow.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 15035
     },
@@ -430,7 +442,7 @@
     },
     {
       "path": "src/components/tagihan/form-tagihan-terjadwal.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 8914
     },
@@ -621,6 +633,12 @@
       "size": 2113
     },
     {
+      "path": "src/lib/data/kosta.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 909
+    },
+    {
       "path": "src/lib/data/pemasukan.test.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -652,15 +670,15 @@
     },
     {
       "path": "src/lib/format.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2817
+      "size": 3004
     },
     {
       "path": "src/lib/format.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3406
+      "size": 3676
     },
     {
       "path": "src/lib/invoice.test.ts",
@@ -699,6 +717,12 @@
       "size": 6072
     },
     {
+      "path": "src/lib/mock/kosta.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1259
+    },
+    {
       "path": "src/lib/nomor-wa.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -730,9 +754,9 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3942
+      "size": 4133
     },
     {
       "path": "src/lib/utils.ts",

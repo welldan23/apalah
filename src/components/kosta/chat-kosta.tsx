@@ -1,12 +1,12 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import { CheckCheck, SendHorizontal } from "lucide-react";
+import { SendHorizontal } from "lucide-react";
 
+import { BubblePesan } from "@/components/kosta/bubble-pesan";
+import { formatTanggal } from "@/lib/format";
 import { tampilNomorWa } from "@/lib/nomor-wa";
-import { formatJam, formatTanggal } from "@/lib/format";
 import type { PesanKosta } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { tanggalWib } from "@/lib/waktu";
 
 const JEDA_BALASAN = 1100;
@@ -16,29 +16,6 @@ const BALASAN_CONTOH =
 
 function labelTanggal(tanggal: string, hariIni: string) {
   return tanggal === hariIni ? "Hari ini" : formatTanggal(tanggal);
-}
-
-function Gelembung({ pesan }: { pesan: PesanKosta }) {
-  const dariOwner = pesan.dari === "owner";
-  return (
-    <li className={cn("flex", dariOwner ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-snug whitespace-pre-line shadow-xs sm:max-w-[70%]",
-          dariOwner
-            ? "rounded-br-sm bg-accent text-accent-foreground"
-            : "rounded-bl-sm bg-card text-card-foreground",
-        )}
-      >
-        <span className="sr-only">{dariOwner ? "Kamu: " : "Kosta: "}</span>
-        {pesan.teks}
-        <span className="mt-1 flex items-center justify-end gap-1 text-[0.7rem] text-muted-foreground">
-          <time dateTime={pesan.waktu}>{formatJam(pesan.waktu)}</time>
-          {dariOwner && <CheckCheck className="size-3.5 text-primary" aria-label="Terkirim" />}
-        </span>
-      </div>
-    </li>
-  );
 }
 
 function IndikatorMengetik() {
@@ -139,7 +116,7 @@ export function ChatKosta({
               <time dateTime={tanggal}>{labelTanggal(tanggal, hariIni)}</time>
             </li>
             {pesan.map((p) => (
-              <Gelembung key={p.id} pesan={p} />
+              <BubblePesan key={p.id} pesan={p} />
             ))}
           </Fragment>
         ))}

@@ -169,6 +169,23 @@ export type DashboardData = {
   invoices: InvoiceRow[];
 };
 
+/**
+ * Data terstruktur di jawaban Kosta. Nominal selalu angka dari database (bukan teks
+ * buatan AI) dan baru diformat Rupiah saat ditampilkan.
+ */
+export type LampiranKosta =
+  | {
+      jenis: "daftar_tagihan";
+      judul: string;
+      baris: { nomorKamar: string; nama: string; nominal: number; keterangan: string }[];
+      total: number;
+    }
+  | {
+      jenis: "rekap";
+      judul: string;
+      baris: { label: string; nominal: number; catatan?: string }[];
+    };
+
 /** Satu pesan di percakapan owner dengan Kosta (WhatsApp). */
 export type PesanKosta = {
   id: string;
@@ -176,4 +193,5 @@ export type PesanKosta = {
   /** ISO datetime. */
   waktu: string;
   teks: string;
+  lampiran?: LampiranKosta;
 };

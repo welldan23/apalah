@@ -11,7 +11,17 @@ export const mockPercakapanKosta: PesanKosta[] = [
     id: "m2",
     dari: "kosta",
     waktu: pada("08:02"),
-    teks: "Ada 3 tagihan jatuh tempo, total Rp1.950.000:\n• A05 Rizky — Rp500.000, lewat 9 hari\n• B06 Reza — Rp650.000, lewat 6 hari\n• C05 Nadia — Rp800.000, lewat 4 hari",
+    teks: "Ada 3 tagihan yang sudah lewat jatuh tempo bulan ini.",
+    lampiran: {
+      jenis: "daftar_tagihan",
+      judul: "Tunggakan September 2026",
+      baris: [
+        { nomorKamar: "A05", nama: "Rizky Ramadhan", nominal: 500_000, keterangan: "lewat 9 hari" },
+        { nomorKamar: "B06", nama: "Reza Kurniawan", nominal: 650_000, keterangan: "lewat 6 hari" },
+        { nomorKamar: "C05", nama: "Nadia Safitri", nominal: 800_000, keterangan: "lewat 4 hari" },
+      ],
+      total: 1_950_000,
+    },
   },
   { id: "m3", dari: "owner", waktu: pada("08:05"), teks: "Kamar mana yang masih kosong?" },
   {
@@ -25,6 +35,15 @@ export const mockPercakapanKosta: PesanKosta[] = [
     id: "m6",
     dari: "kosta",
     waktu: pada("08:07"),
-    teks: "Pemasukan September 2026: Rp12.500.000 dari 19 pembayaran terverifikasi. Masih menunggu 12 tagihan (Rp7.650.000) dan 3 jatuh tempo (Rp1.950.000).",
+    teks: "Ini rekap pemasukan bulan berjalan, dihitung dari pembayaran yang sudah terverifikasi.",
+    lampiran: {
+      jenis: "rekap",
+      judul: "Pemasukan September 2026",
+      baris: [
+        { label: "Sudah masuk", nominal: 12_500_000, catatan: "19 pembayaran" },
+        { label: "Menunggu", nominal: 7_650_000, catatan: "12 tagihan" },
+        { label: "Jatuh tempo", nominal: 1_950_000, catatan: "3 tagihan" },
+      ],
+    },
   },
 ];
