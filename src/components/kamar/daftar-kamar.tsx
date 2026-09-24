@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { LayoutGrid, List, Search } from "lucide-react";
 
+import { KartuKamar } from "@/components/kamar/kartu-kamar";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { KamarPenghuni } from "@/lib/data/kamar";
-import { formatRupiah, formatTanggal } from "@/lib/format";
+import { formatRupiah, formatRupiahSingkat, formatTanggal } from "@/lib/format";
 import { tampilNomorWa } from "@/lib/nomor-wa";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,42 @@ const FILTER: { value: FilterKamar; label: string }[] = [
 
 const parseFilter = (v: string | null): FilterKamar =>
   v === "terisi" || v === "kosong" ? v : "semua";
+
+type Tampilan = "kartu" | "daftar";
+
+/** Kartu kamar dikelompokkan per tipe, lengkap dengan harga & hunian tiap tipe. */
+function GridKamar({ kamar }: { kamar: KamarPenghuni[] }) {
+  const perTipe = new Map<string, KamarPenghuni[]>();
+  for (const k of kamar) perTipe.set(k.tipe, [...(perTipe.get(k.tipe) ?? []), k]);
+
+  return (
+    <div className="flex flex-col gap-6 p-4">
+      {[...perTipe.entries()].map(([tipe, daftar]) => (
+        <section key={tipe} aria-label={`Kamar tipe ${tipe}`}>
+          <h3 className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+            <span className="font-semibold">
+              {tipe}
+              <span className="font-normal text-muted-foreground">
+                {" "}
+                · {formatRupiahSingkat(daftar[0].hargaSewa)}/bln
+              </span>
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {daftar.filter((k) => k.status === "terisi").length}/{daftar.length} terisi
+            </span>
+          </h3>
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {daftar.map((k) => (
+              <li key={k.id}>
+                <KartuKamar kamar={k} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
 
 function StatusKamar({ status }: { status: KamarPenghuni["status"] }) {
   return (
@@ -66,8 +103,9 @@ export function DaftarKamar({ kamar }: { kamar: KamarPenghuni[] }) {
   const searchParams = useSearchParams();
   const filter = parseFilter(searchParams.get("status"));
   const cari = searchParams.get("q") ?? "";
+  const tampilan: Tampilan = searchParams.get("tampilan") === "daftar" ? "daftar" : "kartu";
 
-  function setParam(nama: "status" | "q", nilai: string | null) {
+  function setParam(nama: "status" | "q" | "tampilan", nilai: string | null) {
     const params = new URLSearchParams(searchParams.toString());
     if (nilai) params.set(nama, nilai);
     else params.delete(nama);
@@ -102,27 +140,56 @@ export function DaftarKamar({ kamar }: { kamar: KamarPenghuni[] }) {
             onChange={(e) => setParam("q", e.target.value)}
           />
         </div>
-        <div role="group" aria-label="Saring status kamar" className="flex gap-1.5">
-          {FILTER.map(({ value, label }) => {
-            const aktif = filter === value;
-            return (
+        <div className="flex items-center justify-between gap-2">
+          <div
+            role="group"
+            aria-label="Saring status kamar"
+            className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:none]"
+          >
+            {FILTER.map(({ value, label }) => {
+              const aktif = filter === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={aktif}
+                  onClick={() => setParam("status", value === "semua" ? null : value)}
+                  className={cn(
+                    "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
+                    aktif ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {label}
+                  <span className={cn("rounded-full px-1.5 text-xs tabular-nums", aktif ? "bg-primary-foreground/15" : "bg-card")}>
+                    {jumlah(value)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div role="group" aria-label="Tampilan" className="flex shrink-0 rounded-lg bg-muted p-0.5">
+            {(
+              [
+                ["kartu", "Kartu", LayoutGrid],
+                ["daftar", "Daftar", List],
+              ] as const
+            ).map(([nilai, label, Ikon]) => (
               <button
-                key={value}
+                key={nilai}
                 type="button"
-                aria-pressed={aktif}
-                onClick={() => setParam("status", value === "semua" ? null : value)}
+                aria-pressed={tampilan === nilai}
+                aria-label={`Tampilan ${label.toLowerCase()}`}
+                title={label}
+                onClick={() => setParam("tampilan", nilai === "kartu" ? null : nilai)}
                 className={cn(
-                  "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
-                  aktif ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
+                  "grid size-9 place-items-center rounded-md transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:size-8",
+                  tampilan === nilai ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {label}
-                <span className={cn("rounded-full px-1.5 text-xs tabular-nums", aktif ? "bg-primary-foreground/15" : "bg-card")}>
-                  {jumlah(value)}
-                </span>
+                <Ikon className="size-4" aria-hidden="true" />
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -130,6 +197,8 @@ export function DaftarKamar({ kamar }: { kamar: KamarPenghuni[] }) {
         <p className="px-4 py-12 text-center text-sm text-muted-foreground">
           Tidak ada kamar yang cocok{kataKunci ? ` dengan “${cari.trim()}”` : ""}.
         </p>
+      ) : tampilan === "kartu" ? (
+        <GridKamar kamar={tersaring} />
       ) : (
         <>
           {/* Mobile: kartu */}
