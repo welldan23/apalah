@@ -81,7 +81,7 @@ export function PreviewRows({ rows }: { rows: [string, React.ReactNode][] }) {
       {rows.map(([label, nilai]) => (
         <div key={label} className="flex items-start justify-between gap-4 px-3 py-2.5">
           <dt className="text-muted-foreground">{label}</dt>
-          <dd className="text-right font-medium">{nilai}</dd>
+          <dd className="text-right font-medium tabular-nums">{nilai}</dd>
         </div>
       ))}
     </dl>

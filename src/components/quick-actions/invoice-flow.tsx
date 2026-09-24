@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FilePlus2, Search } from "lucide-react";
+import { Check, FilePlus2, Search } from "lucide-react";
 
 import {
   FieldError,
@@ -14,6 +14,7 @@ import {
   kirimAksi,
 } from "@/components/quick-actions/action-sheet";
 import { RupiahInput } from "@/components/quick-actions/rupiah-input";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -265,7 +266,7 @@ export function InvoiceFlow({
           <legend className="mb-1.5 text-sm font-medium">Nominal</legend>
           {(
             [
-              ["sewa", "Sesuai harga sewa kamar"],
+              ["sewa", "Sesuai harga sewa penghuni"],
               ["khusus", "Nominal sama untuk semua kamar"],
             ] as const
           ).map(([nilai, label]) => (
@@ -359,9 +360,9 @@ export function InvoiceFlow({
                       {k.namaPenghuni}
                     </span>
                     {ditagihPeriodeIni ? (
-                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      <StatusBadge tone="neutral" icon={Check}>
                         Sudah ditagih
-                      </span>
+                      </StatusBadge>
                     ) : (
                       <span className="shrink-0 text-sm tabular-nums">
                         {formatRupiah(nominalUntuk(k))}
