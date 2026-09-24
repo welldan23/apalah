@@ -11,6 +11,12 @@ export function pesanTagihan(inv: DataTagihan, namaKos: string, linkInvoice: str
   return `Halo ${namaDepan}, ini tagihan sewa kamar ${inv.nomorKamar} di ${namaKos} periode ${formatPeriode(inv.periode)} sebesar ${formatRupiah(inv.nominal)}, jatuh tempo ${formatTanggal(inv.jatuhTempo)}. Rincian dan cara bayar ada di link berikut. Terima kasih.\n${linkInvoice}`;
 }
 
+/** Konfirmasi ke penyewa setelah pembayaran terverifikasi dan tagihan Lunas. */
+export function pesanLunas(inv: DataTagihan, namaKos: string, linkInvoice: string) {
+  const namaDepan = inv.namaPenghuni.split(" ")[0];
+  return `Halo ${namaDepan}, pembayaran sewa kamar ${inv.nomorKamar} di ${namaKos} periode ${formatPeriode(inv.periode)} sebesar ${formatRupiah(inv.nominal)} sudah kami terima. Terima kasih! Bukti pembayaran:\n${linkInvoice}`;
+}
+
 /** Pesan pengingat untuk tagihan yang sudah lewat jatuh tempo. */
 export function pesanReminder(inv: DataTagihan, namaKos: string, linkInvoice?: string) {
   const namaDepan = inv.namaPenghuni.split(" ")[0];

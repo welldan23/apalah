@@ -1,10 +1,15 @@
 // POST /api/webhook/pembayaran/midtrans — notifikasi HTTP Midtrans.
 // Tanda tangan signature_key diverifikasi dengan MIDTRANS_SERVER_KEY; tanpa kunci, semua ditolak.
 // Aman dikirim ulang (idempoten). 200 = sudah dicatat; galat server → 500 agar Midtrans mencoba lagi.
+// Tagihan yang baru Lunas dikonfirmasi ke WhatsApp penyewa setelah respons terkirim (after).
+
+import { after } from "next/server";
 
 import { getDb } from "@/db";
+import { kirimKonfirmasiLunas } from "@/lib/pembayaran/konfirmasi";
 import { bacaNotifikasiMidtrans, tandaTanganMidtransValid } from "@/lib/pembayaran/midtrans";
 import { prosesNotifikasiPembayaran } from "@/lib/pembayaran/proses-notifikasi";
+import { getPengirimWhatsApp } from "@/lib/whatsapp";
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -23,7 +28,20 @@ export async function POST(request: Request) {
   if (!notifikasi) return Response.json({ error: "Notifikasi tidak lengkap." }, { status: 400 });
 
   try {
-    return Response.json(await prosesNotifikasiPembayaran(await getDb(), notifikasi));
+    const db = await getDb();
+    const hasil = await prosesNotifikasiPembayaran(db, notifikasi);
+    if (!hasil.duplikat && hasil.statusInvoice === "lunas" && hasil.invoiceId) {
+      const invoiceId = hasil.invoiceId;
+      const baseUrl = process.env.APP_URL ?? new URL(request.url).origin;
+      after(async () => {
+        try {
+          await kirimKonfirmasiLunas(db, invoiceId, { wa: getPengirimWhatsApp(), baseUrl });
+        } catch (err) {
+          console.error("Gagal mengirim konfirmasi lunas:", err);
+        }
+      });
+    }
+    return Response.json(hasil);
   } catch (err) {
     console.error("Gagal memproses notifikasi Midtrans:", err);
     return Response.json({ error: "Gagal memproses notifikasi." }, { status: 500 });

@@ -9,6 +9,7 @@ import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
 import { bacaNotifikasiMidtrans, tandaTanganMidtransValid } from "./midtrans.ts";
+import { kirimKonfirmasiLunas } from "./konfirmasi.ts";
 import { prosesNotifikasiPembayaran } from "./proses-notifikasi.ts";
 
 const KUNCI = "SB-Mid-server-uji";
@@ -142,5 +143,40 @@ describe("prosesNotifikasiPembayaran", () => {
     assert.deepEqual(await proses(notif("inv_tidak_ada", "trx-x", "settlement", 1)), { duplikat: false, hasil: "diabaikan: invoice tidak ditemukan" });
     assert.deepEqual(await proses(notif("inv_2026-09_A01", "trx-y", "refund", 500_000)), { duplikat: false, hasil: "diabaikan: status refund" });
     assert.equal((await invoice("inv_2026-09_A01")).status, "lunas");
+  });
+});
+
+describe("kirimKonfirmasiLunas", () => {
+  let db: Db;
+  let tutup: () => Promise<void>;
+  const terkirim: { ke: string; teks: string }[] = [];
+  const wa = {
+    provider: "uji",
+    simulasi: false,
+    async kirim(p: { ke: string; teks: string }) {
+      terkirim.push(p);
+      return { ok: true as const };
+    },
+  };
+
+  before(async () => {
+    ({ db, tutup } = await buatDbUji());
+    await isiDataContoh(db);
+  });
+  after(() => tutup());
+
+  it("tagihan yang baru Lunas → pesan terima kasih + link bukti, tercatat di riwayat", async () => {
+    await prosesNotifikasiPembayaran(db, bacaNotifikasiMidtrans(notif("inv_2026-09_A03", "trx-k1", "settlement", 500_000))!);
+    assert.equal(await kirimKonfirmasiLunas(db, "inv_2026-09_A03", { wa, baseUrl: "https://kostera.id" }), true);
+    assert.equal(terkirim[0].ke, "6281320465838");
+    assert.match(terkirim[0].teks, /^Halo Yoga, pembayaran sewa kamar A03 di Kos Melati periode September 2026 sebesar Rp500\.000 sudah kami terima\./);
+    assert.match(terkirim[0].teks, /https:\/\/kostera\.id\/invoice\/demo-a03-2026-09$/);
+    const [r] = await db.select().from(schema.reminders).where(eq(schema.reminders.invoiceId, "inv_2026-09_A03"));
+    assert.deepEqual([r.jenis, r.status], ["konfirmasi_lunas", "terkirim"]);
+  });
+
+  it("tagihan yang belum lunas tidak dikonfirmasi", async () => {
+    assert.equal(await kirimKonfirmasiLunas(db, "inv_2026-09_A05", { wa, baseUrl: "https://kostera.id" }), false);
+    assert.equal(terkirim.length, 1);
   });
 });
