@@ -104,7 +104,11 @@ export function BenefitsSection() {
           {BENEFIT.map(({ icon: Icon, judul, deskripsi, ilustrasi }) => {
             const Ilustrasi = ILUSTRASI[ilustrasi];
             return (
-              <li key={judul} className="flex flex-col rounded-2xl border bg-background p-2">
+              // Subgrid di layar lebar: tinggi ilustrasi disamakan antar kartu supaya judulnya sejajar.
+              <li
+                key={judul}
+                className="flex flex-col rounded-2xl border bg-background p-2 md:row-span-2 md:grid md:grid-rows-subgrid md:gap-0"
+              >
                 <div aria-hidden="true" className="rounded-xl bg-muted p-3.5 md:min-h-40">
                   <Ilustrasi />
                 </div>
