@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "701e2901b926b44352ee4dba3800a69870e08b2f",
+  "generatedForCommit": "da78ddc36fa012b21eb5290bd44c9209b202da19",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -69,6 +69,12 @@
       "size": 2103
     },
     {
+      "path": "drizzle/0003_kosta_percakapan.sql",
+      "reason": "new",
+      "language": "sql",
+      "size": 4004
+    },
+    {
       "path": "drizzle/meta/0000_snapshot.json",
       "reason": "needs_summary",
       "language": "json",
@@ -87,10 +93,16 @@
       "size": 29527
     },
     {
-      "path": "drizzle/meta/_journal.json",
-      "reason": "needs_summary",
+      "path": "drizzle/meta/0003_snapshot.json",
+      "reason": "new",
       "language": "json",
-      "size": 492
+      "size": 41767
+    },
+    {
+      "path": "drizzle/meta/_journal.json",
+      "reason": "changed",
+      "language": "json",
+      "size": 636
     },
     {
       "path": "drizzle.config.ts",
@@ -196,13 +208,13 @@
     },
     {
       "path": "src/app/api/cron/harian/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1199
     },
     {
       "path": "src/app/api/dashboard/aksi/kirim-tagihan/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1036
     },
@@ -220,7 +232,7 @@
     },
     {
       "path": "src/app/api/dashboard/aksi/status-tagihan/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 946
     },
@@ -544,7 +556,7 @@
     },
     {
       "path": "src/components/pembayaran/detail-tagihan.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 8422
     },
@@ -693,6 +705,12 @@
       "size": 1466
     },
     {
+      "path": "src/db/schema-kosta.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 5199
+    },
+    {
       "path": "src/db/schema.test.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -700,15 +718,15 @@
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 7764
+      "size": 11919
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2606
+      "size": 4065
     },
     {
       "path": "src/db/testing.ts",
@@ -748,13 +766,13 @@
     },
     {
       "path": "src/lib/aksi/status-tagihan.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6769
     },
     {
       "path": "src/lib/aksi/status-tagihan.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7232
     },
@@ -1012,7 +1030,7 @@
     },
     {
       "path": "src/lib/penjadwal/jatuh-tempo.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 726
     },
@@ -1030,13 +1048,13 @@
     },
     {
       "path": "src/lib/penjadwal/tagihan-terjadwal.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3109
     },
     {
       "path": "src/lib/pesan.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1370
     },
@@ -1132,7 +1150,7 @@
     },
     {
       "path": "vercel.json",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "json",
       "size": 128
     }
