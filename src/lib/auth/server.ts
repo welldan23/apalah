@@ -16,3 +16,8 @@ export function getAuth(): Promise<Auth> {
   );
   return global.kosteraAuth;
 }
+
+/** Sesi login dari header permintaan (cookie kostera.session_token); null bila belum masuk. */
+export async function getSesiLogin(headers: Headers) {
+  return (await getAuth()).api.getSession({ headers });
+}

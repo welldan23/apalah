@@ -55,7 +55,7 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
     try {
       await panggilAuth("/phone-number/verify", { phoneNumber: nomorWa, code: nilai });
       setStatus("berhasil");
-      router.push(`/daftar/workspace?nomor=${nomorWa}`);
+      router.push("/daftar/workspace");
       return;
     } catch (err) {
       const galat = err as GalatAuth;

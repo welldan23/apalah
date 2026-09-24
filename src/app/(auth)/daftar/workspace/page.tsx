@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { FormWorkspace } from "@/components/auth/form-workspace";
-import { normalisasiNomorWa } from "@/lib/nomor-wa";
+import { getDb } from "@/db";
+import { getSesiLogin } from "@/lib/auth/server";
+import { daftarWorkspace } from "@/lib/kosta/workspace";
 
 export const metadata: Metadata = {
   title: "Siapkan kos",
   robots: { index: false, follow: false },
 };
 
-export default async function WorkspaceBaruPage({ searchParams }: PageProps<"/daftar/workspace">) {
-  const { nomor } = await searchParams;
-  const nomorWa = typeof nomor === "string" ? normalisasiNomorWa(nomor) : null;
-  if (!nomorWa) redirect("/daftar");
+export default async function WorkspaceBaruPage() {
+  const sesi = await getSesiLogin(await headers());
+  const nomorWa = sesi?.user.phoneNumber;
+  if (!sesi || !nomorWa) redirect("/daftar");
+  // Sudah mengelola kos (mis. masuk lagi lewat halaman daftar) → langsung pilih kos.
+  if ((await daftarWorkspace(await getDb(), sesi.user.id)).length > 0) redirect("/pilih-kos");
 
   return (
     <div className="flex flex-col gap-6">

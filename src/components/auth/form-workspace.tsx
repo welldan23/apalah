@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, CircleCheck } from "lucide-react";
 
-import { CatatanSimulasi, FieldError } from "@/components/quick-actions/action-sheet";
+import { FieldError, GalatServer, kirimAksi } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,8 @@ import { tampilNomorWa } from "@/lib/nomor-wa";
 type Workspace = { namaPemilik: string; namaKos: string; jumlahKamar: number };
 
 /**
- * Langkah terakhir daftar: data kos pertama → workspace (organisasi + owner) dibuat otomatis dan
- * nomor WhatsApp yang baru diverifikasi langsung tertaut. Tahap frontend: pembuatan masih contoh.
+ * Langkah terakhir daftar: data kos pertama → workspace (organisasi + owner + jadwal pengingat)
+ * dibuat otomatis lewat POST /api/akun/workspace; nomor WhatsApp yang baru diverifikasi sudah tertaut.
  */
 export function FormWorkspace({ nomorWa }: { nomorWa: string }) {
   const [namaPemilik, setNamaPemilik] = useState("");
@@ -23,16 +23,27 @@ export function FormWorkspace({ nomorWa }: { nomorWa: string }) {
   const [jumlahKamar, setJumlahKamar] = useState("");
   const [galat, setGalat] = useState<GalatDataKos>({});
   const [siap, setSiap] = useState<Workspace>();
+  const [membuat, setMembuat] = useState(false);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
 
   const bersihkan = (kunci: keyof GalatDataKos) => setGalat((g) => (g[kunci] ? { ...g, [kunci]: undefined } : g));
 
-  function buat(e: React.FormEvent) {
+  async function buat(e: React.FormEvent) {
     e.preventDefault();
     const data = { namaPemilik, namaKos, jumlahKamar: jumlahKamar ? Number(jumlahKamar) : Number.NaN };
     const g = periksaDataKos(data);
     setGalat(g);
     if (Object.keys(g).length > 0) return;
-    setSiap({ namaPemilik: namaPemilik.trim(), namaKos: namaKos.trim(), jumlahKamar: data.jumlahKamar });
+    setMembuat(true);
+    setGalatServer(null);
+    try {
+      await kirimAksi("/api/akun/workspace", data);
+      setSiap({ namaPemilik: namaPemilik.trim(), namaKos: namaKos.trim(), jumlahKamar: data.jumlahKamar });
+    } catch (err) {
+      setGalatServer((err as Error).message);
+    } finally {
+      setMembuat(false);
+    }
   }
 
   if (siap) {
@@ -68,7 +79,6 @@ export function FormWorkspace({ nomorWa }: { nomorWa: string }) {
             <Link href="/kamar/tambah">Lengkapi data kamar</Link>
           </Button>
         </div>
-        <CatatanSimulasi>Mode contoh: workspace belum benar-benar dibuat; dashboard menampilkan data contoh Kos Melati.</CatatanSimulasi>
       </section>
     );
   }
@@ -139,8 +149,9 @@ export function FormWorkspace({ nomorWa }: { nomorWa: string }) {
         terverifikasi dan akan langsung tertaut ke workspace ini.
       </p>
 
-      <Button type="submit" size="lg" className="h-12 text-base">
-        Buat workspace
+      <GalatServer pesan={galatServer} />
+      <Button type="submit" size="lg" className="h-12 text-base" disabled={membuat}>
+        {membuat ? "Menyiapkan workspace…" : "Buat workspace"}
       </Button>
     </form>
   );
