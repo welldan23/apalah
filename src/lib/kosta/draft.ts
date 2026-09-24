@@ -52,8 +52,14 @@ async function simpanDraft(db: Db, pemilik: Pemilik, data: DataDraftAksi): Promi
   return { aksi, periode, penerima, total, status: "menunggu_konfirmasi", draftId: draft.id };
 }
 
-/** Draft pengingat untuk semua tagihan jatuh tempo; null bila tidak ada yang menunggak. */
-export async function siapkanDraftReminder(db: Db, pemilik: Pemilik): Promise<PreviewAksi | null> {
+/**
+ * Draft pengingat untuk semua tagihan jatuh tempo (kecuali `kecuali`); null bila tidak ada yang menunggak.
+ */
+export async function siapkanDraftReminder(
+  db: Db,
+  pemilik: Pemilik,
+  { kecuali = [] }: { kecuali?: string[] } = {},
+): Promise<PreviewAksi | null> {
   const tunggakan = await db
     .select({
       id: invoices.id,
@@ -65,7 +71,13 @@ export async function siapkanDraftReminder(db: Db, pemilik: Pemilik): Promise<Pr
     .from(invoices)
     .innerJoin(tenants, eq(tenants.id, invoices.tenantId))
     .innerJoin(rooms, eq(rooms.id, invoices.roomId))
-    .where(and(eq(invoices.organizationId, pemilik.organizationId), eq(invoices.status, "jatuh_tempo")));
+    .where(
+      and(
+        eq(invoices.organizationId, pemilik.organizationId),
+        eq(invoices.status, "jatuh_tempo"),
+        kecuali.length ? notInArray(invoices.id, kecuali) : undefined,
+      ),
+    );
   if (tunggakan.length === 0) return null;
   tunggakan.sort(urutKamar);
 

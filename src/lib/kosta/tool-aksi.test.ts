@@ -9,7 +9,7 @@ import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
 import { GalatAksi } from "../aksi/galat.ts";
 import { siapkanDraftReminder } from "./draft.ts";
-import { toolBatalDraft, toolDraftTagihan, toolKoreksiDraft } from "./tool-aksi.ts";
+import { toolBatalDraft, toolDraftTagihan, toolKoreksiDraft, toolSiapkanReminder } from "./tool-aksi.ts";
 
 const ORG = "org_kos_melati";
 const PEMILIK = { organizationId: ORG, userId: "usr_ratna", conversationId: "wac_owner_kos_melati" };
@@ -140,6 +140,58 @@ describe("koreksi & batal draft", () => {
     );
     assert.deepEqual(await toolBatalDraft(db, percakapan), { teks: "Oke, dibatalkan. Tidak ada yang dikirim atau diubah." });
     assert.equal((await draft(reminder!.draftId!)).status, "dibatalkan");
+  });
+});
+
+describe("toolSiapkanReminder", () => {
+  let db: Db;
+  let tutup: () => Promise<void>;
+  const SEKARANG = new Date("2026-09-24T09:00:00+07:00");
+
+  before(async () => {
+    ({ db, tutup } = await buatDbUji());
+    await isiDataContoh(db);
+  });
+  after(() => tutup());
+
+  const catatReminder = (kamar: string, jamLalu: number) =>
+    db.insert(schema.reminders).values({
+      organizationId: ORG,
+      invoiceId: `inv_2026-09_${kamar}`,
+      tenantId: `tnt_${kamar}`,
+      jenis: "manual",
+      status: "terkirim",
+      terkirimPada: new Date(SEKARANG.getTime() - jamLalu * 3_600_000),
+    });
+
+  it("preview semua penunggak + contoh pesan yang akan dikirim", async () => {
+    const hasil = await toolSiapkanReminder(db, PEMILIK, { sekarang: SEKARANG });
+    assert.ok(hasil.lampiran?.jenis === "preview_aksi");
+    assert.deepEqual(hasil.lampiran.penerima.map((p) => p.nomorKamar), ["A05", "B06", "C05"]);
+    assert.equal(hasil.lampiran.status, "menunggu_konfirmasi");
+    assert.match(hasil.teks, /^Ini preview pengingat untuk 3 penyewa yang menunggak, total Rp1\.950\.000\. Belum ada pesan yang dikirim/);
+    assert.match(hasil.teks, /Contoh pesan ke Rizky Ramadhan \(A05\):\nHalo Rizky, ini pengingat dari Kos Melati\. [\s\S]*Rp500\.000[\s\S]*\n\[link invoice\]$/);
+  });
+
+  it("penyewa yang dihubungi dalam 24 jam terakhir dilewati; yang lebih lama tetap diingatkan", async () => {
+    await catatReminder("A05", 3);
+    await catatReminder("B06", 30);
+    const hasil = await toolSiapkanReminder(db, PEMILIK, { sekarang: SEKARANG });
+    assert.ok(hasil.lampiran?.jenis === "preview_aksi");
+    assert.deepEqual(hasil.lampiran.penerima.map((p) => p.nomorKamar), ["B06", "C05"]);
+    assert.match(hasil.teks, /1 tagihan dilewati karena penyewanya sudah dihubungi dalam 24 jam terakhir/);
+  });
+
+  it("semua sudah dihubungi → tidak ada draft; tanpa tunggakan → dijawab jujur", async () => {
+    await catatReminder("B06", 1);
+    await catatReminder("C05", 1);
+    assert.deepEqual(await toolSiapkanReminder(db, PEMILIK, { sekarang: SEKARANG }), {
+      teks: "Semua penyewa yang menunggak sudah dihubungi dalam 24 jam terakhir. Coba lagi besok supaya tidak terkesan spam.",
+    });
+    await db.update(schema.invoices).set({ status: "lunas" }).where(eq(schema.invoices.status, "jatuh_tempo"));
+    assert.deepEqual(await toolSiapkanReminder(db, PEMILIK, { sekarang: SEKARANG }), {
+      teks: "Tidak ada tagihan yang lewat jatuh tempo, jadi belum ada yang perlu diingatkan.",
+    });
   });
 });
 
