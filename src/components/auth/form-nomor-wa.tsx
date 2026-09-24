@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { CatatanSimulasi, FieldError } from "@/components/quick-actions/action-sheet";
+import { FieldError } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { normalisasiNomorWa, tampilNomorWa } from "@/lib/nomor-wa";
 
 /**
- * Langkah pertama daftar: nomor WhatsApp owner. Nomor dirapikan ke format 62… lalu kode OTP dikirim ke sana.
- * Tahap frontend: pengiriman kode masih contoh.
+ * Langkah pertama daftar: nomor WhatsApp owner. Nomor dirapikan ke format 62… lalu lanjut ke
+ * halaman verifikasi, tempat kode OTP dikirim & dicek.
  */
-export function FormNomorWa() {
-  const [nomor, setNomor] = useState("");
+export function FormNomorWa({ nomorAwal }: { /** Nomor sebelumnya, mis. saat kembali dari "Ganti nomor". */ nomorAwal?: string }) {
+  const router = useRouter();
+  const [nomor, setNomor] = useState(nomorAwal ? tampilNomorWa(nomorAwal) : "");
   const [galat, setGalat] = useState<string>();
-  const [terkirimKe, setTerkirimKe] = useState<string>();
 
   const nomorValid = normalisasiNomorWa(nomor);
 
@@ -26,27 +26,7 @@ export function FormNomorWa() {
       setGalat(nomor.trim() ? "Nomor WhatsApp tidak valid, contoh 0812 3456 7890." : "Isi nomor WhatsApp kamu.");
       return;
     }
-    setTerkirimKe(nomorValid);
-  }
-
-  if (terkirimKe) {
-    return (
-      <section aria-live="polite" className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-4 py-8 text-center">
-        <span className="grid size-12 place-items-center rounded-full bg-success-soft text-success">
-          <MessageCircle className="size-6" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="font-semibold">Cek WhatsApp kamu</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Kode verifikasi dikirim ke <span className="font-medium text-foreground tabular-nums">{tampilNomorWa(terkirimKe)}</span>.
-          </p>
-        </div>
-        <CatatanSimulasi>Mode contoh: kode belum benar-benar dikirim.</CatatanSimulasi>
-        <Button variant="ghost" size="lg" className="h-11" onClick={() => setTerkirimKe(undefined)}>
-          Ganti nomor
-        </Button>
-      </section>
-    );
+    router.push(`/daftar/verifikasi?nomor=${nomorValid}`);
   }
 
   return (
