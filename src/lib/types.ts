@@ -107,6 +107,8 @@ export type RoomCell = {
   status: RoomStatus;
   /** Nama penghuni aktif, kosong bila kamar belum terisi. */
   namaPenghuni?: string;
+  /** Harga sewa yang disepakati penghuni aktif (bisa beda dari harga kamar). */
+  hargaSewaPenghuni?: number;
 };
 
 /** Jumlah invoice + total nominalnya. */

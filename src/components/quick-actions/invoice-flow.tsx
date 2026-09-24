@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FilePlus2, Search } from "lucide-react";
 
 import {
-  CatatanSimulasi,
   FieldError,
+  GalatServer,
   PreviewRows,
   SelesaiState,
   SheetActions,
   SheetBody,
-  simulasiKirim,
+  kirimAksi,
 } from "@/components/quick-actions/action-sheet";
 import { RupiahInput } from "@/components/quick-actions/rupiah-input";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import type { RoomCell } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Langkah = "isi" | "preview" | "menyimpan" | "selesai";
+type Hasil = { dibuat: number; totalNominal: number; dilewati: string[] };
 type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal", string>>;
 
 /** Buat Tagihan: pilih kamar, nominal & jatuh tempo → preview → konfirmasi owner. */
@@ -40,8 +42,11 @@ export function InvoiceFlow({
   /** Kamar terisi yang bisa ditagih. */
   kamar: RoomCell[];
 }) {
+  const router = useRouter();
   const periodeAwal = periodeBerikutnya(periode);
   const [langkah, setLangkah] = useState<Langkah>("isi");
+  const [hasil, setHasil] = useState<Hasil | null>(null);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
   const [periodeTagihan, setPeriodeTagihan] = useState(periodeAwal);
   const [jatuhTempo, setJatuhTempo] = useState(`${periodeAwal}-10`);
   const [dipilih, setDipilih] = useState(() => new Set(kamar.map((k) => k.id)));
@@ -64,7 +69,7 @@ export function InvoiceFlow({
     : kamar;
 
   const nominalUntuk = (k: RoomCell) =>
-    modeNominal === "sewa" ? k.hargaSewa : (nominalKhusus ?? 0);
+    modeNominal === "sewa" ? (k.hargaSewaPenghuni ?? k.hargaSewa) : (nominalKhusus ?? 0);
   const penerima = kamar.filter((k) => dipilih.has(k.id));
   const total = penerima.reduce((jumlah, k) => jumlah + nominalUntuk(k), 0);
   const semuaDipilih = dipilih.size === kamar.length;
@@ -91,15 +96,33 @@ export function InvoiceFlow({
 
   async function konfirmasi() {
     setLangkah("menyimpan");
-    await simulasiKirim();
-    setLangkah("selesai");
+    setGalatServer(null);
+    try {
+      const data = await kirimAksi<Hasil>("/api/dashboard/aksi/tagihan", {
+        periode: periodeTagihan,
+        jatuhTempo,
+        roomIds: penerima.map((k) => k.id),
+        nominalKhusus: modeNominal === "khusus" ? nominalKhusus : null,
+      });
+      setHasil(data);
+      setLangkah("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+      setLangkah("preview");
+    }
   }
 
-  if (langkah === "selesai") {
+  if (langkah === "selesai" && hasil) {
+    const kamarDilewati =
+      hasil.dilewati.length > 5 ? `${hasil.dilewati.length} kamar` : `Kamar ${hasil.dilewati.join(", ")}`;
+    const dilewati = hasil.dilewati.length
+      ? ` ${kamarDilewati} dilewati karena sudah punya tagihan periode ini.`
+      : "";
     return (
       <SelesaiState
-        judul={`${penerima.length} tagihan ${formatPeriode(periodeTagihan)} dibuat`}
-        pesan="Setiap tagihan punya link invoice publik yang bisa dibuka penyewa tanpa login."
+        judul={`${hasil.dibuat} tagihan ${formatPeriode(periodeTagihan)} dibuat`}
+        pesan={`Total ${formatRupiah(hasil.totalNominal)}. Setiap tagihan punya link invoice publik yang bisa dibuka penyewa tanpa login.${dilewati}`}
       />
     );
   }
@@ -134,7 +157,7 @@ export function InvoiceFlow({
               ))}
             </ul>
           </section>
-          <CatatanSimulasi />
+          <GalatServer pesan={galatServer} />
         </SheetBody>
         <SheetActions>
           <Button

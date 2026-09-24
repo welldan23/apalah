@@ -88,17 +88,31 @@ export function PreviewRows({ rows }: { rows: [string, React.ReactNode][] }) {
   );
 }
 
-/** Keterangan bahwa aksi masih simulasi di atas data tiruan. */
-export function CatatanSimulasi() {
+/** Keterangan bahwa sebagian aksi masih disimulasikan (mis. provider WhatsApp belum disambungkan). */
+export function CatatanSimulasi({ children }: { children: React.ReactNode }) {
+  return <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">{children}</p>;
+}
+
+/** Galat dari server, ditampilkan di atas tombol aksi. */
+export function GalatServer({ pesan }: { pesan: string | null }) {
+  if (!pesan) return null;
   return (
-    <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
-      Mode contoh: data belum benar-benar disimpan atau dikirim.
+    <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
+      {pesan}
     </p>
   );
 }
 
 /** Layar sukses setelah owner mengonfirmasi. */
-export function SelesaiState({ judul, pesan }: { judul: string; pesan: string }) {
+export function SelesaiState({
+  judul,
+  pesan,
+  catatan,
+}: {
+  judul: string;
+  pesan: string;
+  catatan?: string;
+}) {
   return (
     <>
       <SheetBody className="items-center justify-center py-10 text-center">
@@ -109,7 +123,7 @@ export function SelesaiState({ judul, pesan }: { judul: string; pesan: string })
           <p className="text-base font-semibold">{judul}</p>
           <p className="mt-1 text-sm text-muted-foreground">{pesan}</p>
         </div>
-        <CatatanSimulasi />
+        {catatan && <CatatanSimulasi>{catatan}</CatatanSimulasi>}
       </SheetBody>
       <SheetActions>
         <SheetClose asChild>
@@ -129,7 +143,19 @@ export function FieldError({ id, pesan }: { id: string; pesan?: string }) {
   );
 }
 
-/** Simulasi panggilan server selama tahap frontend. */
-export function simulasiKirim() {
-  return new Promise((resolve) => setTimeout(resolve, 700));
+/** POST JSON ke endpoint aksi cepat; galat dari server dilempar sebagai Error berpesan. */
+export async function kirimAksi<T>(url: string, body: unknown): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.");
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.galat ?? "Gagal menyimpan. Coba lagi.");
+  return data as T;
 }

@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
 
 import {
-  CatatanSimulasi,
   FieldError,
+  GalatServer,
   PreviewRows,
   SelesaiState,
   SheetActions,
   SheetBody,
-  simulasiKirim,
+  kirimAksi,
 } from "@/components/quick-actions/action-sheet";
 import { RupiahInput } from "@/components/quick-actions/rupiah-input";
 import { Button } from "@/components/ui/button";
@@ -18,21 +19,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SheetClose } from "@/components/ui/sheet";
 import { formatRupiah, formatRupiahSingkat, formatTanggal } from "@/lib/format";
+import { normalisasiNomorWa, tampilNomorWa } from "@/lib/nomor-wa";
 import type { RoomCell } from "@/lib/types";
 
 type Langkah = "isi" | "preview" | "menyimpan" | "selesai";
 type Galat = Partial<Record<"nama" | "nomorWa" | "kamar" | "tanggalMasuk" | "hargaSewa", string>>;
-
-/** "0812-3456 7890" / "+62 812…" → "6281234567890"; null bila tidak valid. */
-function normalisasiNomorWa(input: string) {
-  const digit = input.replace(/\D/g, "");
-  const nomor = digit.startsWith("0") ? `62${digit.slice(1)}` : digit;
-  return /^628\d{7,12}$/.test(nomor) ? nomor : null;
-}
-
-function tampilNomorWa(nomor: string) {
-  return `+${nomor.slice(0, 2)} ${nomor.slice(2, 5)}-${nomor.slice(5, 9)}-${nomor.slice(9)}`;
-}
 
 /** Tambah Penghuni: data penghuni + kamar kosong → preview → konfirmasi owner. */
 export function TenantFlow({
@@ -42,7 +33,9 @@ export function TenantFlow({
   hariIni: string;
   kamarKosong: RoomCell[];
 }) {
+  const router = useRouter();
   const [langkah, setLangkah] = useState<Langkah>("isi");
+  const [galatServer, setGalatServer] = useState<string | null>(null);
   const [nama, setNama] = useState("");
   const [nomorWa, setNomorWa] = useState("");
   const [roomId, setRoomId] = useState("");
@@ -78,8 +71,21 @@ export function TenantFlow({
 
   async function konfirmasi() {
     setLangkah("menyimpan");
-    await simulasiKirim();
-    setLangkah("selesai");
+    setGalatServer(null);
+    try {
+      await kirimAksi("/api/dashboard/aksi/penghuni", {
+        nama: nama.trim(),
+        nomorWa: nomorValid,
+        roomId,
+        tanggalMasuk,
+        hargaSewa,
+      });
+      setLangkah("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+      setLangkah("preview");
+    }
   }
 
   if (langkah === "selesai") {
@@ -104,7 +110,7 @@ export function TenantFlow({
               ["Harga sewa", `${formatRupiah(hargaSewa ?? 0)}/bulan`],
             ]}
           />
-          <CatatanSimulasi />
+          <GalatServer pesan={galatServer} />
         </SheetBody>
         <SheetActions>
           <Button

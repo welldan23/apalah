@@ -40,6 +40,7 @@ export const statusPembayaranEnum = pgEnum("status_pembayaran", [
   "valid",
   "tidak_cocok",
 ]);
+export const statusReminderEnum = pgEnum("status_reminder", ["terkirim", "gagal"]);
 
 export const users = pgTable("users", {
   id: id(),
@@ -150,6 +151,8 @@ export const invoices = pgTable(
   },
   (t) => [
     index("invoices_organisasi_periode").on(t.organizationId, t.periode),
+    // Satu tagihan sewa per penghuni per periode — mencegah tagihan ganda.
+    uniqueIndex("invoices_penghuni_periode_unik").on(t.tenantId, t.periode),
     check("invoices_nominal_positif", sql`${t.nominal} > 0`),
     check("invoices_format_periode", sql`${t.periode} ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'`),
   ],
@@ -174,4 +177,26 @@ export const payments = pgTable(
     index("payments_invoice").on(t.invoiceId),
     check("payments_nominal_positif", sql`${t.nominalDibayar} > 0`),
   ],
+);
+
+export const reminders = pgTable(
+  "reminders",
+  {
+    id: id(),
+    organizationId: text()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    invoiceId: text()
+      .notNull()
+      .references(() => invoices.id),
+    tenantId: text()
+      .notNull()
+      .references(() => tenants.id),
+    /** "manual" dari dashboard, atau jadwal otomatis: "H-3" / "H" / "H+3". */
+    jenis: text().notNull(),
+    kanal: text().notNull().default("whatsapp"),
+    status: statusReminderEnum().notNull(),
+    terkirimPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [index("reminders_invoice").on(t.invoiceId)],
 );

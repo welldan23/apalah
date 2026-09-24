@@ -35,6 +35,10 @@ Buka http://localhost:3000 — otomatis diarahkan ke `/dashboard`.
 - `src/components/app-shell/` — kerangka navigasi & identitas workspace.
 - `src/components/dashboard/` — bagian-bagian Dashboard Kos.
 - `src/db/` — skema database (Drizzle), koneksi, migrasi, dan seed data contoh.
+- `src/app/api/dashboard/` — endpoint dashboard: ringkasan, invoice, pemasukan, dan aksi cepat
+  (buat tagihan, tambah penghuni, kirim reminder).
+- `src/lib/aksi/` — logika aksi yang mengubah data; nominal & status ditentukan server.
+- `src/lib/whatsapp/` — adapter pengiriman WhatsApp (`WHATSAPP_PROVIDER`, default `log`).
 - `src/lib/data/` — kontrak data per halaman. Saat ini membaca data tiruan
   (`src/lib/mock/`); lapisan backend nanti mengganti isinya dengan query database
   tanpa mengubah bentuk datanya.

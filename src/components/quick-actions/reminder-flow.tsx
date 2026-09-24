@@ -1,31 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 
 import {
-  CatatanSimulasi,
+  GalatServer,
   PreviewRows,
   SelesaiState,
   SheetActions,
   SheetBody,
-  simulasiKirim,
+  kirimAksi,
 } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SheetClose } from "@/components/ui/sheet";
-import {
-  formatPeriode,
-  formatRupiah,
-  formatTanggal,
-  selisihHari,
-} from "@/lib/format";
+import { formatPeriode, formatRupiah, selisihHari } from "@/lib/format";
+import { pesanReminder } from "@/lib/pesan";
 import type { InvoiceRow } from "@/lib/types";
 
-function isiPesan(inv: InvoiceRow, namaKos: string) {
-  const namaDepan = inv.namaPenghuni.split(" ")[0];
-  return `Halo ${namaDepan}, ini pengingat dari ${namaKos}. Tagihan sewa kamar ${inv.nomorKamar} periode ${formatPeriode(inv.periode)} sebesar ${formatRupiah(inv.nominal)} sudah lewat jatuh tempo (${formatTanggal(inv.jatuhTempo)}). Silakan bayar lewat link invoice berikut. Terima kasih.`;
-}
+type Hasil = { terkirim: number; gagal: string[]; simulasi: boolean };
 
 /** Kirim Reminder: preview penerima, periode, nominal → konfirmasi owner → kirim. */
 export function ReminderFlow({
@@ -40,8 +34,11 @@ export function ReminderFlow({
   /** Tagihan menunggak (jatuh tempo) yang bisa diingatkan. */
   tagihan: InvoiceRow[];
 }) {
+  const router = useRouter();
   const [dipilih, setDipilih] = useState(() => new Set(tagihan.map((inv) => inv.id)));
   const [status, setStatus] = useState<"preview" | "mengirim" | "selesai">("preview");
+  const [hasil, setHasil] = useState<Hasil | null>(null);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
 
   const penerima = tagihan.filter((inv) => dipilih.has(inv.id));
   const total = penerima.reduce((jumlah, inv) => jumlah + inv.nominal, 0);
@@ -57,15 +54,33 @@ export function ReminderFlow({
 
   async function konfirmasi() {
     setStatus("mengirim");
-    await simulasiKirim();
-    setStatus("selesai");
+    setGalatServer(null);
+    try {
+      const data = await kirimAksi<Hasil>("/api/dashboard/aksi/reminder", {
+        invoiceIds: penerima.map((inv) => inv.id),
+      });
+      setHasil(data);
+      setStatus("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+      setStatus("preview");
+    }
   }
 
-  if (status === "selesai") {
+  if (status === "selesai" && hasil) {
+    const gagal = hasil.gagal.length
+      ? ` Gagal terkirim ke kamar ${hasil.gagal.join(", ")}, coba kirim ulang nanti.`
+      : "";
     return (
       <SelesaiState
-        judul={`Reminder terkirim ke ${penerima.length} penyewa`}
-        pesan="Tercatat di riwayat reminder. Status tagihan berubah otomatis begitu pembayaran masuk."
+        judul={`Reminder terkirim ke ${hasil.terkirim} penyewa`}
+        pesan={`Tercatat di riwayat reminder. Status tagihan berubah otomatis begitu pembayaran masuk.${gagal}`}
+        catatan={
+          hasil.simulasi
+            ? "Mode pengembangan: provider WhatsApp belum disambungkan, pesan hanya dicatat di log server."
+            : undefined
+        }
       />
     );
   }
@@ -143,7 +158,7 @@ export function ReminderFlow({
               Contoh pesan untuk {penerima[0].namaPenghuni}
             </h3>
             <div className="rounded-xl rounded-tl-sm bg-accent px-3 py-2.5 text-sm text-accent-foreground">
-              {isiPesan(penerima[0], namaKos)}
+              {pesanReminder(penerima[0], namaKos)}
               <span className="mt-2 block w-fit rounded-md bg-card/70 px-2 py-1 text-xs font-medium">
                 Link invoice kamar {penerima[0].nomorKamar}
               </span>
@@ -151,7 +166,7 @@ export function ReminderFlow({
           </section>
         )}
 
-        <CatatanSimulasi />
+        <GalatServer pesan={galatServer} />
       </SheetBody>
 
       <SheetActions>

@@ -8,6 +8,13 @@
       "when": 1790259374126,
       "tag": "0000_skema_dashboard",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790260848116,
+      "tag": "0001_aksi_cepat",
+      "breakpoints": true
     }
   ]
 }

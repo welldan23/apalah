@@ -32,15 +32,17 @@ export async function getRingkasanKos(
       hargaSewa: rooms.hargaSewa,
       status: rooms.status,
       namaPenghuni: tenants.nama,
+      hargaSewaPenghuni: tenants.hargaSewa,
     })
     .from(rooms)
     .leftJoin(tenants, and(eq(tenants.roomId, rooms.id), eq(tenants.status, "aktif")))
     .where(eq(rooms.organizationId, organizationId))
     .orderBy(asc(rooms.nomorKamar));
 
-  const daftar = baris.map(({ namaPenghuni, ...kamar }) => ({
+  const daftar = baris.map(({ namaPenghuni, hargaSewaPenghuni, ...kamar }) => ({
     ...kamar,
     namaPenghuni: namaPenghuni ?? undefined,
+    hargaSewaPenghuni: hargaSewaPenghuni ?? undefined,
   }));
 
   const perTipe = new Map<string, RoomTypeSummary>();
