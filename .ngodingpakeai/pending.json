@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "71ba97caab7bf817de606ecf6bac05030b07e083",
+  "generatedForCommit": "a075c914e6ad0062031d25f65722e839d0e84e28",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -273,6 +273,12 @@
       "size": 902
     },
     {
+      "path": "src/app/api/kosta/draft/[id]/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1823
+    },
+    {
       "path": "src/app/api/landing/konten/route.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -442,9 +448,9 @@
     },
     {
       "path": "src/components/kosta/chat-kosta.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 10566
+      "size": 10744
     },
     {
       "path": "src/components/kosta/kartu-preview-aksi.tsx",
@@ -724,15 +730,15 @@
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 11919
+      "size": 11907
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4793
+      "size": 5130
     },
     {
       "path": "src/db/testing.ts",
@@ -868,9 +874,9 @@
     },
     {
       "path": "src/lib/data/kosta.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1271
+      "size": 1330
     },
     {
       "path": "src/lib/data/pemantauan.ts",
@@ -987,32 +993,50 @@
       "size": 1853
     },
     {
-      "path": "src/lib/kosta/intent.test.ts",
+      "path": "src/lib/kosta/draft.test.ts",
       "reason": "new",
+      "language": "typescript",
+      "size": 6486
+    },
+    {
+      "path": "src/lib/kosta/draft.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 9453
+    },
+    {
+      "path": "src/lib/kosta/intent.test.ts",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3643
     },
     {
       "path": "src/lib/kosta/intent.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 7143
     },
     {
       "path": "src/lib/kosta/llm.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3392
     },
     {
-      "path": "src/lib/kosta/router.test.ts",
+      "path": "src/lib/kosta/riwayat.ts",
       "reason": "new",
+      "language": "typescript",
+      "size": 2822
+    },
+    {
+      "path": "src/lib/kosta/router.test.ts",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4633
     },
     {
       "path": "src/lib/kosta/router.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1340
     },
@@ -1174,9 +1198,9 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5771
+      "size": 6281
     },
     {
       "path": "src/lib/utils.ts",

@@ -1,0 +1,109 @@
+// Tool baca Kosta: menjawab pertanyaan owner dengan angka langsung dari database (bukan dari AI).
+// Setiap tool mengembalikan teks singkat + lampiran terstruktur untuk ditampilkan/dikirim.
+
+import { and, asc, eq } from "drizzle-orm";
+
+import { schema, type Db } from "../../db/index.ts";
+import { getKamarKosong } from "../data/kamar.ts";
+import { formatPeriode, formatRupiah, formatTanggal, selisihHari } from "../format.ts";
+import { hariKosong } from "../kamar-kosong.ts";
+import type { LampiranKosta } from "@/lib/types";
+
+const { invoices, rooms, tenants } = schema;
+
+export type BalasanKosta = { teks: string; lampiran?: LampiranKosta };
+
+/**
+ * Tagihan yang sudah lewat jatuh tempo — yang paling lama telat di atas. Tanpa periode = semua periode
+ * (tunggakan bulan lalu tetap tunggakan).
+ */
+export async function toolTunggakan(
+  db: Db,
+  organizationId: string,
+  { periode, hariIni }: { periode?: string; hariIni: string },
+): Promise<BalasanKosta> {
+  const baris = await db
+    .select({
+      periode: invoices.periode,
+      nominal: invoices.nominal,
+      jatuhTempo: invoices.jatuhTempo,
+      nomorKamar: rooms.nomorKamar,
+      nama: tenants.nama,
+    })
+    .from(invoices)
+    .innerJoin(tenants, eq(tenants.id, invoices.tenantId))
+    .innerJoin(rooms, eq(rooms.id, invoices.roomId))
+    .where(
+      and(
+        eq(invoices.organizationId, organizationId),
+        eq(invoices.status, "jatuh_tempo"),
+        periode ? eq(invoices.periode, periode) : undefined,
+      ),
+    )
+    .orderBy(asc(invoices.jatuhTempo), asc(rooms.nomorKamar));
+
+  const cakupan = periode ? ` untuk ${formatPeriode(periode)}` : "";
+  if (baris.length === 0) {
+    return { teks: `Tidak ada tunggakan${cakupan}. Semua tagihan yang lewat jatuh tempo sudah dibayar.` };
+  }
+
+  const total = baris.reduce((jumlah, b) => jumlah + b.nominal, 0);
+  const periodeBerjalan = hariIni.slice(0, 7);
+  return {
+    teks: `Ada ${baris.length} tagihan yang sudah lewat jatuh tempo${cakupan}, total ${formatRupiah(total)}.`,
+    lampiran: {
+      jenis: "daftar_tagihan",
+      judul: periode ? `Tunggakan ${formatPeriode(periode)}` : `Tunggakan per ${formatTanggal(hariIni)}`,
+      baris: baris.map((b) => ({
+        nomorKamar: b.nomorKamar,
+        nama: b.nama,
+        nominal: b.nominal,
+        keterangan: [
+          `lewat ${selisihHari(b.jatuhTempo, hariIni)} hari`,
+          !periode && b.periode !== periodeBerjalan ? formatPeriode(b.periode) : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      })),
+      total,
+    },
+  };
+}
+
+/** Kamar kosong per tipe, potensi sewa, dan sudah berapa lama kosong. */
+export async function toolKamarKosong(
+  db: Db,
+  organizationId: string,
+  { hariIni }: { hariIni: string },
+): Promise<BalasanKosta> {
+  const kamar = await getKamarKosong(db, organizationId);
+  if (kamar.length === 0) {
+    const [ada] = await db.select({ id: rooms.id }).from(rooms).where(eq(rooms.organizationId, organizationId)).limit(1);
+    return {
+      teks: ada
+        ? "Semua kamar sudah terisi. Tidak ada kamar kosong saat ini."
+        : "Belum ada kamar yang terdaftar di kos ini. Tambahkan dulu lewat menu Kamar & Penghuni.",
+    };
+  }
+
+  const perTipe = new Map<string, string[]>();
+  for (const k of kamar) perTipe.set(k.tipe, [...(perTipe.get(k.tipe) ?? []), k.nomorKamar]);
+  const daftar = [...perTipe].map(([tipe, nomor]) => `${nomor.join(", ")} (${tipe})`).join(", ");
+  const potensi = kamar.reduce((jumlah, k) => jumlah + k.hargaSewa, 0);
+
+  return {
+    teks: `${kamar.length} kamar masih kosong: ${daftar}. Potensi sewa ${formatRupiah(potensi)}/bulan.`,
+    lampiran: {
+      jenis: "rekap",
+      judul: "Kamar kosong",
+      baris: kamar.map((k) => {
+        const hari = hariKosong(k.kosongSejak, hariIni);
+        return {
+          label: `${k.nomorKamar} · ${k.tipe}`,
+          nominal: k.hargaSewa,
+          catatan: hari === undefined ? "belum ada riwayat penghuni" : `kosong ${hari} hari`,
+        };
+      }),
+    },
+  };
+}
