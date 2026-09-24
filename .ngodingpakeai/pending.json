@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "70b0390296cc41fd1d1149f42e20e4e21b015c3d",
+  "generatedForCommit": "dfa6260052d76f3860ba73fde7ea1509ff4a3cd5",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -118,7 +118,7 @@
     },
     {
       "path": "src/app/(app)/dashboard/page.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2860
     },
@@ -138,7 +138,7 @@
       "path": "src/app/(app)/pembayaran/page.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 1591
+      "size": 1697
     },
     {
       "path": "src/app/(app)/tagihan/page.tsx",
@@ -424,15 +424,15 @@
     },
     {
       "path": "src/components/pembayaran/banner-perlu-review.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1692
     },
     {
       "path": "src/components/pembayaran/daftar-pembayaran.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 9460
+      "size": 10536
     },
     {
       "path": "src/components/pembayaran/detail-tagihan.tsx",
@@ -646,7 +646,7 @@
     },
     {
       "path": "src/lib/data/dashboard.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1556
     },
@@ -670,9 +670,9 @@
     },
     {
       "path": "src/lib/data/invoice.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2085
+      "size": 2163
     },
     {
       "path": "src/lib/data/kos.test.ts",
@@ -696,7 +696,7 @@
       "path": "src/lib/data/pemantauan.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 1451
+      "size": 1778
     },
     {
       "path": "src/lib/data/pemasukan.test.ts",
@@ -712,25 +712,25 @@
     },
     {
       "path": "src/lib/data/pembayaran.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2269
+      "size": 3134
     },
     {
       "path": "src/lib/data/pembayaran.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2476
+      "size": 2582
     },
     {
       "path": "src/lib/data/perlu-review.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1721
     },
     {
       "path": "src/lib/data/perlu-review.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1218
     },
@@ -862,7 +862,7 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5771
     },
