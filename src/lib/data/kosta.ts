@@ -1,11 +1,12 @@
-// Kontrak data halaman Chat Kosta.
-// Tahap frontend: riwayat percakapan dari data tiruan. Tahap backend: ambil dari wa_messages
-// percakapan owner yang sedang masuk — bentuk `HalamanKosta` tetap sama.
+// Kontrak data halaman Chat Kosta. Daftar kos dari keanggotaan owner/admin di database;
+// riwayat percakapan masih data tiruan sampai dibaca dari wa_messages — bentuk `HalamanKosta` tetap.
 
 import { connection } from "next/server";
 
+import { getDb } from "@/db";
 import { getWorkspaceSession } from "@/lib/data/session";
-import { mockPercakapanKosta, mockWorkspaceLain } from "@/lib/mock/kosta";
+import { daftarWorkspace } from "@/lib/kosta/workspace";
+import { mockPercakapanKosta } from "@/lib/mock/kosta";
 import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 import { hariIniWib } from "@/lib/waktu";
 
@@ -27,15 +28,7 @@ export async function getHalamanKosta(): Promise<HalamanKosta> {
   return {
     hariIni: hariIniWib(),
     workspaceAktif: organization.id,
-    workspaces: [
-      {
-        id: organization.id,
-        namaKos: organization.namaKos,
-        jumlahKamar: organization.jumlahKamar,
-        peran: session.peran,
-      },
-      ...mockWorkspaceLain,
-    ],
+    workspaces: await daftarWorkspace(await getDb(), session.user.id),
     nomorWa: session.user.nomorWa,
     pesan: mockPercakapanKosta,
   };

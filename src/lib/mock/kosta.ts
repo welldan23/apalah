@@ -102,7 +102,10 @@ export const mockPercakapanKosta: PesanKosta[] = [
   },
 ];
 
-/** Kos lain milik owner contoh — untuk mencoba pemilih workspace multi-kos. */
+/** Pemilik Griya Asri; owner contoh menjadi admin di sana. */
+export const mockPemilikLain = { id: "usr_pemilik_griya", nama: "Hendra Wijaya", nomorWa: "6281377009900" };
+
+/** Kos lain yang dikelola owner contoh — untuk mencoba pemilih workspace multi-kos. */
 export const mockWorkspaceLain: WorkspaceRingkas[] = [
   { id: "org_kos_mawar", namaKos: "Kos Mawar", jumlahKamar: 12, peran: "owner" },
   { id: "org_griya_asri", namaKos: "Griya Asri", jumlahKamar: 20, peran: "admin" },

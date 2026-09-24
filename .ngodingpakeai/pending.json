@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "32c80aba041fe9a35cf2040293b846ab7efc8261",
+  "generatedForCommit": "473afba79e7acb8b7bc6d051d114686249b67441",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -280,7 +280,7 @@
     },
     {
       "path": "src/app/api/webhook/whatsapp/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1762
     },
@@ -988,13 +988,13 @@
     },
     {
       "path": "src/lib/kosta/terima-pesan.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2812
     },
     {
       "path": "src/lib/kosta/terima-pesan.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1982
     },
@@ -1156,19 +1156,31 @@
     },
     {
       "path": "src/lib/whatsapp/index.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 1108
+      "size": 1953
+    },
+    {
+      "path": "src/lib/whatsapp/waha.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2993
+    },
+    {
+      "path": "src/lib/whatsapp/waha.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1819
     },
     {
       "path": "src/lib/whatsapp/webhook.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4230
     },
     {
       "path": "src/lib/whatsapp/webhook.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4002
     },

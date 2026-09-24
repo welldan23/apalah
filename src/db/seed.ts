@@ -14,7 +14,7 @@ import {
   mockRooms,
   mockTenants,
 } from "../lib/mock/kos-melati.ts";
-import { mockPercakapanKosta } from "../lib/mock/kosta.ts";
+import { mockPemilikLain, mockPercakapanKosta, mockWorkspaceLain } from "../lib/mock/kosta.ts";
 import { getDb, tutupDb, type Db } from "./index.ts";
 import * as schema from "./schema.ts";
 
@@ -64,6 +64,17 @@ export async function isiDataContoh(db: Db) {
     await tx.insert(schema.payments).values(
       mockPayments.map((p) => ({ ...p, diverifikasiPada: new Date(p.diverifikasiPada) })),
     );
+
+    // Kos lain yang juga dikelola owner contoh (sebagai owner / admin) — untuk pemilih workspace.
+    await tx.insert(schema.users).values({ ...mockPemilikLain, nomorWaTerverifikasi: true });
+    for (const ws of mockWorkspaceLain) {
+      const ownerId = ws.peran === "owner" ? mockOwner.id : mockPemilikLain.id;
+      await tx.insert(schema.organizations).values({ id: ws.id, namaKos: ws.namaKos, jumlahKamar: ws.jumlahKamar, ownerId });
+      await tx.insert(schema.members).values([
+        { organizationId: ws.id, userId: ownerId, peran: "owner" },
+        ...(ws.peran === "admin" ? [{ organizationId: ws.id, userId: mockOwner.id, peran: "admin" as const }] : []),
+      ]);
+    }
 
     // Percakapan owner dengan Kosta, berakhir dengan preview pengingat yang menunggu konfirmasi.
     const percakapan = { id: "wac_owner_kos_melati", organizationId: mockOrganization.id };

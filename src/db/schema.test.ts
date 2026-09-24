@@ -25,7 +25,8 @@ describe("skema & migrasi", () => {
   };
 
   it("data contoh Kos Melati sesuai angka PRD", async () => {
-    assert.equal(await hitung(schema.organizations), 1);
+    // Kos Melati + 2 kos lain untuk pemilih workspace (tanpa kamar).
+    assert.equal(await hitung(schema.organizations), 3);
     assert.equal(await hitung(schema.rooms), 40);
     // 34 penghuni aktif + 2 mantan penghuni.
     assert.equal(await hitung(schema.tenants), 36);
