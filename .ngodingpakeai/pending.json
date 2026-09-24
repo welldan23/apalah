@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "d8aba076ef019e2c3cdcf2769194b876b24de73c",
+  "generatedForCommit": "7d33f4a15f2cb488efacb15d3d5a881151fe4699",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -306,19 +306,25 @@
       "path": "src/components/kosta/bubble-pesan.tsx",
       "reason": "changed",
       "language": "typescript",
-      "size": 3263
+      "size": 3522
     },
     {
       "path": "src/components/kosta/chat-kosta.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 7088
+      "size": 8722
     },
     {
       "path": "src/components/kosta/kartu-preview-aksi.tsx",
+      "reason": "changed",
+      "language": "typescript",
+      "size": 3526
+    },
+    {
+      "path": "src/components/kosta/konfirmasi-aksi.tsx",
       "reason": "new",
       "language": "typescript",
-      "size": 3127
+      "size": 1085
     },
     {
       "path": "src/components/kosta/pemilih-workspace.tsx",
@@ -687,6 +693,18 @@
       "size": 1537
     },
     {
+      "path": "src/lib/draft-aksi.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 845
+    },
+    {
+      "path": "src/lib/draft-aksi.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 703
+    },
+    {
       "path": "src/lib/format.test.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -736,7 +754,7 @@
     },
     {
       "path": "src/lib/mock/kosta.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2858
     },
@@ -772,7 +790,7 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5348
     },

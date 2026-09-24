@@ -11,7 +11,7 @@ export default async function KostaPage() {
   const data = await getHalamanKosta();
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Chat Kosta</h1>
         <p className="mt-1 text-sm text-muted-foreground">

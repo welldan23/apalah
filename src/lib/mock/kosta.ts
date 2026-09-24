@@ -3,9 +3,43 @@
 
 import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 
-const pada = (jam: string) => `2026-09-24T${jam}:00+07:00`;
+const pada = (jam: string, tanggal = "2026-09-24") => `${tanggal}T${jam}:00+07:00`;
 
 export const mockPercakapanKosta: PesanKosta[] = [
+  {
+    id: "h1",
+    dari: "owner",
+    waktu: pada("09:15", "2026-09-20"),
+    teks: "Rekap pemasukan minggu ini",
+  },
+  {
+    id: "h2",
+    dari: "kosta",
+    waktu: pada("09:15", "2026-09-20"),
+    teks: "Pembayaran terverifikasi 14–20 September:",
+    lampiran: {
+      jenis: "rekap",
+      judul: "Masuk 14–20 Sep 2026",
+      baris: [
+        { label: "C07 · Kadek Sri Wahyuni", nominal: 800_000, catatan: "14 Sep" },
+        { label: "B10 · Arif Hidayat", nominal: 650_000, catatan: "16 Sep" },
+        { label: "B11 · Rina Marlina", nominal: 650_000, catatan: "18 Sep" },
+        { label: "B12 · Kevin Wijaya", nominal: 650_000, catatan: "20 Sep" },
+      ],
+    },
+  },
+  {
+    id: "h3",
+    dari: "owner",
+    waktu: pada("19:30", "2026-09-22"),
+    teks: "Kamar A03 sudah bayar belum?",
+  },
+  {
+    id: "h4",
+    dari: "kosta",
+    waktu: pada("19:30", "2026-09-22"),
+    teks: "Belum. Tagihan A03 (Yoga Saputra) Rp500.000 masih menunggu pembayaran, jatuh tempo 26 Sep.",
+  },
   { id: "m1", dari: "owner", waktu: pada("08:02"), teks: "Kosta, berapa tunggakan bulan ini?" },
   {
     id: "m2",

@@ -1,16 +1,16 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import { ArrowLeftRight, SendHorizontal } from "lucide-react";
+import { ArrowLeftRight, History, SendHorizontal } from "lucide-react";
 
 import { BubblePesan } from "@/components/kosta/bubble-pesan";
+import { PanelRiwayat } from "@/components/kosta/panel-riwayat";
 import { PemilihWorkspace } from "@/components/kosta/pemilih-workspace";
 import { ActionSheet } from "@/components/quick-actions/action-sheet";
 import { statusSetelah, type KeputusanDraft } from "@/lib/draft-aksi";
-import { formatTanggal } from "@/lib/format";
 import { tampilNomorWa } from "@/lib/nomor-wa";
+import { labelHari, ringkasRiwayat, tanggalPesan } from "@/lib/riwayat-kosta";
 import type { PesanKosta, PreviewAksi, WorkspaceRingkas } from "@/lib/types";
-import { tanggalWib } from "@/lib/waktu";
 
 const JEDA_BALASAN = 1100;
 
@@ -24,10 +24,6 @@ function pesanSelesai(preview: PreviewAksi) {
   return preview.aksi === "reminder"
     ? `Reminder terkirim ke ${jumlah} penyewa dan tercatat di riwayat reminder. ${CATATAN_CONTOH}`
     : `${jumlah} tagihan dibuat, masing-masing dengan link invoice untuk penyewa. ${CATATAN_CONTOH}`;
-}
-
-function labelTanggal(tanggal: string, hariIni: string) {
-  return tanggal === hariIni ? "Hari ini" : formatTanggal(tanggal);
 }
 
 function IndikatorMengetik() {
@@ -63,10 +59,11 @@ export function ChatKosta({
   const [pesan, setPesan] = useState(awal);
   const [aktifId, setAktifId] = useState(workspaceAktif);
   const [pilihKosTerbuka, setPilihKosTerbuka] = useState(false);
+  const [riwayatTerbuka, setRiwayatTerbuka] = useState(false);
   const aktif = workspaces.find((ws) => ws.id === aktifId) ?? workspaces[0];
   const [draf, setDraf] = useState("");
   const [mengetik, setMengetik] = useState(false);
-  const bawahRef = useRef<HTMLLIElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -108,9 +105,10 @@ export function ChatKosta({
       balasKosta(pesanSelesai(lampiran), () => ubahStatusDraft(pesanId, "selesai"));
     }
   }
-  // Selalu tampilkan pesan terbaru.
+  // Selalu tampilkan pesan terbaru (hanya area chat yang digulir, bukan halaman).
   useEffect(() => {
-    bawahRef.current?.scrollIntoView({ block: "end" });
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
   }, [pesan.length, mengetik]);
 
   function kirim(e: React.FormEvent) {
@@ -132,100 +130,143 @@ export function ChatKosta({
     );
   }
 
+  function lompatKe(tanggal: string) {
+    setRiwayatTerbuka(false);
+    const pemisah = document.getElementById(`kosta-${tanggal}`);
+    listRef.current?.scrollTo({ top: (pemisah?.offsetTop ?? 0) - 8, behavior: "smooth" });
+  }
+
   // Kelompokkan per tanggal WIB untuk pemisah "Hari ini" / tanggal.
   const grup: { tanggal: string; pesan: PesanKosta[] }[] = [];
   for (const p of pesan) {
-    const tanggal = tanggalWib(new Date(p.waktu));
+    const tanggal = tanggalPesan(p);
     const terakhir = grup.at(-1);
     if (terakhir?.tanggal === tanggal) terakhir.pesan.push(p);
     else grup.push({ tanggal, pesan: [p] });
   }
 
+  const riwayat = ringkasRiwayat(pesan);
+
   return (
-    <section
-      aria-labelledby="kosta-judul"
-      className="flex h-[calc(100dvh-15.5rem)] min-h-96 flex-col overflow-hidden rounded-2xl border bg-muted lg:h-[calc(100dvh-11rem)]"
-    >
-      <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent font-semibold text-accent-foreground">
-          K
-        </span>
-        <div className="min-w-0 flex-1 leading-tight">
-          <h2 id="kosta-judul" className="font-semibold">
-            Kosta
-          </h2>
-          <p className="truncate text-xs text-primary-foreground/75">
-            {mengetik ? "mengetik…" : `${aktif.namaKos} · WhatsApp ${tampilNomorWa(nomorWa)}`}
-          </p>
-        </div>
-        {workspaces.length > 1 && (
+    <div className="grid gap-4 lg:grid-cols-[1fr_17rem]">
+      <section
+        aria-labelledby="kosta-judul"
+        className="flex h-[calc(100dvh-15.5rem)] min-h-96 flex-col overflow-hidden rounded-2xl border bg-muted lg:h-[calc(100dvh-11rem)]"
+      >
+        <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent font-semibold text-accent-foreground">
+            K
+          </span>
+          <div className="min-w-0 flex-1 leading-tight">
+            <h2 id="kosta-judul" className="font-semibold">
+              Kosta
+            </h2>
+            <p className="truncate text-xs text-primary-foreground/75">
+              {mengetik ? "mengetik…" : `${aktif.namaKos} · WhatsApp ${tampilNomorWa(nomorWa)}`}
+            </p>
+          </div>
           <button
             type="button"
+            aria-label="Riwayat percakapan"
             aria-haspopup="dialog"
-            onClick={() => setPilihKosTerbuka(true)}
-            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 text-sm font-medium outline-none hover:bg-primary-foreground/20 focus-visible:ring-3 focus-visible:ring-accent/40"
+            onClick={() => setRiwayatTerbuka(true)}
+            className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-foreground/10 outline-none hover:bg-primary-foreground/20 focus-visible:ring-3 focus-visible:ring-accent/40 lg:hidden"
           >
-            <ArrowLeftRight className="size-4" aria-hidden="true" />
-            Ganti kos
+            <History className="size-5" aria-hidden="true" />
           </button>
-        )}
-      </header>
+          {workspaces.length > 1 && (
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setPilihKosTerbuka(true)}
+              className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 text-sm font-medium outline-none hover:bg-primary-foreground/20 focus-visible:ring-3 focus-visible:ring-accent/40"
+            >
+              <ArrowLeftRight className="size-4" aria-hidden="true" />
+              Ganti kos
+            </button>
+          )}
+        </header>
 
-      <ActionSheet
-        open={pilihKosTerbuka}
-        onOpenChange={setPilihKosTerbuka}
-        title="Pilih kos"
-        description="Kosta hanya membaca data kos yang dipilih."
-      >
-        <div className="overflow-y-auto p-4">
-          <PemilihWorkspace workspaces={workspaces} aktifId={aktif.id} onPilih={gantiKos} />
-        </div>
-      </ActionSheet>
-
-      <ol
-        aria-label="Percakapan dengan Kosta"
-        aria-live="polite"
-        className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4 sm:px-5"
-      >
-        {grup.map(({ tanggal, pesan }) => (
-          <Fragment key={tanggal}>
-            <li className="my-1 self-center rounded-md bg-card/80 px-2 py-0.5 text-xs text-muted-foreground">
-              <time dateTime={tanggal}>{labelTanggal(tanggal, hariIni)}</time>
-            </li>
-            {pesan.map((p) => (
-              <BubblePesan
-                key={p.id}
-                pesan={p}
-                onPutuskan={mengetik ? undefined : (keputusan) => putuskan(p.id, keputusan)}
-              />
-            ))}
-          </Fragment>
-        ))}
-        {mengetik && <IndikatorMengetik />}
-        <li ref={bawahRef} aria-hidden="true" />
-      </ol>
-
-      <form onSubmit={kirim} className="flex items-center gap-2 border-t bg-card/80 px-3 py-2.5">
-        <label htmlFor="kosta-pesan" className="sr-only">
-          Tulis pesan untuk Kosta
-        </label>
-        <input
-          id="kosta-pesan"
-          autoComplete="off"
-          placeholder="Tanya Kosta…"
-          className="h-11 min-w-0 flex-1 rounded-full border border-input bg-card px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm"
-          value={draf}
-          onChange={(e) => setDraf(e.target.value)}
-        />
-        <button
-          type="submit"
-          aria-label="Kirim pesan"
-          disabled={!draf.trim() || mengetik}
-          className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-opacity outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+        <ActionSheet
+          open={pilihKosTerbuka}
+          onOpenChange={setPilihKosTerbuka}
+          title="Pilih kos"
+          description="Kosta hanya membaca data kos yang dipilih."
         >
-          <SendHorizontal className="size-5" />
-        </button>
-      </form>
-    </section>
+          <div className="overflow-y-auto p-4">
+            <PemilihWorkspace workspaces={workspaces} aktifId={aktif.id} onPilih={gantiKos} />
+          </div>
+        </ActionSheet>
+
+        <ActionSheet
+          open={riwayatTerbuka}
+          onOpenChange={setRiwayatTerbuka}
+          title="Riwayat percakapan"
+          description="Pilih hari untuk melihat percakapannya."
+        >
+          <PanelRiwayat
+            riwayat={riwayat}
+            hariIni={hariIni}
+            onPilih={lompatKe}
+            className="overflow-y-auto p-4"
+          />
+        </ActionSheet>
+
+        <ol
+          ref={listRef}
+          aria-label="Percakapan dengan Kosta"
+          aria-live="polite"
+          className="relative flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4 sm:px-5"
+        >
+          {grup.map(({ tanggal, pesan }) => (
+            <Fragment key={tanggal}>
+              <li
+                id={`kosta-${tanggal}`}
+                className="my-1 self-center rounded-md bg-card/80 px-2 py-0.5 text-xs text-muted-foreground"
+              >
+                <time dateTime={tanggal}>{labelHari(tanggal, hariIni)}</time>
+              </li>
+              {pesan.map((p) => (
+                <BubblePesan
+                  key={p.id}
+                  pesan={p}
+                  onPutuskan={mengetik ? undefined : (keputusan) => putuskan(p.id, keputusan)}
+                />
+              ))}
+            </Fragment>
+          ))}
+          {mengetik && <IndikatorMengetik />}
+        </ol>
+
+        <form onSubmit={kirim} className="flex items-center gap-2 border-t bg-card/80 px-3 py-2.5">
+          <label htmlFor="kosta-pesan" className="sr-only">
+            Tulis pesan untuk Kosta
+          </label>
+          <input
+            id="kosta-pesan"
+            autoComplete="off"
+            placeholder="Tanya Kosta…"
+            className="h-11 min-w-0 flex-1 rounded-full border border-input bg-card px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm"
+            value={draf}
+            onChange={(e) => setDraf(e.target.value)}
+          />
+          <button
+            type="submit"
+            aria-label="Kirim pesan"
+            disabled={!draf.trim() || mengetik}
+            className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-opacity outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+          >
+            <SendHorizontal className="size-5" />
+          </button>
+        </form>
+      </section>
+
+      <aside aria-labelledby="riwayat-judul" className="hidden lg:flex lg:h-[calc(100dvh-11rem)] lg:flex-col">
+        <h2 id="riwayat-judul" className="mb-2 text-sm font-semibold">
+          Riwayat percakapan
+        </h2>
+        <PanelRiwayat riwayat={riwayat} hariIni={hariIni} onPilih={lompatKe} className="overflow-y-auto" />
+      </aside>
+    </div>
   );
 }
