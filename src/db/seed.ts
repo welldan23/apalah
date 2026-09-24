@@ -11,6 +11,7 @@ import {
   mockOwner,
   mockPayments,
   mockPenghuniKeluar,
+  mockReminders,
   mockRooms,
   mockTenants,
 } from "../lib/mock/kos-melati.ts";
@@ -79,6 +80,8 @@ export async function isiDataContoh(db: Db) {
         dibuatPada: new Date(p.diverifikasiPada),
       })),
     );
+
+    await tx.insert(schema.reminders).values(mockReminders.map((r) => ({ ...r, terkirimPada: new Date(r.terkirimPada) })));
 
     // Kos lain yang juga dikelola owner contoh (sebagai owner / admin) — untuk pemilih workspace.
     await tx.insert(schema.users).values({ ...mockPemilikLain, nomorWaTerverifikasi: true });

@@ -203,7 +203,7 @@ describe("aksi cepat dashboard", () => {
       assert.match(a05!.teks, /Rp500\.000/);
       assert.match(a05!.teks, /https:\/\/kostera\.id\/invoice\/demo-a05-2026-09/);
 
-      const riwayat = await db.select().from(schema.reminders);
+      const riwayat = await db.select().from(schema.reminders).where(eq(schema.reminders.jenis, "manual"));
       assert.equal(riwayat.length, 3);
       assert.deepEqual(
         riwayat.map((r) => r.status).sort(),

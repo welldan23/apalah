@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarClock } from "lucide-react";
+import { BellRing, CalendarClock } from "lucide-react";
 
 import { BuatTagihan } from "@/components/tagihan/buat-tagihan";
 import { DaftarInvoice } from "@/components/tagihan/daftar-invoice";
@@ -31,6 +31,12 @@ export default async function TagihanPage({ searchParams }: PageProps<"/tagihan"
         <div className="flex flex-wrap items-center justify-between gap-2">
           <PeriodeNav periode={data.periode} periodeBerjalan={data.periodeBerjalan} />
           <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="lg" className="h-10">
+              <Link href="/reminder" aria-label="Reminder otomatis">
+                <BellRing data-icon="inline-start" />
+                <span className="hidden sm:inline">Reminder</span>
+              </Link>
+            </Button>
             <Button asChild variant="outline" size="lg" className="h-10">
               <Link href="/tagihan/terjadwal">
                 <CalendarClock data-icon="inline-start" />

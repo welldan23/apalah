@@ -68,7 +68,10 @@ describe("kirim tagihan & ubah status", () => {
       assert.match(a03.teks, /^Halo Yoga, ini tagihan sewa kamar A03 di Kos Melati periode September 2026/);
       assert.match(a03.teks, /https:\/\/kostera\.id\/invoice\/demo-a03-2026-09$/);
 
-      const riwayat = await db.select().from(schema.reminders).where(inArray(schema.reminders.invoiceId, ids));
+      const riwayat = await db
+        .select()
+        .from(schema.reminders)
+        .where(and(inArray(schema.reminders.invoiceId, ids), eq(schema.reminders.jenis, "tagihan")));
       assert.equal(riwayat.length, 3);
       assert.ok(riwayat.every((r) => r.jenis === "tagihan"));
       assert.equal(riwayat.find((r) => r.invoiceId === "inv_2026-09_A06")?.status, "gagal");

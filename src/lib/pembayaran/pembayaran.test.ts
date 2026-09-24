@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { after, before, describe, it } from "node:test";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
@@ -172,7 +172,10 @@ describe("kirimKonfirmasiLunas", () => {
     assert.equal(terkirim[0].ke, "6281320465838");
     assert.match(terkirim[0].teks, /^Halo Yoga, pembayaran sewa kamar A03 di Kos Melati periode September 2026 sebesar Rp500\.000 sudah kami terima\./);
     assert.match(terkirim[0].teks, /https:\/\/kostera\.id\/invoice\/demo-a03-2026-09$/);
-    const [r] = await db.select().from(schema.reminders).where(eq(schema.reminders.invoiceId, "inv_2026-09_A03"));
+    const [r] = await db
+      .select()
+      .from(schema.reminders)
+      .where(and(eq(schema.reminders.invoiceId, "inv_2026-09_A03"), eq(schema.reminders.jenis, "konfirmasi_lunas")));
     assert.deepEqual([r.jenis, r.status], ["konfirmasi_lunas", "terkirim"]);
   });
 

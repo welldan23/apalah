@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "a4cf3e18b81d4f02f7c0fdc17e5dcf7d548739b2",
+  "generatedForCommit": "ac5f1c066ec895b8695cf04828c2e80860f4bdb1",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -304,7 +304,7 @@
     },
     {
       "path": "src/app/api/dashboard/kamar/kosong/route.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1339
     },
@@ -454,9 +454,9 @@
     },
     {
       "path": "src/components/dashboard/kos-overview.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3616
+      "size": 3551
     },
     {
       "path": "src/components/dashboard/quick-actions.tsx",
@@ -466,9 +466,9 @@
     },
     {
       "path": "src/components/dashboard/room-summary.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 6163
+      "size": 6076
     },
     {
       "path": "src/components/dashboard/status-filter.ts",
@@ -976,15 +976,15 @@
     },
     {
       "path": "src/lib/data/kos.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2991
+      "size": 4085
     },
     {
       "path": "src/lib/data/kos.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2141
+      "size": 2532
     },
     {
       "path": "src/lib/data/kosta.ts",
@@ -1096,13 +1096,13 @@
     },
     {
       "path": "src/lib/kamar-kosong.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2936
     },
     {
       "path": "src/lib/kamar-kosong.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2798
     },
@@ -1402,9 +1402,9 @@
     },
     {
       "path": "src/lib/types.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 6281
+      "size": 6568
     },
     {
       "path": "src/lib/utils.ts",

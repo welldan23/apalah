@@ -202,3 +202,30 @@ const pembayaranTidakCocok: Payment = {
 };
 
 export const mockPayments: Payment[] = [...pembayaranLunas, pembayaranTidakCocok];
+
+// Riwayat pengingat otomatis (H-3/H/H+3, jam 09.00 WIB) untuk tagihan contoh sampai hari ini.
+// [kamar, jenis, tanggal kirim, status]
+const RIWAYAT_PENGINGAT: [string, string, string, "terkirim" | "gagal"][] = [
+  ["A05", "H-3", "2026-09-12", "terkirim"],
+  ["A05", "H", "2026-09-15", "terkirim"],
+  ["B06", "H-3", "2026-09-15", "terkirim"],
+  ["C05", "H-3", "2026-09-17", "terkirim"],
+  ["A05", "H+3", "2026-09-18", "terkirim"],
+  ["B06", "H", "2026-09-18", "terkirim"],
+  ["C05", "H", "2026-09-20", "gagal"],
+  ["B06", "H+3", "2026-09-21", "terkirim"],
+  ["B15", "H-3", "2026-09-21", "terkirim"],
+  ["A03", "H-3", "2026-09-23", "terkirim"],
+];
+
+export const mockReminders = RIWAYAT_PENGINGAT.map(([kamar, jenis, tanggal, status]) => ({
+  id: `rem_${kamar}_${jenis}`,
+  organizationId: mockOrganization.id,
+  invoiceId: `inv_${MOCK_PERIODE}_${kamar}`,
+  tenantId: `tnt_${kamar}`,
+  jenis,
+  kanal: "whatsapp",
+  status,
+  terkirimPada: `${tanggal}T09:00:00+07:00`,
+}));
+
