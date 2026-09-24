@@ -168,3 +168,12 @@ export type DashboardData = {
   /** Invoice periode berjalan, urut dari yang paling perlu ditindak. */
   invoices: InvoiceRow[];
 };
+
+/** Satu pesan di percakapan owner dengan Kosta (WhatsApp). */
+export type PesanKosta = {
+  id: string;
+  dari: "owner" | "kosta";
+  /** ISO datetime. */
+  waktu: string;
+  teks: string;
+};

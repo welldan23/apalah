@@ -100,6 +100,17 @@ const waktuWib = new Intl.DateTimeFormat("id-ID", {
   timeZone: "Asia/Jakarta",
 });
 
+const jamWib = new Intl.DateTimeFormat("id-ID", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Jakarta",
+});
+
+/** "2026-09-24T01:02:00Z" → "08.02" (WIB) */
+export function formatJam(isoDateTime: string) {
+  return jamWib.format(new Date(isoDateTime));
+}
+
 /** "2026-09-20T14:32:00+07:00" → "20 Sep, 14.32" (WIB) */
 export function formatWaktu(isoDateTime: string) {
   return waktuWib.format(new Date(isoDateTime));

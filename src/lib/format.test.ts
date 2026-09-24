@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   formatAngka,
   formatHari,
+  formatJam,
   formatPeriode,
   formatRupiah,
   formatRupiahSingkat,
@@ -70,6 +71,11 @@ describe("tanggal", () => {
     assert.equal(selisihHari("2026-09-24", "2026-09-15"), -9);
     assert.equal(selisihHari("2026-09-24", "2026-09-24"), 0);
     assert.equal(selisihHari("2026-09-24", "2026-10-01"), 7);
+  });
+
+  it("formatJam memakai WIB", () => {
+    assert.equal(formatJam("2026-09-24T01:02:00Z"), "08.02");
+    assert.equal(formatJam("2026-09-24T08:02:00+07:00"), "08.02");
   });
 
   it("periodeSebelumnya melewati pergantian tahun", () => {

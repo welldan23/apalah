@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "dda924e5f3b5d91edeb6253b0c437922aeeda3c5",
+  "generatedForCommit": "dbddecb695f0bf85e5339bbed89d2a6b0adbaa50",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -202,7 +202,7 @@
     },
     {
       "path": "src/app/invoice/[token]/page.tsx",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5937
     },
@@ -376,15 +376,15 @@
     },
     {
       "path": "src/components/quick-actions/action-sheet.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 4577
+      "size": 4590
     },
     {
       "path": "src/components/quick-actions/invoice-flow.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 15011
+      "size": 15035
     },
     {
       "path": "src/components/quick-actions/reminder-flow.tsx",
@@ -430,9 +430,9 @@
     },
     {
       "path": "src/components/tagihan/form-tagihan-terjadwal.tsx",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 8901
+      "size": 8914
     },
     {
       "path": "src/components/tagihan/periode-nav.tsx",
@@ -586,13 +586,13 @@
     },
     {
       "path": "src/lib/data/invoice-publik.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1677
     },
     {
       "path": "src/lib/data/invoice-publik.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 2228
     },
@@ -712,7 +712,7 @@
     },
     {
       "path": "src/lib/situs.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 348
     },

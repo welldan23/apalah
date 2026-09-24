@@ -27,6 +27,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/kamar", label: "Kamar & Penghuni", labelPendek: "Kamar", icon: BedDouble, siap: false, mobile: true },
   { href: "/pembayaran", label: "Pembayaran", labelPendek: "Bayar", icon: Wallet, siap: false, mobile: true },
   { href: "/reminder", label: "Reminder", labelPendek: "Reminder", icon: BellRing, siap: false, mobile: false },
-  { href: "/kosta", label: "Chat Kosta", labelPendek: "Kosta", icon: MessageCircleMore, siap: false, mobile: true },
+  { href: "/kosta", label: "Chat Kosta", labelPendek: "Kosta", icon: MessageCircleMore, siap: true, mobile: true },
   { href: "/pengaturan", label: "Pengaturan", labelPendek: "Atur", icon: Settings, siap: false, mobile: false },
 ];
