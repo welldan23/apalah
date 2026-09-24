@@ -5,24 +5,30 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronRight, CircleCheck, Plus } from "lucide-react";
 
-import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
+import { GalatServer, kirimAksi } from "@/components/quick-actions/action-sheet";
 import { StatusBadge } from "@/components/status-badge";
 import type { WorkspaceRingkas } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const LABEL_PERAN: Record<WorkspaceRingkas["peran"], string> = { owner: "Pemilik", admin: "Admin", penyewa: "Penyewa" };
 
-/**
- * Daftar kos yang bisa dikelola; memilih satu membuka dashboard kos itu.
- * Tahap frontend: pilihan belum disimpan ke sesi, dashboard tetap kos contoh.
- */
-export function PilihWorkspace({ workspaces, aktifId }: { workspaces: WorkspaceRingkas[]; aktifId: string }) {
+/** Daftar kos yang bisa dikelola; memilih satu menyimpannya di sesi lalu membuka dashboard kos itu. */
+export function PilihWorkspace({ workspaces, aktifId }: { workspaces: WorkspaceRingkas[]; aktifId: string | null }) {
   const router = useRouter();
   const [memilih, setMemilih] = useState<string>();
+  const [galat, setGalat] = useState<string | null>(null);
 
-  function pilih(id: string) {
+  async function pilih(id: string) {
     setMemilih(id);
-    router.push("/dashboard");
+    setGalat(null);
+    try {
+      await kirimAksi("/api/akun/workspace-aktif", { organizationId: id });
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setGalat((err as Error).message);
+      setMemilih(undefined);
+    }
   }
 
   return (
@@ -75,7 +81,7 @@ export function PilihWorkspace({ workspaces, aktifId }: { workspaces: WorkspaceR
         Daftarkan kos baru
       </Link>
 
-      <CatatanSimulasi>Mode contoh: dashboard masih menampilkan Kos Melati apa pun kos yang dipilih.</CatatanSimulasi>
+      <GalatServer pesan={galat} />
     </div>
   );
 }

@@ -10,11 +10,11 @@ import {
   getPengaturanPengingat,
   simpanPengaturanPengingat,
 } from "@/lib/aksi/jadwal-pengingat";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 
 export async function GET() {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     return Response.json(await getPengaturanPengingat(await getDb(), session.organization.id));
   } catch (err) {
@@ -24,7 +24,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const input = bacaInputPengaturanPengingat(await bacaJson(request));
     return Response.json(await simpanPengaturanPengingat(await getDb(), session.organization.id, input));

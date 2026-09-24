@@ -11,12 +11,12 @@ import type { NextRequest } from "next/server";
 import { getDb } from "@/db";
 import { pastikanPengelola, responGalat } from "@/lib/aksi/galat";
 import { bacaFilterRiwayatReminder, getRiwayatReminder, kursorSetelah } from "@/lib/data/reminder";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 import { periodeWib } from "@/lib/waktu";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const hasil = bacaFilterRiwayatReminder(request.nextUrl.searchParams, periodeWib());
     if ("galat" in hasil) return Response.json({ galat: hasil.galat }, { status: 400 });

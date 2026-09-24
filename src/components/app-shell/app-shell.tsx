@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { MobileNav, SidebarNav } from "@/components/app-shell/app-nav";
+import { TombolKeluar } from "@/components/auth/tombol-keluar";
 import { KosteraLogo } from "@/components/app-shell/kostera-logo";
 import { UserAvatar } from "@/components/app-shell/user-avatar";
 import { WorkspaceBadge } from "@/components/app-shell/workspace-badge";
@@ -29,12 +30,15 @@ export function AppShell({
         </Link>
         <WorkspaceBadge organization={organization} />
         <SidebarNav peran={peran} />
-        <div className="mt-auto flex items-center gap-2.5 rounded-lg px-2 py-1.5">
-          <UserAvatar nama={user.nama} />
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm font-medium">{user.nama}</p>
-            <p className="text-xs text-muted-foreground">{LABEL_PERAN[peran]}</p>
+        <div className="mt-auto flex flex-col gap-1">
+          <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
+            <UserAvatar nama={user.nama} />
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-sm font-medium">{user.nama}</p>
+              <p className="text-xs text-muted-foreground">{LABEL_PERAN[peran]}</p>
+            </div>
           </div>
+          <TombolKeluar className="h-9 justify-start px-2.5 text-sidebar-foreground/80" />
         </div>
       </aside>
 

@@ -3,14 +3,14 @@
 
 import { getDb } from "@/db";
 import { bacaJson, GalatAksi, pastikanPengelola, responGalat } from "@/lib/aksi/galat";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 import { getDepsKosta } from "@/lib/kosta/deps";
 import { prosesPesanKosta } from "@/lib/kosta/proses-pesan";
 import { catatPesan, pastikanPercakapan } from "@/lib/kosta/riwayat";
 
 export async function POST(request: Request) {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const { teks } = await bacaJson(request);
     const isi = typeof teks === "string" ? teks.trim() : "";

@@ -4,13 +4,13 @@
 import { getDb } from "@/db";
 import { bacaJson, pastikanPengelola, responGalat } from "@/lib/aksi/galat";
 import { bacaInputKirimTagihan, kirimTagihan } from "@/lib/aksi/status-tagihan";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 import { hariIniWib } from "@/lib/waktu";
 import { getPengirimWhatsApp } from "@/lib/whatsapp";
 
 export async function POST(request: Request) {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const input = bacaInputKirimTagihan(await bacaJson(request));
     const baseUrl = process.env.APP_URL ?? new URL(request.url).origin;

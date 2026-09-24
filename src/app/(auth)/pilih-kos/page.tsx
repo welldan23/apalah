@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { PilihWorkspace } from "@/components/auth/pilih-workspace";
+import { TombolKeluar } from "@/components/auth/tombol-keluar";
 import { getHalamanPilihKos } from "@/lib/data/halaman-pilih-kos";
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default async function PilihKosPage() {
         </p>
       </div>
       <PilihWorkspace workspaces={data.workspaces} aktifId={data.aktifId} />
+      <TombolKeluar className="self-center text-muted-foreground" />
     </div>
   );
 }

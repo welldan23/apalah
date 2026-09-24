@@ -16,8 +16,8 @@ export default async function WorkspaceBaruPage() {
   const sesi = await getSesiLogin(await headers());
   const nomorWa = sesi?.user.phoneNumber;
   if (!sesi || !nomorWa) redirect("/daftar");
-  // Sudah mengelola kos (mis. masuk lagi lewat halaman daftar) → langsung pilih kos.
-  if ((await daftarWorkspace(await getDb(), sesi.user.id)).length > 0) redirect("/pilih-kos");
+  // Sudah mengelola kos (mis. masuk lagi) → dashboard (satu kos dibuka otomatis, lebih → Pilih kos).
+  if ((await daftarWorkspace(await getDb(), sesi.user.id)).length > 0) redirect("/dashboard");
 
   return (
     <div className="flex flex-col gap-6">

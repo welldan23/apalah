@@ -9,16 +9,17 @@ import {
   getPengaturanTagihanTerjadwal,
   simpanPengaturanTagihanTerjadwal,
 } from "@/lib/aksi/tagihan-terjadwal";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 
 export async function GET() {
-  const session = await getWorkspaceSession();
+  const session = await getWorkspaceSessionApi().catch(responGalat);
+  if (session instanceof Response) return session;
   return Response.json(await getPengaturanTagihanTerjadwal(await getDb(), session.organization.id));
 }
 
 export async function PUT(request: Request) {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const input = bacaInputPengaturan(await bacaJson(request));
     return Response.json(

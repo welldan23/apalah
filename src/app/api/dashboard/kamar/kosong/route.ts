@@ -6,8 +6,9 @@
 import type { NextRequest } from "next/server";
 
 import { getDb } from "@/db";
+import { responGalat } from "@/lib/aksi/galat";
 import { getKamarKosong } from "@/lib/data/kamar";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 import { bacaFilterKamarKosong, hariKosong, saringKamarKosong } from "@/lib/kamar-kosong";
 import { hariIniWib } from "@/lib/waktu";
 
@@ -15,7 +16,8 @@ export async function GET(request: NextRequest) {
   const hasil = bacaFilterKamarKosong(request.nextUrl.searchParams);
   if ("galat" in hasil) return Response.json({ error: hasil.galat }, { status: 400 });
 
-  const session = await getWorkspaceSession();
+  const session = await getWorkspaceSessionApi().catch(responGalat);
+  if (session instanceof Response) return session;
   const semua = await getKamarKosong(await getDb(), session.organization.id);
   const hariIni = hariIniWib();
   const kamar = saringKamarKosong(semua, hasil.filter).map((k) => ({ ...k, hariKosong: hariKosong(k.kosongSejak, hariIni) }));

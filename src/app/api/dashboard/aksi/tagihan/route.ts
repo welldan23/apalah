@@ -5,11 +5,11 @@
 import { getDb } from "@/db";
 import { bacaJson, pastikanPengelola, responGalat } from "@/lib/aksi/galat";
 import { bacaInputBuatTagihan, buatTagihan } from "@/lib/aksi/tagihan";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 
 export async function POST(request: Request) {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const input = bacaInputBuatTagihan(await bacaJson(request));
     const hasil = await buatTagihan(await getDb(), session.organization.id, input);

@@ -8,8 +8,9 @@
 import type { NextRequest } from "next/server";
 
 import { getDb } from "@/db";
+import { responGalat } from "@/lib/aksi/galat";
 import { bacaFilterDaftarInvoice, getDaftarInvoice } from "@/lib/data/invoice";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 import { urutkanInvoice } from "@/lib/invoice";
 import { periodeWib } from "@/lib/waktu";
 
@@ -18,7 +19,8 @@ export async function GET(request: NextRequest) {
   if ("galat" in hasil) return Response.json({ error: hasil.galat }, { status: 400 });
   const { filter } = hasil;
 
-  const session = await getWorkspaceSession();
+  const session = await getWorkspaceSessionApi().catch(responGalat);
+  if (session instanceof Response) return session;
   const invoices = await getDaftarInvoice(await getDb(), session.organization.id, {
     periode: filter.periode === "semua" ? undefined : filter.periode,
     status: filter.status === "semua" ? undefined : filter.status,

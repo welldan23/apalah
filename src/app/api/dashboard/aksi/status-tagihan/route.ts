@@ -5,12 +5,12 @@
 import { getDb } from "@/db";
 import { bacaJson, pastikanPengelola, responGalat } from "@/lib/aksi/galat";
 import { bacaInputUbahStatus, ubahStatusTagihan } from "@/lib/aksi/status-tagihan";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 import { hariIniWib } from "@/lib/waktu";
 
 export async function POST(request: Request) {
   try {
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const input = bacaInputUbahStatus(await bacaJson(request));
     return Response.json(await ubahStatusTagihan(await getDb(), session.organization.id, input, hariIniWib()));

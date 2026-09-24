@@ -3,7 +3,7 @@
 
 import { getDb } from "@/db";
 import { bacaJson, GalatAksi, pastikanPengelola, responGalat } from "@/lib/aksi/galat";
-import { getWorkspaceSession } from "@/lib/data/session";
+import { getWorkspaceSessionApi } from "@/lib/data/session";
 import { putuskanDraft } from "@/lib/kosta/draft";
 import { catatPesan } from "@/lib/kosta/riwayat";
 import { getPengirimWhatsApp } from "@/lib/whatsapp";
@@ -11,7 +11,7 @@ import { getPengirimWhatsApp } from "@/lib/whatsapp";
 export async function POST(request: Request, ctx: RouteContext<"/api/kosta/draft/[id]">) {
   try {
     const { id } = await ctx.params;
-    const session = await getWorkspaceSession();
+    const session = await getWorkspaceSessionApi();
     pastikanPengelola(session.peran);
     const { keputusan } = await bacaJson(request);
     if (keputusan !== "setuju" && keputusan !== "batal") {
