@@ -1,0 +1,1 @@
+DROP TABLE "verifikasi_wa" CASCADE;

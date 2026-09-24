@@ -108,10 +108,4 @@ describe("skema percakapan Kosta", () => {
     );
     await db.insert(schema.actionDrafts).values({ ...draft, status: "dibatalkan", dikonfirmasiPada: new Date() });
   });
-
-  it("verifikasi OTP: percobaan dibatasi", async () => {
-    const kode = { nomorWa: "6281300000009", kodeHash: "x", kedaluwarsaPada: new Date() };
-    await db.insert(schema.verifikasiWa).values(kode);
-    await ditolakOleh(db.insert(schema.verifikasiWa).values({ ...kode, percobaan: 11 }), "verifikasi_wa_percobaan");
-  });
 });

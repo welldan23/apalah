@@ -57,6 +57,20 @@
       "when": 1790278649290,
       "tag": "0007_jadwal_pengingat",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790281400723,
+      "tag": "0008_akun_sesi",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790281401696,
+      "tag": "0009_hapus_verifikasi_wa",
+      "breakpoints": true
     }
   ]
 }

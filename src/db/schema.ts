@@ -4,6 +4,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   date,
@@ -56,12 +57,21 @@ export const statusDraftAksiEnum = pgEnum("status_draft_aksi", [
   "dijalankan",
 ]);
 
+/**
+ * Akun pengguna (owner/admin/penyewa). Login lewat Better Auth dengan nomor WhatsApp + OTP
+ * (plugin phone-number: nomorWa & nomorWaTerverifikasi). Better Auth mewajibkan email; akun dari
+ * nomor WA mendapat email sementara yang diturunkan dari nomornya.
+ */
 export const users = pgTable("users", {
   id: id(),
   nama: text().notNull(),
   nomorWa: text().notNull().unique("users_nomor_wa_unik"),
   nomorWaTerverifikasi: boolean().notNull().default(false),
-  email: text(),
+  email: text().unique("users_email_unik"),
+  emailTerverifikasi: boolean().notNull().default(false),
+  foto: text(),
+  dibuatPada: waktu().notNull().defaultNow(),
+  diperbaruiPada: waktu().notNull().defaultNow(),
 });
 
 export const organizations = pgTable(
@@ -97,6 +107,82 @@ export const members = pgTable(
   },
   (t) => [uniqueIndex("members_organisasi_user_unik").on(t.organizationId, t.userId)],
 );
+
+/**
+ * Sesi login (Better Auth). `organizationId` = kos (workspace) yang sedang dibuka; FK gabungan ke
+ * members menjamin kos itu memang dikelola pengguna sesi ini.
+ */
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: id(),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text().notNull().unique("sessions_token_unik"),
+    kedaluwarsaPada: waktu().notNull(),
+    alamatIp: text(),
+    userAgent: text(),
+    organizationId: text(),
+    dibuatPada: waktu().notNull().defaultNow(),
+    diperbaruiPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    index("sessions_user").on(t.userId),
+    // Di migrasi: ON DELETE SET NULL ("organization_id") — dikeluarkan dari kos hanya mengosongkan
+    // workspace aktif, sesinya tetap.
+    foreignKey({
+      name: "sessions_workspace_anggota_fk",
+      columns: [t.organizationId, t.userId],
+      foreignColumns: [members.organizationId, members.userId],
+    }).onDelete("set null"),
+  ],
+);
+
+/** Akun login per penyedia (Better Auth). Login nomor WA + OTP tidak memakai password. */
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: id(),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    accountId: text().notNull(),
+    providerId: text().notNull(),
+    accessToken: text(),
+    refreshToken: text(),
+    idToken: text(),
+    accessTokenExpiresAt: waktu(),
+    refreshTokenExpiresAt: waktu(),
+    scope: text(),
+    password: text(),
+    dibuatPada: waktu().notNull().defaultNow(),
+    diperbaruiPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [index("accounts_user").on(t.userId)],
+);
+
+/** Kode verifikasi berumur pendek (Better Auth), mis. OTP WhatsApp: identifier = nomor WA. */
+export const verifications = pgTable(
+  "verifications",
+  {
+    id: id(),
+    identifier: text().notNull(),
+    value: text().notNull(),
+    kedaluwarsaPada: waktu().notNull(),
+    dibuatPada: waktu().notNull().defaultNow(),
+    diperbaruiPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [index("verifications_identifier").on(t.identifier)],
+);
+
+/** Penghitung batas permintaan (Better Auth) — disimpan di database agar berlaku di semua instance server. */
+export const rateLimits = pgTable("rate_limits", {
+  id: id(),
+  key: text().notNull().unique("rate_limits_key_unik"),
+  count: integer().notNull(),
+  lastRequest: bigint({ mode: "number" }).notNull(),
+});
 
 export const rooms = pgTable(
   "rooms",
@@ -437,20 +523,3 @@ export const actionDrafts = pgTable(
   ],
 );
 
-/** Kode OTP untuk memverifikasi & menautkan nomor WhatsApp. Hanya hash kode yang disimpan. */
-export const verifikasiWa = pgTable(
-  "verifikasi_wa",
-  {
-    id: id(),
-    nomorWa: text().notNull(),
-    kodeHash: text().notNull(),
-    kedaluwarsaPada: waktu().notNull(),
-    percobaan: integer().notNull().default(0),
-    terverifikasiPada: waktu(),
-    dibuatPada: waktu().notNull().defaultNow(),
-  },
-  (t) => [
-    index("verifikasi_wa_nomor").on(t.nomorWa, t.dibuatPada),
-    check("verifikasi_wa_percobaan", sql`${t.percobaan} between 0 and 10`),
-  ],
-);
