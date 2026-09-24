@@ -38,7 +38,6 @@ export default async function DashboardPage() {
         <div className="order-3 lg:order-none lg:col-start-2 lg:row-start-1">
           <h2 className="sr-only">Aksi cepat</h2>
           <QuickActions
-            namaKos={data.organization.namaKos}
             periode={data.periode}
             hariIni={data.hariIni}
             kamar={data.kamar.daftar}

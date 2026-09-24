@@ -31,7 +31,7 @@ function sejak(iso: string, sekarang: Date) {
 }
 
 /** Pilih penerima reminder massal: saring, cari, centang — lalu preview & konfirmasi sebelum dikirim. */
-export function PilihPenerima({ kandidat, hariIni, periode, namaKos, sekarang: sekarangIso }: HalamanKirimReminder) {
+export function PilihPenerima({ kandidat, hariIni, periode, sekarang: sekarangIso }: HalamanKirimReminder) {
   const sekarang = new Date(sekarangIso);
   const [saringan, setSaringan] = useState<Saringan>("jatuh_tempo");
   const [cari, setCari] = useState("");
@@ -175,7 +175,7 @@ export function PilihPenerima({ kandidat, hariIni, periode, namaKos, sekarang: s
         title="Preview reminder"
         description="Cek penerima, periode, dan nominal dulu. Pesan baru terkirim setelah kamu konfirmasi."
       >
-        {preview && <ReminderFlow namaKos={namaKos} periode={periode} hariIni={hariIni} tagihan={penerima} />}
+        {preview && <ReminderFlow periode={periode} hariIni={hariIni} tagihan={penerima} />}
       </ActionSheet>
     </>
   );

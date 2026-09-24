@@ -17,6 +17,9 @@ export type PesanReminder = {
   tenantId: string;
   nomorKamar: string;
   namaPenghuni: string;
+  periode: string;
+  nominal: number;
+  jatuhTempo: string;
   /** Tujuan WhatsApp (format 62…). */
   nomorWa: string;
   teks: string;
@@ -74,6 +77,9 @@ export async function susunPesanReminder(
     tenantId: t.tenantId,
     nomorKamar: t.nomorKamar,
     namaPenghuni: t.namaPenghuni,
+    periode: t.periode,
+    nominal: t.nominal,
+    jatuhTempo: t.jatuhTempo,
     nomorWa: t.nomorWa,
     teks: pesanPengingat(t, kos.namaKos, hariIni, `${baseUrl}/invoice/${t.tokenPublik}`),
     template: templatePengingat(t, kos.namaKos, hariIni, t.tokenPublik),

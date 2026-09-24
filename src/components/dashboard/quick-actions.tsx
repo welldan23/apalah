@@ -20,13 +20,11 @@ const AKSI = [
 
 /** Aksi Cepat dari layar utama; tiap aksi lewat preview + konfirmasi owner. */
 export function QuickActions({
-  namaKos,
   periode,
   hariIni,
   kamar,
   invoices,
 }: {
-  namaKos: string;
   periode: string;
   hariIni: string;
   kamar: RoomCell[];
@@ -83,7 +81,7 @@ export function QuickActions({
         title="Kirim reminder"
         description="Cek penerima, periode, dan nominal dulu. Pesan baru terkirim setelah kamu konfirmasi."
       >
-        <ReminderFlow namaKos={namaKos} periode={periode} hariIni={hariIni} tagihan={menunggak} />
+        <ReminderFlow periode={periode} hariIni={hariIni} tagihan={menunggak} />
       </ActionSheet>
     </>
   );

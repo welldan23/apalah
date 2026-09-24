@@ -12,7 +12,7 @@ import type { HalamanReminder } from "@/lib/data/halaman-reminder";
 import { formatPeriode, formatRupiah, selisihHari } from "@/lib/format";
 
 /** Tagihan jatuh tempo yang bisa diingatkan sekarang, lewat preview & konfirmasi. */
-export function PerluDiingatkan({ menunggak, hariIni, periode, namaKos }: Pick<HalamanReminder, "menunggak" | "hariIni" | "periode" | "namaKos">) {
+export function PerluDiingatkan({ menunggak, hariIni, periode }: Pick<HalamanReminder, "menunggak" | "hariIni" | "periode">) {
   const [buka, setBuka] = useState(false);
   const total = menunggak.reduce((jumlah, t) => jumlah + t.nominal, 0);
 
@@ -68,7 +68,7 @@ export function PerluDiingatkan({ menunggak, hariIni, periode, namaKos }: Pick<H
         title="Kirim reminder massal"
         description="Cek penerima, periode, dan nominal dulu. Pesan baru terkirim setelah kamu konfirmasi."
       >
-        <ReminderFlow namaKos={namaKos} periode={periode} hariIni={hariIni} tagihan={menunggak} />
+        <ReminderFlow periode={periode} hariIni={hariIni} tagihan={menunggak} />
       </ActionSheet>
     </Card>
   );

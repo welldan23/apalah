@@ -27,7 +27,7 @@ export default async function ReminderPage() {
 
       <div className="grid items-start gap-5 lg:grid-cols-3 lg:gap-6">
         <div className="flex min-w-0 flex-col gap-5 lg:col-span-2 lg:gap-6">
-          <PerluDiingatkan menunggak={data.menunggak} hariIni={data.hariIni} periode={data.periode} namaKos={data.namaKos} />
+          <PerluDiingatkan menunggak={data.menunggak} hariIni={data.hariIni} periode={data.periode} />
           <RiwayatReminderTerbaru riwayat={data.riwayat} />
         </div>
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6">

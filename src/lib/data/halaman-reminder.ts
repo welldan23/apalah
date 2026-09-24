@@ -72,7 +72,6 @@ export async function getHalamanJadwalPengingat(): Promise<HalamanJadwalPenginga
 export type HalamanKirimReminder = {
   hariIni: string;
   periode: string;
-  namaKos: string;
   /** Waktu server (ISO) — acuan jeda 24 jam antar pengingat. */
   sekarang: string;
   kandidat: KandidatReminder[];
@@ -86,7 +85,6 @@ export async function getHalamanKirimReminder(): Promise<HalamanKirimReminder> {
   return {
     hariIni,
     periode: hariIni.slice(0, 7),
-    namaKos: session.organization.namaKos,
     sekarang: new Date().toISOString(),
     kandidat: await getKandidatReminder(await getDb(), session.organization.id),
   };
