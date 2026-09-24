@@ -123,7 +123,7 @@ describe("koreksi & batal draft", () => {
 
   it("semua kamar dikecualikan → draft dibatalkan", async () => {
     await toolBatalDraft(db, percakapan);
-    await db.update(schema.tenants).set({ status: "keluar" }).where(eq(schema.tenants.organizationId, ORG));
+    await db.update(schema.tenants).set({ status: "keluar", tanggalKeluar: "2026-09-30" }).where(eq(schema.tenants.organizationId, ORG));
     await db.update(schema.tenants).set({ status: "aktif" }).where(eq(schema.tenants.id, "tnt_A01"));
     await toolDraftTagihan(db, PEMILIK, { periode: "2026-11", hariIni: HARI_INI });
     assert.deepEqual(await toolKoreksiDraft(db, percakapan, { kecualikan: ["A01"] }), {

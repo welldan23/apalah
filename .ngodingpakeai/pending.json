@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "1a6328b3abd36e91ea44edca73ddd48343e03556",
+  "generatedForCommit": "b1c22fdb1c593a3145f4441276b6767b9a4d030f",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -312,7 +312,7 @@
       "path": "src/app/api/webhook/pembayaran/midtrans/route.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 2134
+      "size": 2530
     },
     {
       "path": "src/app/api/webhook/whatsapp/route.ts",
@@ -1180,7 +1180,7 @@
     },
     {
       "path": "src/lib/pembayaran/konfirmasi.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1887
     },
@@ -1191,10 +1191,16 @@
       "size": 3736
     },
     {
+      "path": "src/lib/pembayaran/notifikasi-review.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 2940
+    },
+    {
       "path": "src/lib/pembayaran/pembayaran.test.ts",
       "reason": "changed",
       "language": "typescript",
-      "size": 8954
+      "size": 10750
     },
     {
       "path": "src/lib/pembayaran/pencocokan.test.ts",
@@ -1252,7 +1258,7 @@
     },
     {
       "path": "src/lib/pesan.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1818
     },

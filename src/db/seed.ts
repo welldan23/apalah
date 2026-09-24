@@ -51,6 +51,17 @@ export async function isiDataContoh(db: Db) {
     });
     await tx.insert(schema.rooms).values(mockRooms);
     await tx.insert(schema.tenants).values([...mockTenants, ...mockPenghuniKeluar]);
+    await tx.insert(schema.riwayatHunian).values(
+      [...mockTenants, ...mockPenghuniKeluar].map((t) => ({
+        organizationId: t.organizationId,
+        tenantId: t.id,
+        roomId: t.roomId,
+        tanggalMulai: t.tanggalMasuk,
+        tanggalSelesai: t.tanggalKeluar ?? null,
+        hargaSewa: t.hargaSewa,
+        alasanSelesai: t.status === "keluar" ? "keluar" : null,
+      })),
+    );
     await tx.insert(schema.invoices).values(
       mockInvoices.map((inv) => ({
         ...inv,

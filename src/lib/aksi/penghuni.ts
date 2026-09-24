@@ -6,7 +6,7 @@ import { schema, type Db } from "../../db/index.ts";
 import { normalisasiNomorWa } from "../nomor-wa.ts";
 import { GalatAksi, nominalValid, tanggalValid } from "./galat.ts";
 
-const { rooms, tenants } = schema;
+const { riwayatHunian, rooms, tenants } = schema;
 
 export type InputTambahPenghuni = {
   nama: string;
@@ -58,6 +58,13 @@ export async function tambahPenghuni(db: Db, organizationId: string, input: Inpu
       .insert(tenants)
       .values({ organizationId, ...input, status: "aktif" })
       .returning({ id: tenants.id });
+    await tx.insert(riwayatHunian).values({
+      organizationId,
+      tenantId: penghuni.id,
+      roomId: input.roomId,
+      tanggalMulai: input.tanggalMasuk,
+      hargaSewa: input.hargaSewa,
+    });
     return { tenantId: penghuni.id, nomorKamar: kamar.nomorKamar };
   });
 }

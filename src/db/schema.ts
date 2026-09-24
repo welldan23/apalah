@@ -131,12 +131,46 @@ export const tenants = pgTable(
     tanggalKeluar: date({ mode: "string" }),
     status: statusPenghuniEnum().notNull().default("aktif"),
     hargaSewa: integer().notNull(),
+    alasanKeluar: text(),
   },
   (t) => [
     index("tenants_organisasi").on(t.organizationId),
     // Satu kamar hanya boleh punya satu penghuni aktif.
     uniqueIndex("tenants_kamar_aktif_unik").on(t.roomId).where(sql`${t.status} = 'aktif'`),
     check("tenants_harga_sewa_positif", sql`${t.hargaSewa} > 0`),
+    check("tenants_keluar_bertanggal", sql`${t.status} = 'aktif' or ${t.tanggalKeluar} is not null`),
+    check("tenants_tanggal_keluar_urut", sql`${t.tanggalKeluar} is null or ${t.tanggalKeluar} >= ${t.tanggalMasuk}`),
+  ],
+);
+
+/**
+ * Riwayat penempatan penghuni per kamar (masuk, pindah, keluar). Satu penghuni hanya punya satu
+ * hunian berjalan (tanggal selesai kosong). Dipakai untuk riwayat kamar & "kosong sejak".
+ */
+export const riwayatHunian = pgTable(
+  "riwayat_hunian",
+  {
+    id: id(),
+    organizationId: text()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    tenantId: text()
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    roomId: text()
+      .notNull()
+      .references(() => rooms.id),
+    tanggalMulai: date({ mode: "string" }).notNull(),
+    tanggalSelesai: date({ mode: "string" }),
+    hargaSewa: integer().notNull(),
+    /** Alasan hunian berakhir: "pindah" atau "keluar" (+ keterangan). */
+    alasanSelesai: text(),
+  },
+  (t) => [
+    index("riwayat_hunian_kamar").on(t.roomId, t.tanggalSelesai),
+    uniqueIndex("riwayat_hunian_berjalan_unik").on(t.tenantId).where(sql`${t.tanggalSelesai} is null`),
+    check("riwayat_hunian_harga_positif", sql`${t.hargaSewa} > 0`),
+    check("riwayat_hunian_tanggal_urut", sql`${t.tanggalSelesai} is null or ${t.tanggalSelesai} >= ${t.tanggalMulai}`),
   ],
 );
 
