@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "6fded17c419ca685ca11a8a268304010ab001d37",
+  "generatedForCommit": "3213e6db43058c0f34676a23743b2152badeca94",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -193,6 +193,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 1479
+    },
+    {
+      "path": "src/app/api/cron/tagihan-terjadwal/route.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 830
     },
     {
       "path": "src/app/api/dashboard/aksi/penghuni/route.ts",
@@ -730,15 +736,15 @@
     },
     {
       "path": "src/lib/aksi/tagihan-terjadwal.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2691
+      "size": 2964
     },
     {
       "path": "src/lib/aksi/tagihan.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 5494
+      "size": 6276
     },
     {
       "path": "src/lib/data/dashboard.ts",
@@ -975,6 +981,24 @@
       "size": 574
     },
     {
+      "path": "src/lib/penjadwal/otorisasi.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 598
+    },
+    {
+      "path": "src/lib/penjadwal/tagihan-terjadwal.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 5989
+    },
+    {
+      "path": "src/lib/penjadwal/tagihan-terjadwal.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3120
+    },
+    {
       "path": "src/lib/pesan.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -1069,6 +1093,12 @@
       "reason": "needs_summary",
       "language": "json",
       "size": 710
+    },
+    {
+      "path": "vercel.json",
+      "reason": "new",
+      "language": "json",
+      "size": 139
     }
   ]
 }

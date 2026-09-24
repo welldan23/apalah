@@ -7,7 +7,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
-import { buatTagihan } from "../aksi/tagihan.ts";
+import { buatTagihan, buatTokenPublik } from "../aksi/tagihan.ts";
 import { getInvoicePublik, tokenValid } from "./invoice-publik.ts";
 
 describe("getInvoicePublik", () => {
@@ -67,6 +67,12 @@ describe("getInvoicePublik", () => {
     const inv = await getInvoicePublik(db, "demo-a01-2026-09");
     assert.equal(inv?.status, "lunas");
     assert.equal(inv?.dibayarPada, "2026-09-02");
+  });
+
+  it("token baru acak, unik, dan lolos validasi format", () => {
+    const token = Array.from({ length: 200 }, buatTokenPublik);
+    assert.equal(new Set(token).size, 200);
+    assert.ok(token.every((t) => t.length === 24 && tokenValid(t)));
   });
 
   it("token tidak dikenal atau formatnya salah → null", async () => {
