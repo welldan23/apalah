@@ -32,11 +32,14 @@ function urutkanInvoice(a: InvoiceRow, b: InvoiceRow) {
   return a.jatuhTempo.localeCompare(b.jatuhTempo);
 }
 
-/** Invoice satu periode (YYYY-MM), opsional disaring satu status, urut dari yang paling perlu ditindak. */
+/**
+ * Invoice satu periode (YYYY-MM) — atau semua periode bila `periode` kosong — opsional disaring
+ * satu status, urut dari yang paling perlu ditindak.
+ */
 export async function getDaftarInvoice(
   db: Db,
   organizationId: string,
-  { periode, status }: { periode: string; status?: InvoiceStatus },
+  { periode, status }: { periode?: string; status?: InvoiceStatus },
 ): Promise<InvoiceRow[]> {
   const baris = await db
     .select({
@@ -50,7 +53,7 @@ export async function getDaftarInvoice(
     .where(
       and(
         eq(invoices.organizationId, organizationId),
-        eq(invoices.periode, periode),
+        periode ? eq(invoices.periode, periode) : undefined,
         status ? eq(invoices.status, status) : undefined,
       ),
     );

@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { TagihanPembayaran } from "@/lib/data/pembayaran";
-import { formatRupiah, formatRupiahSingkat, formatWaktu } from "@/lib/format";
+import { formatPeriode, formatRupiah, formatRupiahSingkat, formatWaktu } from "@/lib/format";
 import type { InvoiceStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -52,12 +52,31 @@ function InfoBayar({ t }: { t: TagihanPembayaran }) {
   );
 }
 
-/** Pemantauan pembayaran: ringkasan per status (sekaligus filter) + daftar tagihan & uang masuk. */
+/** Label periode kecil untuk tagihan dari bulan lain (mis. di filter Perlu review). */
+function LabelPeriode({ t, periode }: { t: TagihanPembayaran; periode: string }) {
+  if (t.periode === periode) return null;
+  return (
+    <span className="ml-1.5 rounded bg-muted px-1.5 py-0.5 text-[0.7rem] font-normal text-muted-foreground">
+      {formatPeriode(t.periode)}
+    </span>
+  );
+}
+
+/**
+ * Pemantauan pembayaran: ringkasan per status (sekaligus filter) + daftar tagihan & uang masuk.
+ * Perlu review mencakup semua periode supaya tidak ada pembayaran bermasalah yang terlewat.
+ */
 export function DaftarPembayaran({
   tagihan,
+  tagihanPerluReview,
+  periode,
   hariIni,
 }: {
+  /** Tagihan periode yang sedang dilihat. */
   tagihan: TagihanPembayaran[];
+  /** Tagihan Perlu review dari semua periode. */
+  tagihanPerluReview: TagihanPembayaran[];
+  periode: string;
   hariIni: string;
 }) {
   const [dipilih, setDipilih] = useState<TagihanPembayaran | null>(null);
@@ -73,13 +92,15 @@ export function DaftarPembayaran({
     window.history.replaceState(null, "", `${pathname}${query ? `?${query}` : ""}`);
   }
 
-  const tersaring = filter === "semua" ? tagihan : tagihan.filter((t) => t.status === filter);
+  const sumberUntuk = (status: InvoiceStatus) =>
+    status === "perlu_review" ? tagihanPerluReview : tagihan.filter((t) => t.status === status);
+  const tersaring = filter === "semua" ? tagihan : sumberUntuk(filter);
 
   return (
     <>
       <div role="group" aria-label="Saring per status" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {RINGKASAN.map(({ status, label }) => {
-          const baris = tagihan.filter((t) => t.status === status);
+          const baris = sumberUntuk(status);
           const nominal = baris.reduce((total, t) => total + t.nominal, 0);
           const aktif = filter === status;
           const perhatian = status === "perlu_review" && baris.length > 0;
@@ -102,6 +123,7 @@ export function DaftarPembayaran({
               <span className="text-2xl font-semibold tabular-nums">{baris.length}</span>
               <span className="text-xs text-muted-foreground tabular-nums">
                 {formatRupiahSingkat(nominal)}
+                {status === "perlu_review" && " · semua periode"}
               </span>
             </button>
           );
@@ -150,7 +172,10 @@ export function DaftarPembayaran({
                       {t.nomorKamar}
                     </span>
                     <span className="min-w-0 flex-1 text-sm">
-                      <span className="block truncate font-medium">{t.namaPenghuni}</span>
+                      <span className="block truncate font-medium">
+                        {t.namaPenghuni}
+                        <LabelPeriode t={t} periode={periode} />
+                      </span>
                       <span className="block text-xs text-muted-foreground">
                         Tagihan <span className="tabular-nums">{formatRupiah(t.nominal)}</span>
                       </span>
@@ -184,7 +209,10 @@ export function DaftarPembayaran({
               <TableBody>
                 {tersaring.map((t) => (
                   <TableRow key={t.id}>
-                    <TableCell className="pl-4 font-medium">{t.namaPenghuni}</TableCell>
+                    <TableCell className="pl-4 font-medium">
+                      {t.namaPenghuni}
+                      <LabelPeriode t={t} periode={periode} />
+                    </TableCell>
                     <TableCell className="tabular-nums">{t.nomorKamar}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatRupiah(t.nominal)}</TableCell>
                     <TableCell>

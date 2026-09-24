@@ -5,7 +5,6 @@ import { connection } from "next/server";
 
 import { getDb } from "@/db";
 import { getDaftarTagihanPembayaran, type TagihanPembayaran } from "@/lib/data/pembayaran";
-import { getPerluReview } from "@/lib/data/perlu-review";
 import { getWorkspaceSession } from "@/lib/data/session";
 import type { PembayaranPerluReview } from "@/lib/types";
 import { hariIniWib, periodeValid } from "@/lib/waktu";
@@ -15,7 +14,9 @@ export type HalamanPembayaran = {
   periode: string;
   periodeBerjalan: string;
   tagihan: TagihanPembayaran[];
-  /** Semua tagihan Perlu Review lintas periode — untuk banner notifikasi. */
+  /** Semua tagihan Perlu Review lintas periode — untuk filter Perlu review. */
+  tagihanPerluReview: TagihanPembayaran[];
+  /** Ringkasan yang sama untuk banner notifikasi. */
   perluReview: PembayaranPerluReview[];
 };
 
@@ -29,9 +30,17 @@ export async function getHalamanPembayaran(periodeDiminta?: string): Promise<Hal
     periodeDiminta && periodeValid(periodeDiminta) ? periodeDiminta : periodeBerjalan;
 
   const db = await getDb();
-  const [tagihan, perluReview] = await Promise.all([
+  const [tagihan, tagihanPerluReview] = await Promise.all([
     getDaftarTagihanPembayaran(db, session.organization.id, { periode }),
-    getPerluReview(db, session.organization.id),
+    getDaftarTagihanPembayaran(db, session.organization.id, { status: "perlu_review" }),
   ]);
-  return { hariIni, periode, periodeBerjalan, tagihan, perluReview };
+  const perluReview = tagihanPerluReview.map((t) => ({
+    invoiceId: t.id,
+    nomorKamar: t.nomorKamar,
+    namaPenghuni: t.namaPenghuni,
+    periode: t.periode,
+    nominal: t.nominal,
+    dibayar: t.dibayar,
+  }));
+  return { hariIni, periode, periodeBerjalan, tagihan, tagihanPerluReview, perluReview };
 }

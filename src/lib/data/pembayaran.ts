@@ -6,7 +6,7 @@ import { desc, inArray, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { getDaftarInvoice } from "./invoice.ts";
-import type { InvoiceRow, PaymentStatus } from "@/lib/types";
+import type { InvoiceRow, InvoiceStatus, PaymentStatus } from "@/lib/types";
 
 const { payments } = schema;
 
@@ -29,12 +29,13 @@ export type TagihanPembayaran = InvoiceRow & {
   riwayat: PembayaranTercatat[];
 };
 
+/** Filter sama dengan getDaftarInvoice: periode kosong = semua periode. */
 export async function getDaftarTagihanPembayaran(
   db: Db,
   organizationId: string,
-  { periode }: { periode: string },
+  filter: { periode?: string; status?: InvoiceStatus },
 ): Promise<TagihanPembayaran[]> {
-  const invoices = await getDaftarInvoice(db, organizationId, { periode });
+  const invoices = await getDaftarInvoice(db, organizationId, filter);
   if (invoices.length === 0) return [];
 
   const bayar = await db

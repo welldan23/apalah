@@ -57,6 +57,33 @@ describe("getDaftarTagihanPembayaran", () => {
     );
   });
 
+  it("filter Perlu review semua periode ikut membawa tagihan bulan lain", async () => {
+    await db.insert(schema.invoices).values({
+      id: "inv_2026-08_C09",
+      organizationId: "org_kos_melati",
+      tenantId: "tnt_C09",
+      roomId: "room_C09",
+      periode: "2026-08",
+      nominal: 800_000,
+      jatuhTempo: "2026-08-27",
+      status: "perlu_review",
+      tokenPublik: "uji-c09-2026-08",
+    });
+    const semua = await getDaftarTagihanPembayaran(db, "org_kos_melati", { status: "perlu_review" });
+    assert.deepEqual(
+      semua.map((t) => [t.nomorKamar, t.periode]).sort(),
+      [
+        ["C09", "2026-08"],
+        ["C09", "2026-09"],
+      ],
+    );
+    const september = await getDaftarTagihanPembayaran(db, "org_kos_melati", {
+      periode: "2026-09",
+      status: "perlu_review",
+    });
+    assert.equal(september.length, 1);
+  });
+
   it("periode tanpa tagihan → kosong", async () => {
     assert.deepEqual(await getDaftarTagihanPembayaran(db, "org_kos_melati", { periode: "2026-12" }), []);
   });

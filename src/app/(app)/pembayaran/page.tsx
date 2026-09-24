@@ -30,7 +30,12 @@ export default async function PembayaranPage({ searchParams }: PageProps<"/pemba
       </header>
 
       <BannerPerluReview items={data.perluReview} />
-      <DaftarPembayaran tagihan={data.tagihan} hariIni={data.hariIni} />
+      <DaftarPembayaran
+        tagihan={data.tagihan}
+        tagihanPerluReview={data.tagihanPerluReview}
+        periode={data.periode}
+        hariIni={data.hariIni}
+      />
     </div>
   );
 }
