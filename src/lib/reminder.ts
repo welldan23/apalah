@@ -1,6 +1,8 @@
 // Aturan pengingat bayar otomatis — fungsi murni, dipakai halaman Reminder dan penjadwal.
 // Jadwal dinyatakan relatif terhadap jatuh tempo: offset -3 = H-3, 0 = hari H, +3 = H+3.
 
+import { jamWib, tanggalWib } from "./waktu.ts";
+
 export type JadwalPengingat = {
   /** Hari relatif terhadap jatuh tempo (negatif = sebelum). */
   offsetHari: number;
@@ -34,7 +36,7 @@ export function keteranganJadwal(offsetHari: number) {
 /** Label jenis di riwayat: "manual" → "Manual", "H-3" tetap. */
 export const labelJenisReminder = (jenis: string) => (jenis === "manual" ? "Manual" : jenis);
 
-const geserHari = (tanggal: string, hari: number) => {
+export const geserHari = (tanggal: string, hari: number) => {
   const d = new Date(`${tanggal}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + hari);
   return d.toISOString().slice(0, 10);
@@ -101,6 +103,34 @@ export function periksaJadwal(jadwal: JadwalPengingat, semua: JadwalPengingat[],
   }
   if (indeksUbah === undefined && semua.length >= MAKS_JADWAL) return `Maksimal ${MAKS_JADWAL} jadwal.`;
   return "";
+}
+
+/** true bila `sekarang` di dalam jam kirim wajar (JAM_KIRIM, WIB); di luar itu pengingat ditunda. */
+export function dalamJamKirim(sekarang: Date) {
+  const jam = jamWib(sekarang);
+  return jam >= JAM_KIRIM.paling_awal && jam <= JAM_KIRIM.paling_akhir;
+}
+
+/** Satu jadwal pada satu tanggal kirim: tagihan yang jatuh tempo `jatuhTempo` diingatkan saat `waktuKirim`. */
+export type SlotPengingat = { jatuhTempo: string; offsetHari: number; jenis: string; waktuKirim: Date };
+
+/**
+ * Slot jadwal aktif yang waktunya (tanggal kirim + jam WIB) jatuh dalam 24 jam terakhir s.d. `sekarang`.
+ * Penjadwal yang jalan tiap jam mengirim tepat waktu; putaran yang telat/terlewat menyusul ≤ 24 jam.
+ */
+export function slotPengingatJatuhWaktu(jadwal: JadwalPengingat[], sekarang: Date): SlotPengingat[] {
+  const hariIni = tanggalWib(sekarang);
+  const slot: SlotPengingat[] = [];
+  for (const j of jadwal) {
+    if (!j.aktif) continue;
+    for (const tanggalKirim of [geserHari(hariIni, -1), hariIni]) {
+      const waktuKirim = new Date(`${tanggalKirim}T${j.jam}:00+07:00`);
+      const lalu = sekarang.getTime() - waktuKirim.getTime();
+      if (lalu < 0 || lalu >= 24 * 3_600_000) continue;
+      slot.push({ jatuhTempo: geserHari(tanggalKirim, -j.offsetHari), offsetHari: j.offsetHari, jenis: labelJadwal(j.offsetHari), waktuKirim });
+    }
+  }
+  return slot;
 }
 
 /** Satu penyewa tidak diingatkan lebih dari sekali dalam rentang ini. */

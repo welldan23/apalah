@@ -7,6 +7,18 @@ const tanggalWibFormat = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
+const jamWibFormat = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Jakarta",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** Date → jam WIB "HH:MM". */
+export function jamWib(waktu: Date) {
+  return jamWibFormat.format(waktu);
+}
+
 /** Date → tanggal kalender WIB "YYYY-MM-DD". */
 export function tanggalWib(waktu: Date) {
   return tanggalWibFormat.format(waktu);

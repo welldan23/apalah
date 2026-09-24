@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { hariIniWib, periodeValid, periodeWib, tanggalWib } from "./waktu.ts";
+import { hariIniWib, jamWib, periodeValid, periodeWib, tanggalWib } from "./waktu.ts";
 
 describe("waktu WIB", () => {
   it("pergantian hari mengikuti WIB, bukan UTC", () => {
@@ -17,5 +17,13 @@ describe("waktu WIB", () => {
     assert.equal(periodeValid("2026-13"), false);
     assert.equal(periodeValid("2026-9"), false);
     assert.equal(periodeValid("abc"), false);
+  });
+});
+
+describe("jam WIB", () => {
+  it("jam & menit menurut WIB, format 24 jam", () => {
+    assert.equal(jamWib(new Date("2026-09-30T18:30:00Z")), "01:30");
+    assert.equal(jamWib(new Date("2026-09-30T05:05:00Z")), "12:05");
+    assert.equal(jamWib(new Date("2026-09-30T17:00:00Z")), "00:00");
   });
 });

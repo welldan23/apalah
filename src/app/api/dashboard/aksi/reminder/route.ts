@@ -1,4 +1,4 @@
-// POST /api/dashboard/aksi/reminder — kirim pengingat WhatsApp untuk tagihan jatuh tempo
+// POST /api/dashboard/aksi/reminder — kirim pengingat WhatsApp untuk tagihan belum dibayar
 // yang dipilih owner (setelah preview). Body: { invoiceIds }.
 
 import { getDb } from "@/db";

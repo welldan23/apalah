@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   antrianPengingat,
   bolehDiingatkan,
+  dalamJamKirim,
   JADWAL_BAWAAN,
   jenisDiRiwayat,
   keteranganJadwal,
@@ -13,6 +14,7 @@ import {
   periksaJadwal,
   periodeDiRiwayat,
   saringRiwayatReminder,
+  slotPengingatJatuhWaktu,
 } from "./reminder.ts";
 
 describe("label jadwal pengingat", () => {
@@ -100,5 +102,35 @@ describe("saring riwayat reminder", () => {
     assert.equal(parseStatusRiwayat("gagal"), "gagal");
     assert.equal(parseStatusRiwayat("lunas"), "semua");
     assert.equal(parseStatusRiwayat(null), "semua");
+  });
+});
+
+describe("slot pengingat otomatis", () => {
+  const wib = (iso: string) => new Date(`${iso}+07:00`);
+  const slot = (sekarang: string, jadwal = JADWAL_BAWAAN) =>
+    slotPengingatJatuhWaktu(jadwal, wib(sekarang)).map((s) => `${s.jenis} ${s.jatuhTempo} ${s.waktuKirim.toISOString()}`);
+
+  it("slot dihitung dari tanggal kirim WIB: H-3 hari ini → jatuh tempo 3 hari lagi", () => {
+    assert.deepEqual(slot("2026-09-27T09:00:00"), [
+      "H-3 2026-09-30 2026-09-27T02:00:00.000Z",
+      "H 2026-09-27 2026-09-27T02:00:00.000Z",
+      "H+3 2026-09-24 2026-09-27T02:00:00.000Z",
+    ]);
+  });
+
+  it("hanya slot dalam 24 jam terakhir; sebelum jamnya belum; jadwal nonaktif dilewati", () => {
+    assert.deepEqual(slot("2026-09-27T08:59:00", [{ offsetHari: 0, jam: "09:00", aktif: true }]), ["H 2026-09-26 2026-09-26T02:00:00.000Z"]);
+    assert.deepEqual(slot("2026-09-28T09:00:00", [{ offsetHari: 0, jam: "09:00", aktif: true }]), ["H 2026-09-28 2026-09-28T02:00:00.000Z"]);
+    assert.deepEqual(slot("2026-09-27T12:00:00", [{ offsetHari: 0, jam: "18:00", aktif: true }]), ["H 2026-09-26 2026-09-26T11:00:00.000Z"]);
+    assert.deepEqual(slot("2026-09-27T12:00:00", [{ offsetHari: 0, jam: "09:00", aktif: false }]), []);
+  });
+
+  it("jam kirim wajar 06.00–21.00 WIB", () => {
+    assert.equal(dalamJamKirim(wib("2026-09-27T05:59:00")), false);
+    assert.equal(dalamJamKirim(wib("2026-09-27T06:00:00")), true);
+    assert.equal(dalamJamKirim(wib("2026-09-27T21:00:00")), true);
+    assert.equal(dalamJamKirim(wib("2026-09-27T21:01:00")), false);
+    // 23.30 UTC = 06.30 WIB esok hari.
+    assert.equal(dalamJamKirim(new Date("2026-09-26T23:30:00Z")), true);
   });
 });
