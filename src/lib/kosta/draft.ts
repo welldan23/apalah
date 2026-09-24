@@ -9,7 +9,7 @@ import { GalatAksi } from "../aksi/galat.ts";
 import { kirimReminder } from "../aksi/reminder.ts";
 import { sisipkanTagihan } from "../aksi/tagihan.ts";
 import { getPengaturanTagihanTerjadwal } from "../aksi/tagihan-terjadwal.ts";
-import { formatPeriode, formatRupiah, periodeBerikutnya } from "../format.ts";
+import { formatPeriode, formatRupiah, formatTanggal, periodeBerikutnya } from "../format.ts";
 import { jatuhTempoUntuk } from "../tagihan-terjadwal.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import type { DataDraftAksi, PreviewAksi, StatusDraftAksi } from "@/lib/types";
@@ -161,6 +161,34 @@ async function ubahStatus(db: Db, id: string, dari: StatusDraftAksi, ke: StatusD
   return !!baris;
 }
 
+async function ambilDraftMenunggu(db: Db, draftId: string, organizationId: string) {
+  const [draft] = await db
+    .select()
+    .from(actionDrafts)
+    .where(and(eq(actionDrafts.id, draftId), eq(actionDrafts.organizationId, organizationId)));
+  if (!draft) throw new GalatAksi("Draft tidak ditemukan.", 404);
+  if (draft.status !== "menunggu_konfirmasi") throw SUDAH_DIPUTUSKAN();
+  return draft;
+}
+
+const kedaluwarsa = (draft: { dibuatPada: Date }, sekarang: Date) =>
+  sekarang.getTime() - draft.dibuatPada.getTime() > MASA_BERLAKU_DRAFT_MS;
+
+/** Batalkan draft yang masih menunggu konfirmasi; tidak ada data yang diubah atau dikirim. */
+export async function batalkanDraft(
+  db: Db,
+  { draftId, organizationId, sekarang = new Date() }: { draftId: string; organizationId: string; sekarang?: Date },
+): Promise<HasilKeputusan> {
+  const draft = await ambilDraftMenunggu(db, draftId, organizationId);
+  if (!(await ubahStatus(db, draftId, "menunggu_konfirmasi", "dibatalkan", sekarang))) throw SUDAH_DIPUTUSKAN();
+  return {
+    aksi: draft.jenisAksi,
+    conversationId: draft.conversationId,
+    status: "dibatalkan",
+    balasan: "Oke, dibatalkan. Tidak ada yang dikirim atau diubah.",
+  };
+}
+
 /**
  * Keputusan owner atas draft. Perpindahan status atomik (menunggu → disetujui) sehingga konfirmasi
  * ganda tidak menjalankan aksi dua kali. Target dicek ulang saat dijalankan.
@@ -171,22 +199,12 @@ export async function putuskanDraft(
   deps: { wa: PengirimWhatsApp; baseUrl: string; sekarang?: Date },
 ): Promise<HasilKeputusan> {
   const sekarang = deps.sekarang ?? new Date();
-  const [draft] = await db
-    .select()
-    .from(actionDrafts)
-    .where(and(eq(actionDrafts.id, draftId), eq(actionDrafts.organizationId, organizationId)));
-  if (!draft) throw new GalatAksi("Draft tidak ditemukan.", 404);
-  if (draft.status !== "menunggu_konfirmasi") throw SUDAH_DIPUTUSKAN();
+  if (keputusan === "batal") return batalkanDraft(db, { draftId, organizationId, sekarang });
 
-  if (keputusan === "batal" || sekarang.getTime() - draft.dibuatPada.getTime() > MASA_BERLAKU_DRAFT_MS) {
-    if (!(await ubahStatus(db, draftId, "menunggu_konfirmasi", "dibatalkan", sekarang))) {
-      throw SUDAH_DIPUTUSKAN();
-    }
-    const balasan =
-      keputusan === "batal"
-        ? "Oke, dibatalkan. Tidak ada yang dikirim atau diubah."
-        : "Preview ini sudah lebih dari 24 jam, jadi aku batalkan. Minta ulang supaya datanya terbaru.";
-    return { aksi: draft.jenisAksi, conversationId: draft.conversationId, status: "dibatalkan", balasan };
+  const draft = await ambilDraftMenunggu(db, draftId, organizationId);
+  if (kedaluwarsa(draft, sekarang)) {
+    const hasil = await batalkanDraft(db, { draftId, organizationId, sekarang });
+    return { ...hasil, balasan: "Preview ini sudah lebih dari 24 jam, jadi aku batalkan. Minta ulang supaya datanya terbaru." };
   }
 
   if (!(await ubahStatus(db, draftId, "menunggu_konfirmasi", "disetujui", sekarang))) {
@@ -245,4 +263,66 @@ async function jalankanTagihan(db: Db, organizationId: string, data: DataDraftAk
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+export type KoreksiDraft = {
+  /** Nomor kamar yang tidak jadi ditagih. */
+  kecualikan?: string[];
+  /** Nominal sewa baru per kamar. */
+  nominal?: { nomorKamar: string; nominal: number }[];
+  /** Tanggal jatuh tempo baru (1–31, dipotong ke akhir bulan) untuk semua tagihan di draft. */
+  tanggalJatuhTempo?: number;
+};
+
+/**
+ * Koreksi draft tagihan yang masih menunggu konfirmasi. Hasilnya draft BARU (preview baru untuk
+ * dikonfirmasi) dan draft lama dibatalkan — owner selalu menyetujui persis yang terakhir ia lihat.
+ * preview null bila semua kamar dikecualikan (draft dibatalkan).
+ */
+export async function koreksiDraftTagihan(
+  db: Db,
+  { draftId, organizationId, sekarang = new Date() }: { draftId: string; organizationId: string; sekarang?: Date },
+  koreksi: KoreksiDraft,
+): Promise<{ preview: PreviewAksi | null; perubahan: string[] }> {
+  const draft = await ambilDraftMenunggu(db, draftId, organizationId);
+  const data = draft.ringkasanPreview;
+  if (data.aksi !== "tagihan" || !data.tagihan) throw new GalatAksi("Koreksi hanya untuk draft tagihan.", 409);
+  if (kedaluwarsa(draft, sekarang)) throw new GalatAksi("Draft ini sudah kedaluwarsa. Minta draft baru.", 409);
+
+  const baris = data.penerima.map((p, i) => ({ penerima: { ...p }, tagihan: { ...data.tagihan![i] } }));
+  const disebut = [...(koreksi.kecualikan ?? []), ...(koreksi.nominal ?? []).map((n) => n.nomorKamar)];
+  const tidakAda = disebut.filter((k) => !baris.some((b) => b.penerima.nomorKamar === k));
+  if (tidakAda.length) throw new GalatAksi(`Kamar ${[...new Set(tidakAda)].join(", ")} tidak ada di draft ini.`);
+
+  const perubahan: string[] = [];
+  const dikecualikan = new Set(koreksi.kecualikan ?? []);
+  if (dikecualikan.size) perubahan.push(`${[...dikecualikan].join(", ")} dikecualikan`);
+  for (const { nomorKamar, nominal } of koreksi.nominal ?? []) {
+    const b = baris.find((x) => x.penerima.nomorKamar === nomorKamar)!;
+    b.penerima.nominal = nominal;
+    b.tagihan.sewa = nominal;
+    perubahan.push(`${nomorKamar} jadi ${formatRupiah(nominal)}`);
+  }
+  if (koreksi.tanggalJatuhTempo) {
+    const jatuhTempo = jatuhTempoUntuk({ aturan: "tanggal_tetap", tanggal: koreksi.tanggalJatuhTempo }, data.periode, "");
+    for (const b of baris) b.tagihan.jatuhTempo = jatuhTempo;
+    perubahan.push(`jatuh tempo ${formatTanggal(jatuhTempo)}`);
+  }
+
+  await ubahStatus(db, draftId, "menunggu_konfirmasi", "dibatalkan", sekarang);
+  const sisa = baris.filter((b) => !dikecualikan.has(b.penerima.nomorKamar));
+  if (sisa.length === 0) return { preview: null, perubahan };
+
+  const preview = await simpanDraft(
+    db,
+    { organizationId, userId: draft.userId, conversationId: draft.conversationId },
+    {
+      aksi: "tagihan",
+      periode: data.periode,
+      penerima: sisa.map((b) => b.penerima),
+      total: sisa.reduce((jumlah, b) => jumlah + b.penerima.nominal, 0),
+      tagihan: sisa.map((b) => b.tagihan),
+    },
+  );
+  return { preview, perubahan };
 }

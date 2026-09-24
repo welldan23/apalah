@@ -2,7 +2,7 @@
 // atau pesan yang dikirim sampai owner menyetujui preview (lihat putuskanDraft).
 
 import { formatPeriode, formatRupiah, periodeBerikutnya } from "../format.ts";
-import { siapkanDraftTagihan } from "./draft.ts";
+import { batalkanDraft, draftMenungguTerakhir, koreksiDraftTagihan, siapkanDraftTagihan, type KoreksiDraft } from "./draft.ts";
 import type { BalasanKosta } from "./tool-baca.ts";
 import type { Db } from "../../db/index.ts";
 
@@ -30,4 +30,31 @@ export async function toolDraftTagihan(
     teks: `Ini draft tagihan ${formatPeriode(preview.periode)} untuk ${preview.penerima.length} penghuni, total ${formatRupiah(preview.total)}. Belum ada tagihan yang dibuat sampai kamu konfirmasi.`,
     lampiran: { jenis: "preview_aksi", ...preview },
   };
+}
+
+type Percakapan = { organizationId: string; conversationId: string };
+
+const TIDAK_ADA_DRAFT = "Tidak ada draft yang sedang menunggu konfirmasi.";
+
+/** Koreksi draft tagihan terakhir di percakapan → preview baru yang perlu dikonfirmasi lagi. */
+export async function toolKoreksiDraft(
+  db: Db,
+  { organizationId, conversationId }: Percakapan,
+  koreksi: KoreksiDraft,
+): Promise<BalasanKosta> {
+  const draftId = await draftMenungguTerakhir(db, conversationId, organizationId);
+  if (!draftId) return { teks: TIDAK_ADA_DRAFT };
+  const { preview, perubahan } = await koreksiDraftTagihan(db, { draftId, organizationId }, koreksi);
+  if (!preview) return { teks: "Semua kamar dikecualikan, jadi draft tagihan dibatalkan. Tidak ada tagihan yang dibuat." };
+  return {
+    teks: `Draft diperbarui (${perubahan.join("; ")}). Sekarang ${preview.penerima.length} penghuni, total ${formatRupiah(preview.total)}. Cek lagi lalu konfirmasi.`,
+    lampiran: { jenis: "preview_aksi", ...preview },
+  };
+}
+
+/** Batalkan draft terakhir yang menunggu konfirmasi di percakapan. */
+export async function toolBatalDraft(db: Db, { organizationId, conversationId }: Percakapan): Promise<BalasanKosta> {
+  const draftId = await draftMenungguTerakhir(db, conversationId, organizationId);
+  if (!draftId) return { teks: TIDAK_ADA_DRAFT };
+  return { teks: (await batalkanDraft(db, { draftId, organizationId })).balasan };
 }

@@ -13,13 +13,19 @@ export type Intent =
   | { intent: "siapkan_reminder" }
   | { intent: "pindah_penghuni"; dariKamar: string; keKamar: string }
   | { intent: "konfirmasi"; setuju: boolean }
+  | {
+      intent: "koreksi_draft";
+      kecualikan?: string[];
+      nominal?: { nomorKamar: string; nominal: number }[];
+      tanggalJatuhTempo?: number;
+    }
   | { intent: "ganti_kos" }
   /** Tidak dikenali / di luar kemampuan Kosta. */
   | { intent: "bantuan" };
 
 export type NamaIntent = Intent["intent"];
 
-type Properti = Record<string, { type: string; description: string }>;
+type Properti = Record<string, { type: string; description: string; items?: Record<string, unknown> }>;
 const periode = { type: "string", description: "Periode tagihan YYYY-MM. Kosongkan untuk bulan berjalan." };
 const kamar = (description: string) => ({ type: "string", description });
 
@@ -47,6 +53,24 @@ export const ALAT: { name: Exclude<NamaIntent, "bantuan">; description: string; 
     description: "Jawaban owner atas preview aksi: setuju (ya/kirim) atau batal.",
     properties: { setuju: { type: "boolean", description: "true bila setuju, false bila batal." } },
     required: ["setuju"],
+  },
+  {
+    name: "koreksi_draft",
+    description:
+      "Ubah draft tagihan yang sedang menunggu konfirmasi: kecualikan kamar, ubah nominal kamar, atau ubah tanggal jatuh tempo.",
+    properties: {
+      kecualikan: { type: "array", description: "Nomor kamar yang tidak jadi ditagih.", items: { type: "string" } },
+      nominal: {
+        type: "array",
+        description: "Nominal sewa baru per kamar (rupiah, angka bulat).",
+        items: {
+          type: "object",
+          properties: { nomorKamar: { type: "string" }, nominal: { type: "integer" } },
+          required: ["nomorKamar", "nominal"],
+        },
+      },
+      tanggalJatuhTempo: { type: "integer", description: "Tanggal jatuh tempo baru (1–31)." },
+    },
   },
   { name: "ganti_kos", description: "Ganti kos / workspace yang sedang dibahas.", properties: {} },
 ];
@@ -87,6 +111,27 @@ export function validasiIntent(mentah: unknown): Intent {
     }
     case "konfirmasi":
       return typeof x.setuju === "boolean" ? { intent: "konfirmasi", setuju: x.setuju } : { intent: "bantuan" };
+    case "koreksi_draft": {
+      const kecualikan = (Array.isArray(x.kecualikan) ? x.kecualikan : [])
+        .map(normalisasiKamar)
+        .filter((k): k is string => !!k);
+      const nominal = (Array.isArray(x.nominal) ? x.nominal : []).flatMap((n: { nomorKamar?: unknown; nominal?: unknown }) => {
+        const nomorKamar = normalisasiKamar(n?.nomorKamar);
+        const nilai = n?.nominal;
+        return nomorKamar && Number.isInteger(nilai) && (nilai as number) > 0 && (nilai as number) <= 1_000_000_000
+          ? [{ nomorKamar, nominal: nilai as number }]
+          : [];
+      });
+      const tanggal = x.tanggalJatuhTempo;
+      const tanggalJatuhTempo = Number.isInteger(tanggal) && (tanggal as number) >= 1 && (tanggal as number) <= 31 ? (tanggal as number) : undefined;
+      if (!kecualikan.length && !nominal.length && !tanggalJatuhTempo) return { intent: "bantuan" };
+      return {
+        intent: "koreksi_draft",
+        ...(kecualikan.length ? { kecualikan } : {}),
+        ...(nominal.length ? { nominal } : {}),
+        ...(tanggalJatuhTempo ? { tanggalJatuhTempo } : {}),
+      };
+    }
     default:
       return { intent: "bantuan" };
   }
@@ -117,12 +162,55 @@ export function periodeDariTeks(teks: string, hariIni: string): string | undefin
   return `${m[2] ?? sekarang.slice(0, 4)}-${String(indeks + 1).padStart(2, "0")}`;
 }
 
+/** "600rb" / "600 ribu" / "650.000" / "1,2jt" → rupiah; null bila bukan nominal. */
+export function parseRupiah(teks: string) {
+  const m = /^(?:rp\.?\s*)?(\d+(?:[.,]\d+)*)\s*(rb|ribu|k|jt|juta)?$/i.exec(teks.trim());
+  if (!m) return null;
+  const satuan = m[2]?.toLowerCase();
+  const angka = satuan
+    ? Number(m[1].replace(",", "."))
+    : Number(m[1].replace(/[.,]/g, ""));
+  const kali = satuan === "jt" || satuan === "juta" ? 1_000_000 : satuan ? 1_000 : 1;
+  const hasil = Math.round(angka * kali);
+  return Number.isFinite(hasil) && hasil > 0 ? hasil : null;
+}
+
+// "rp750" bukan nomor kamar.
+const KAMAR = String.raw`(?!rp)[a-z]{1,2}\s?-?\d{1,3}`;
+
+/** Koreksi draft dari kalimat owner; null bila bukan koreksi. */
+export function parseKoreksi(teks: string) {
+  const t = bersih(teks);
+  const nominal = [...t.matchAll(new RegExp(`\\b(${KAMAR})\\s+(?:jadi|=)\\s+((?:rp\\.?\\s*)?\\d+(?:[.,]\\d+)*\\s*(?:rb|ribu|k|jt|juta)?)`, "g"))].flatMap(
+    (m) => {
+      const nomorKamar = normalisasiKamar(m[1]);
+      const nilai = parseRupiah(m[2]);
+      return nomorKamar && nilai ? [{ nomorKamar, nominal: nilai }] : [];
+    },
+  );
+  const kecualikan = /\b(kecualikan|tanpa|hapus|keluarkan|coret)\b/.test(t)
+    ? [...t.matchAll(new RegExp(`\\b(${KAMAR})\\b(?!\\s+(?:jadi|=))`, "g"))]
+        .map((m) => normalisasiKamar(m[1]))
+        .filter((k): k is string => !!k)
+    : [];
+  const tanggal = /jatuh tempo\s*(?:jadi\s*|ke\s*)?(?:tanggal|tgl)\.?\s*(\d{1,2})\b/.exec(t);
+  const intent = validasiIntent({
+    intent: "koreksi_draft",
+    kecualikan,
+    nominal,
+    tanggalJatuhTempo: tanggal ? Number(tanggal[1]) : undefined,
+  });
+  return intent.intent === "koreksi_draft" ? intent : null;
+}
+
 /** Cadangan tanpa LLM: kata kunci sederhana. */
 export function parseKataKunci(teks: string, hariIni: string): Intent {
   const t = bersih(teks);
+  const koreksi = parseKoreksi(t);
+  if (koreksi) return koreksi;
   const periode = periodeDariTeks(t, hariIni);
   const p = periode ? { periode } : {};
-  const kamarDisebut = [...t.matchAll(/\b([a-z]{1,2}\s?-?\d{1,3})\b/g)].map((m) => normalisasiKamar(m[1])).filter((k): k is string => !!k);
+  const kamarDisebut = [...t.matchAll(new RegExp(`\\b(${KAMAR})\\b`, "g"))].map((m) => normalisasiKamar(m[1])).filter((k): k is string => !!k);
 
   if (/\bpindah(kan)?\b/.test(t) && kamarDisebut.length >= 2) {
     return validasiIntent({ intent: "pindah_penghuni", dariKamar: kamarDisebut[0], keKamar: kamarDisebut[1] });

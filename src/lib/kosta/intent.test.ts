@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { normalisasiKamar, parseCepat, parseKataKunci, periodeDariTeks, validasiIntent } from "./intent.ts";
+import { normalisasiKamar, parseCepat, parseKataKunci, parseKoreksi, parseRupiah, periodeDariTeks, validasiIntent } from "./intent.ts";
 
 const HARI_INI = "2026-09-24";
 
@@ -62,3 +62,42 @@ describe("validasiIntent (hasil LLM)", () => {
     assert.equal(normalisasiKamar("kamar"), null);
   });
 });
+
+describe("koreksi draft", () => {
+  it("parseRupiah", () => {
+    assert.equal(parseRupiah("600rb"), 600_000);
+    assert.equal(parseRupiah("600 ribu"), 600_000);
+    assert.equal(parseRupiah("Rp650.000"), 650_000);
+    assert.equal(parseRupiah("1,2jt"), 1_200_000);
+    assert.equal(parseRupiah("1.5 juta"), 1_500_000);
+    assert.equal(parseRupiah("abc"), null);
+    assert.equal(parseRupiah("0"), null);
+  });
+
+  it("parseKoreksi: kecualikan, ubah nominal, ubah jatuh tempo", () => {
+    assert.deepEqual(parseKoreksi("kecualikan A05 dan b6"), { intent: "koreksi_draft", kecualikan: ["A05", "B06"] });
+    assert.deepEqual(parseKoreksi("B06 jadi 600rb"), { intent: "koreksi_draft", nominal: [{ nomorKamar: "B06", nominal: 600_000 }] });
+    assert.deepEqual(parseKoreksi("tanpa A05, C09 jadi Rp750.000, jatuh tempo tanggal 10"), {
+      intent: "koreksi_draft",
+      kecualikan: ["A05"],
+      nominal: [{ nomorKamar: "C09", nominal: 750_000 }],
+      tanggalJatuhTempo: 10,
+    });
+    assert.equal(parseKoreksi("berapa tunggakan bulan ini"), null);
+    assert.equal(parseKoreksi("kamar A03 sudah bayar?"), null);
+  });
+
+  it("kata kunci: kalimat koreksi dikenali sebagai koreksi_draft", () => {
+    assert.deepEqual(parseKataKunci("jatuh tempo tgl 5 aja", HARI_INI), { intent: "koreksi_draft", tanggalJatuhTempo: 5 });
+    assert.deepEqual(parseKataKunci("tagihan yang jatuh tempo siapa aja", HARI_INI), { intent: "lihat_tunggakan" });
+  });
+
+  it("validasi hasil LLM untuk koreksi", () => {
+    assert.deepEqual(
+      validasiIntent({ intent: "koreksi_draft", kecualikan: ["a5", "xx"], nominal: [{ nomorKamar: "B06", nominal: "600000" }], tanggalJatuhTempo: 40 }),
+      { intent: "koreksi_draft", kecualikan: ["A05"] },
+    );
+    assert.deepEqual(validasiIntent({ intent: "koreksi_draft" }), { intent: "bantuan" });
+  });
+});
+
