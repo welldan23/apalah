@@ -84,6 +84,7 @@ export async function isiDataContoh(db: Db) {
       userId: mockOwner.id,
       terakhirPesanPada: new Date(mockPercakapanKosta.at(-1)!.waktu),
     });
+    const idDraft = (l: { aksi: string; periode: string }) => `draft_${l.aksi}_${l.periode}`;
     await tx.insert(schema.waMessages).values(
       mockPercakapanKosta.map((p) => ({
         id: `msg_${p.id}`,
@@ -91,7 +92,8 @@ export async function isiDataContoh(db: Db) {
         organizationId: percakapan.organizationId,
         arah: p.dari === "owner" ? ("masuk" as const) : ("keluar" as const),
         isi: p.teks,
-        lampiran: p.lampiran ?? null,
+        lampiran:
+          p.lampiran?.jenis === "preview_aksi" ? { ...p.lampiran, draftId: idDraft(p.lampiran) } : (p.lampiran ?? null),
         dibuatPada: new Date(p.waktu),
       })),
     );
@@ -99,12 +101,13 @@ export async function isiDataContoh(db: Db) {
     if (pesanPreview?.lampiran?.jenis === "preview_aksi") {
       const { aksi, periode, penerima, total } = pesanPreview.lampiran;
       await tx.insert(schema.actionDrafts).values({
-        id: `draft_${aksi}_${periode}`,
+        id: idDraft(pesanPreview.lampiran),
         organizationId: percakapan.organizationId,
         userId: mockOwner.id,
         conversationId: percakapan.id,
         jenisAksi: aksi,
-        ringkasanPreview: { aksi, periode, penerima, total },
+        // Pengingat untuk tagihan jatuh tempo kamar-kamar di preview.
+        ringkasanPreview: { aksi, periode, penerima, total, invoiceIds: penerima.map((p) => `inv_${periode}_${p.nomorKamar}`) },
         dibuatPada: new Date(pesanPreview.waktu),
       });
     }

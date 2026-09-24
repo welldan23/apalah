@@ -18,7 +18,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import type { LampiranKosta, PreviewAksi } from "@/lib/types";
+import type { DataDraftAksi, LampiranKosta } from "@/lib/types";
 
 const id = () =>
   text()
@@ -318,7 +318,7 @@ export const actionDrafts = pgTable(
     conversationId: text().references(() => waConversations.id, { onDelete: "set null" }),
     jenisAksi: jenisAksiEnum().notNull(),
     /** Penerima, periode, nominal yang ditampilkan ke owner saat minta konfirmasi. */
-    ringkasanPreview: jsonb().$type<Omit<PreviewAksi, "status">>().notNull(),
+    ringkasanPreview: jsonb().$type<DataDraftAksi>().notNull(),
     status: statusDraftAksiEnum().notNull().default("menunggu_konfirmasi"),
     dibuatPada: waktu().notNull().defaultNow(),
     dikonfirmasiPada: waktu(),

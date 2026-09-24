@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "88e5adb3f82637ba235990c2895b53adba2f1aec",
+  "generatedForCommit": "71ba97caab7bf817de606ecf6bac05030b07e083",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -718,7 +718,7 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5617
     },
@@ -730,7 +730,7 @@
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4793
     },
@@ -868,7 +868,7 @@
     },
     {
       "path": "src/lib/data/kosta.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1271
     },
@@ -987,6 +987,36 @@
       "size": 1853
     },
     {
+      "path": "src/lib/kosta/intent.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3643
+    },
+    {
+      "path": "src/lib/kosta/intent.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 7143
+    },
+    {
+      "path": "src/lib/kosta/llm.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 3392
+    },
+    {
+      "path": "src/lib/kosta/router.test.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 4633
+    },
+    {
+      "path": "src/lib/kosta/router.ts",
+      "reason": "new",
+      "language": "typescript",
+      "size": 1340
+    },
+    {
       "path": "src/lib/kosta/terima-pesan.test.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -1000,13 +1030,13 @@
     },
     {
       "path": "src/lib/kosta/workspace.test.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 5153
     },
     {
       "path": "src/lib/kosta/workspace.ts",
-      "reason": "new",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4294
     },
@@ -1036,7 +1066,7 @@
     },
     {
       "path": "src/lib/mock/kosta.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 4167
     },

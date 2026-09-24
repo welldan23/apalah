@@ -211,6 +211,16 @@ export type PreviewAksi = {
   penerima: { nomorKamar: string; nama: string; nominal: number }[];
   total: number;
   status: StatusDraftAksi;
+  /** ID action_drafts — ada bila preview berasal dari server. */
+  draftId?: string;
+};
+
+/** Isi action_drafts.ringkasan_preview: preview untuk owner + target yang dijalankan setelah disetujui. */
+export type DataDraftAksi = Omit<PreviewAksi, "status" | "draftId"> & {
+  /** Aksi reminder: tagihan jatuh tempo yang diingatkan. */
+  invoiceIds?: string[];
+  /** Aksi tagihan: tagihan yang akan dibuat. */
+  tagihan?: { tenantId: string; roomId: string; periode: string; jatuhTempo: string; sewa: number }[];
 };
 
 /** Satu pesan di percakapan owner dengan Kosta (WhatsApp). */

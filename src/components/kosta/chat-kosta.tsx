@@ -6,25 +6,16 @@ import { ArrowLeftRight, History, SendHorizontal } from "lucide-react";
 import { BubblePesan } from "@/components/kosta/bubble-pesan";
 import { PanelRiwayat } from "@/components/kosta/panel-riwayat";
 import { PemilihWorkspace } from "@/components/kosta/pemilih-workspace";
-import { ActionSheet } from "@/components/quick-actions/action-sheet";
-import { statusSetelah, type KeputusanDraft } from "@/lib/draft-aksi";
+import { ActionSheet, kirimAksi } from "@/components/quick-actions/action-sheet";
+import { statusSetelah } from "@/lib/draft-aksi";
 import { tampilNomorWa } from "@/lib/nomor-wa";
 import { labelHari, ringkasRiwayat, tanggalPesan } from "@/lib/riwayat-kosta";
-import type { PesanKosta, PreviewAksi, WorkspaceRingkas } from "@/lib/types";
+import type { PesanKosta, StatusDraftAksi, WorkspaceRingkas } from "@/lib/types";
 
 const JEDA_BALASAN = 1100;
 
 const BALASAN_CONTOH =
   "Mode contoh: Kosta belum tersambung ke layanan AI. Setelah aktif, pertanyaanmu dijawab dengan angka langsung dari database kos.";
-
-const CATATAN_CONTOH = "(Mode contoh: belum benar-benar dijalankan.)";
-
-function pesanSelesai(preview: PreviewAksi) {
-  const jumlah = preview.penerima.length;
-  return preview.aksi === "reminder"
-    ? `Reminder terkirim ke ${jumlah} penyewa dan tercatat di riwayat reminder. ${CATATAN_CONTOH}`
-    : `${jumlah} tagihan dibuat, masing-masing dengan link invoice untuk penyewa. ${CATATAN_CONTOH}`;
-}
 
 function IndikatorMengetik() {
   return (
@@ -68,41 +59,54 @@ export function ChatKosta({
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const tambahPesan = (dari: PesanKosta["dari"], teks: string) =>
-    setPesan((p) => [...p, { id: crypto.randomUUID(), dari, waktu: new Date().toISOString(), teks }]);
+  const pesanLokal = (dari: PesanKosta["dari"], teks: string): PesanKosta => ({
+    id: crypto.randomUUID(),
+    dari,
+    waktu: new Date().toISOString(),
+    teks,
+  });
+  const tambahPesan = (dari: PesanKosta["dari"], teks: string) => setPesan((p) => [...p, pesanLokal(dari, teks)]);
 
   /** Balasan Kosta setelah jeda "mengetik". */
-  function balasKosta(teks: string, sebelumBalas?: () => void) {
+  function balasKosta(teks: string) {
     setMengetik(true);
     timers.current.push(
       setTimeout(() => {
         setMengetik(false);
-        sebelumBalas?.();
         tambahPesan("kosta", teks);
       }, JEDA_BALASAN),
     );
   }
 
-  const ubahStatusDraft = (pesanId: string, keputusan: KeputusanDraft) =>
-    setPesan((p) =>
-      p.map((m) => {
-        if (m.id !== pesanId || m.lampiran?.jenis !== "preview_aksi") return m;
-        const status = statusSetelah(m.lampiran.status, keputusan);
-        return status ? { ...m, lampiran: { ...m.lampiran, status } } : m;
-      }),
+  const aturStatusDraft = (daftar: PesanKosta[], pesanId: string, status: StatusDraftAksi) =>
+    daftar.map((m) =>
+      m.id === pesanId && m.lampiran?.jenis === "preview_aksi" ? { ...m, lampiran: { ...m.lampiran, status } } : m,
     );
 
-  function putuskan(pesanId: string, keputusan: "setuju" | "batal") {
+  /** Keputusan owner atas preview: dijalankan di server, lalu keputusan & balasan Kosta tercatat di riwayat. */
+  async function putuskan(pesanId: string, keputusan: "setuju" | "batal") {
     const lampiran = pesan.find((m) => m.id === pesanId)?.lampiran;
-    if (lampiran?.jenis !== "preview_aksi" || !statusSetelah(lampiran.status, keputusan)) return;
+    const statusBaru = lampiran?.jenis === "preview_aksi" ? statusSetelah(lampiran.status, keputusan) : null;
+    if (lampiran?.jenis !== "preview_aksi" || !lampiran.draftId || !statusBaru || mengetik) return;
 
-    ubahStatusDraft(pesanId, keputusan);
-    if (keputusan === "batal") {
-      tambahPesan("owner", "Batal");
-      balasKosta("Oke, dibatalkan. Tidak ada yang dikirim atau diubah.");
-    } else {
-      tambahPesan("owner", lampiran.aksi === "reminder" ? "Setuju, kirim" : "Setuju, buat");
-      balasKosta(pesanSelesai(lampiran), () => ubahStatusDraft(pesanId, "selesai"));
+    setPesan((p) => aturStatusDraft(p, pesanId, statusBaru));
+    setMengetik(true);
+    try {
+      const data = await kirimAksi<{ status: StatusDraftAksi; balasan: string; pesan: PesanKosta[] }>(
+        `/api/kosta/draft/${lampiran.draftId}`,
+        { keputusan },
+      );
+      const tambahan = data.pesan.length
+        ? data.pesan
+        : [pesanLokal("owner", keputusan === "batal" ? "Batal" : "Setuju"), pesanLokal("kosta", data.balasan)];
+      setPesan((p) => [...aturStatusDraft(p, pesanId, data.status), ...tambahan]);
+    } catch (err) {
+      setPesan((p) => [
+        ...aturStatusDraft(p, pesanId, lampiran.status),
+        pesanLokal("kosta", `Maaf, keputusanmu belum tersimpan: ${(err as Error).message}`),
+      ]);
+    } finally {
+      setMengetik(false);
     }
   }
   // Selalu tampilkan pesan terbaru (hanya area chat yang digulir, bukan halaman).
