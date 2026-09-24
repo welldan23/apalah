@@ -4,12 +4,25 @@
 import { eq } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import { PENGATURAN_BAWAAN, type PengaturanTagihanTerjadwal } from "../tagihan-terjadwal.ts";
+import {
+  PENGATURAN_BAWAAN,
+  type AturanJatuhTempo,
+  type PengaturanTagihanTerjadwal,
+} from "../tagihan-terjadwal.ts";
 import { GalatAksi } from "./galat.ts";
 
 const { invoiceSchedules } = schema;
 
 const tanggalBulanan = (n: unknown): n is number => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 28;
+
+/** Aturan jatuh tempo dari satu baris invoice_schedules. */
+export function aturanJatuhTempoDari(
+  baris: Pick<typeof invoiceSchedules.$inferSelect, "aturanJatuhTempo" | "tanggalJatuhTempo">,
+): AturanJatuhTempo {
+  return baris.aturanJatuhTempo === "tanggal_tetap" && baris.tanggalJatuhTempo
+    ? { aturan: "tanggal_tetap", tanggal: baris.tanggalJatuhTempo }
+    : { aturan: "tanggal_masuk" };
+}
 
 export async function getPengaturanTagihanTerjadwal(
   db: Db,
@@ -23,10 +36,7 @@ export async function getPengaturanTagihanTerjadwal(
   return {
     aktif: baris.aktif,
     tanggalTerbit: baris.tanggalTerbit,
-    jatuhTempo:
-      baris.aturanJatuhTempo === "tanggal_tetap" && baris.tanggalJatuhTempo
-        ? { aturan: "tanggal_tetap", tanggal: baris.tanggalJatuhTempo }
-        : { aturan: "tanggal_masuk" },
+    jatuhTempo: aturanJatuhTempoDari(baris),
   };
 }
 

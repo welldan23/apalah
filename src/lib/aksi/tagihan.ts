@@ -87,6 +87,58 @@ export function buatTokenPublik() {
   return randomBytes(18).toString("base64url");
 }
 
+export type TagihanBaru = {
+  tenantId: string;
+  roomId: string;
+  periode: string;
+  jatuhTempo: string;
+  /** Nominal rincian "Sewa kamar". */
+  sewa: number;
+};
+
+/**
+ * Simpan tagihan berstatus Menunggu beserta rinciannya (sewa kamar + biaya tambahan) dalam satu
+ * transaksi. Penghuni yang sudah punya tagihan di periode itu dilewati; yang dikembalikan hanya
+ * tagihan yang benar-benar dibuat.
+ */
+export async function sisipkanTagihan(
+  db: Db,
+  organizationId: string,
+  daftar: TagihanBaru[],
+  biayaTambahan: RincianBiaya[] = [],
+) {
+  if (daftar.length === 0) return [];
+  const tambahan = biayaTambahan.reduce((total, b) => total + b.nominal, 0);
+  return db.transaction(async (tx) => {
+    const baris = await tx
+      .insert(invoices)
+      .values(
+        daftar.map((t) => ({
+          organizationId,
+          tenantId: t.tenantId,
+          roomId: t.roomId,
+          periode: t.periode,
+          nominal: t.sewa + tambahan,
+          jatuhTempo: t.jatuhTempo,
+          status: "menunggu" as const,
+          tokenPublik: buatTokenPublik(),
+        })),
+      )
+      .onConflictDoNothing({ target: [invoices.tenantId, invoices.periode] })
+      .returning({ id: invoices.id, roomId: invoices.roomId, nominal: invoices.nominal });
+
+    if (baris.length > 0) {
+      await tx.insert(invoiceItems).values(
+        baris.flatMap((inv) => [
+          { invoiceId: inv.id, label: LABEL_SEWA, nominal: inv.nominal - tambahan },
+          ...biayaTambahan.map((b) => ({ invoiceId: inv.id, ...b })),
+        ]),
+      );
+    }
+    return baris;
+  });
+}
+
 export async function buatTagihan(
   db: Db,
   organizationId: string,
@@ -115,36 +167,18 @@ export async function buatTagihan(
     throw new GalatAksi(`${jumlahHilang} kamar tidak ditemukan atau belum berpenghuni.`, 404);
   }
 
-  const biayaTambahan = input.biayaTambahan ?? [];
-  const tambahan = biayaTambahan.reduce((total, b) => total + b.nominal, 0);
-  const dibuat = await db.transaction(async (tx) => {
-    const baris = await tx
-      .insert(invoices)
-      .values(
-        penghuni.map((p) => ({
-          organizationId,
-          tenantId: p.tenantId,
-          roomId: p.roomId,
-          periode: input.periode,
-          nominal: (input.nominalKhusus ?? p.hargaSewa) + tambahan,
-          jatuhTempo: input.jatuhTempo,
-          status: "menunggu" as const,
-          tokenPublik: buatTokenPublik(),
-        })),
-      )
-      .onConflictDoNothing({ target: [invoices.tenantId, invoices.periode] })
-      .returning({ id: invoices.id, roomId: invoices.roomId, nominal: invoices.nominal });
-
-    if (baris.length > 0) {
-      await tx.insert(invoiceItems).values(
-        baris.flatMap((inv) => [
-          { invoiceId: inv.id, label: LABEL_SEWA, nominal: inv.nominal - tambahan },
-          ...biayaTambahan.map((b) => ({ invoiceId: inv.id, ...b })),
-        ]),
-      );
-    }
-    return baris;
-  });
+  const dibuat = await sisipkanTagihan(
+    db,
+    organizationId,
+    penghuni.map((p) => ({
+      tenantId: p.tenantId,
+      roomId: p.roomId,
+      periode: input.periode,
+      jatuhTempo: input.jatuhTempo,
+      sewa: input.nominalKhusus ?? p.hargaSewa,
+    })),
+    input.biayaTambahan,
+  );
 
   const baru = new Set(dibuat.map((inv) => inv.roomId));
   return {

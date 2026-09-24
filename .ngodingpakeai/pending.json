@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "74312d15686e937ebc67962f4c5b30d3baef151a",
+  "generatedForCommit": "6fded17c419ca685ca11a8a268304010ab001d37",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -214,7 +214,7 @@
     },
     {
       "path": "src/app/api/dashboard/invoices/route.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 1388
     },
@@ -229,6 +229,12 @@
       "reason": "needs_summary",
       "language": "typescript",
       "size": 538
+    },
+    {
+      "path": "src/app/api/dashboard/tagihan-terjadwal/route.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 1176
     },
     {
       "path": "src/app/api/landing/konten/route.ts",
@@ -522,7 +528,7 @@
       "path": "src/components/quick-actions/action-sheet.tsx",
       "reason": "needs_summary",
       "language": "typescript",
-      "size": 4590
+      "size": 4615
     },
     {
       "path": "src/components/quick-actions/invoice-flow.tsx",
@@ -576,7 +582,7 @@
       "path": "src/components/tagihan/form-tagihan-terjadwal.tsx",
       "reason": "needs_summary",
       "language": "typescript",
-      "size": 8914
+      "size": 9510
     },
     {
       "path": "src/components/tagihan/periode-nav.tsx",
@@ -717,6 +723,18 @@
       "size": 3460
     },
     {
+      "path": "src/lib/aksi/tagihan-terjadwal.test.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 3160
+    },
+    {
+      "path": "src/lib/aksi/tagihan-terjadwal.ts",
+      "reason": "needs_summary",
+      "language": "typescript",
+      "size": 2691
+    },
+    {
       "path": "src/lib/aksi/tagihan.ts",
       "reason": "needs_summary",
       "language": "typescript",
@@ -754,13 +772,13 @@
     },
     {
       "path": "src/lib/data/invoice.test.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6126
     },
     {
       "path": "src/lib/data/invoice.ts",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 3817
     },
@@ -846,7 +864,7 @@
       "path": "src/lib/data/tagihan-terjadwal.ts",
       "reason": "needs_summary",
       "language": "typescript",
-      "size": 1275
+      "size": 1410
     },
     {
       "path": "src/lib/data/tagihan.ts",
