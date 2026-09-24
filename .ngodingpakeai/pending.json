@@ -1,6 +1,6 @@
 {
   "repo": "kostera",
-  "generatedForCommit": "7304f8a52a75d74d9d4625f94dc64d5c0e43eff0",
+  "generatedForCommit": "3e0f507d32f076a74bffdcecbbc949ba92bb6a8a",
   "files": [
     {
       "path": ".claude/skills/karpathy-guidelines/SKILL.md",
@@ -63,6 +63,12 @@
       "size": 1277
     },
     {
+      "path": "drizzle/0002_tagihan_terjadwal.sql",
+      "reason": "new",
+      "language": "sql",
+      "size": 2103
+    },
+    {
       "path": "drizzle/meta/0000_snapshot.json",
       "reason": "needs_summary",
       "language": "json",
@@ -75,10 +81,16 @@
       "size": 24577
     },
     {
-      "path": "drizzle/meta/_journal.json",
-      "reason": "needs_summary",
+      "path": "drizzle/meta/0002_snapshot.json",
+      "reason": "new",
       "language": "json",
-      "size": 347
+      "size": 29527
+    },
+    {
+      "path": "drizzle/meta/_journal.json",
+      "reason": "changed",
+      "language": "json",
+      "size": 492
     },
     {
       "path": "drizzle.config.ts",
@@ -316,7 +328,7 @@
     },
     {
       "path": "src/components/dashboard/room-summary.tsx",
-      "reason": "changed",
+      "reason": "needs_summary",
       "language": "typescript",
       "size": 6163
     },
@@ -652,21 +664,21 @@
     },
     {
       "path": "src/db/schema.test.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 3551
+      "size": 5547
     },
     {
       "path": "src/db/schema.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 6082
+      "size": 7764
     },
     {
       "path": "src/db/seed.ts",
-      "reason": "needs_summary",
+      "reason": "changed",
       "language": "typescript",
-      "size": 2449
+      "size": 2606
     },
     {
       "path": "src/db/testing.ts",

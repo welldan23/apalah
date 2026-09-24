@@ -1,5 +1,6 @@
-// Aksi cepat "Buat tagihan": tagihan sewa untuk kamar terpilih dalam satu periode.
-// Nominal ditentukan server (harga sewa penghuni atau nominal khusus), bukan dari klien.
+// Aksi "Buat tagihan": tagihan sewa untuk kamar terpilih dalam satu periode, beserta rinciannya
+// (sewa kamar + biaya tambahan yang sama untuk semua kamar, mis. listrik/air).
+// Nominal sewa ditentukan server (harga sewa penghuni atau nominal khusus), bukan dari klien.
 // Kamar yang sudah punya tagihan di periode itu dilewati, jadi aman bila terkirim dua kali.
 
 import { randomBytes } from "node:crypto";
@@ -10,7 +11,12 @@ import { schema, type Db } from "../../db/index.ts";
 import { periodeValid } from "../waktu.ts";
 import { GalatAksi, nominalValid, tanggalValid } from "./galat.ts";
 
-const { invoices, rooms, tenants } = schema;
+const { invoiceItems, invoices, rooms, tenants } = schema;
+
+export const LABEL_SEWA = "Sewa kamar";
+const MAKS_BIAYA_TAMBAHAN = 10;
+
+export type RincianBiaya = { label: string; nominal: number };
 
 export type InputBuatTagihan = {
   periode: string;
@@ -18,6 +24,8 @@ export type InputBuatTagihan = {
   roomIds: string[];
   /** Kosong = sesuai harga sewa masing-masing penghuni. */
   nominalKhusus?: number;
+  /** Biaya lain yang ditambahkan ke setiap tagihan, tampil sebagai rincian invoice. */
+  biayaTambahan?: RincianBiaya[];
 };
 
 export type HasilBuatTagihan = {
@@ -27,8 +35,29 @@ export type HasilBuatTagihan = {
   dilewati: string[];
 };
 
+function bacaBiayaTambahan(nilai: unknown): RincianBiaya[] {
+  if (nilai == null) return [];
+  if (!Array.isArray(nilai) || nilai.length > MAKS_BIAYA_TAMBAHAN) {
+    throw new GalatAksi(`Biaya tambahan berupa daftar, paling banyak ${MAKS_BIAYA_TAMBAHAN} baris.`);
+  }
+  const biaya = nilai.map((b: { label?: unknown; nominal?: unknown } | null) => {
+    const label = typeof b?.label === "string" ? b.label.trim() : "";
+    if (!label || label.length > 60) {
+      throw new GalatAksi("Nama biaya tambahan wajib diisi, maksimal 60 karakter.");
+    }
+    if (!nominalValid(b?.nominal)) {
+      throw new GalatAksi(`Nominal biaya "${label}" harus bilangan bulat rupiah lebih dari 0.`);
+    }
+    return { label, nominal: b.nominal };
+  });
+  if (!nominalValid(biaya.reduce((total, b) => total + b.nominal, 0))) {
+    throw new GalatAksi("Total biaya tambahan terlalu besar.");
+  }
+  return biaya;
+}
+
 export function bacaInputBuatTagihan(body: Record<string, unknown>): InputBuatTagihan {
-  const { periode, jatuhTempo, roomIds, nominalKhusus } = body;
+  const { periode, jatuhTempo, roomIds, nominalKhusus, biayaTambahan } = body;
   if (typeof periode !== "string" || !periodeValid(periode)) {
     throw new GalatAksi("Periode harus berformat YYYY-MM.");
   }
@@ -49,6 +78,7 @@ export function bacaInputBuatTagihan(body: Record<string, unknown>): InputBuatTa
     jatuhTempo,
     roomIds: [...new Set(roomIds as string[])],
     nominalKhusus: nominalKhusus ?? undefined,
+    biayaTambahan: bacaBiayaTambahan(biayaTambahan),
   };
 }
 
@@ -85,22 +115,36 @@ export async function buatTagihan(
     throw new GalatAksi(`${jumlahHilang} kamar tidak ditemukan atau belum berpenghuni.`, 404);
   }
 
-  const dibuat = await db
-    .insert(invoices)
-    .values(
-      penghuni.map((p) => ({
-        organizationId,
-        tenantId: p.tenantId,
-        roomId: p.roomId,
-        periode: input.periode,
-        nominal: input.nominalKhusus ?? p.hargaSewa,
-        jatuhTempo: input.jatuhTempo,
-        status: "menunggu" as const,
-        tokenPublik: buatTokenPublik(),
-      })),
-    )
-    .onConflictDoNothing({ target: [invoices.tenantId, invoices.periode] })
-    .returning({ roomId: invoices.roomId, nominal: invoices.nominal });
+  const biayaTambahan = input.biayaTambahan ?? [];
+  const tambahan = biayaTambahan.reduce((total, b) => total + b.nominal, 0);
+  const dibuat = await db.transaction(async (tx) => {
+    const baris = await tx
+      .insert(invoices)
+      .values(
+        penghuni.map((p) => ({
+          organizationId,
+          tenantId: p.tenantId,
+          roomId: p.roomId,
+          periode: input.periode,
+          nominal: (input.nominalKhusus ?? p.hargaSewa) + tambahan,
+          jatuhTempo: input.jatuhTempo,
+          status: "menunggu" as const,
+          tokenPublik: buatTokenPublik(),
+        })),
+      )
+      .onConflictDoNothing({ target: [invoices.tenantId, invoices.periode] })
+      .returning({ id: invoices.id, roomId: invoices.roomId, nominal: invoices.nominal });
+
+    if (baris.length > 0) {
+      await tx.insert(invoiceItems).values(
+        baris.flatMap((inv) => [
+          { invoiceId: inv.id, label: LABEL_SEWA, nominal: inv.nominal - tambahan },
+          ...biayaTambahan.map((b) => ({ invoiceId: inv.id, ...b })),
+        ]),
+      );
+    }
+    return baris;
+  });
 
   const baru = new Set(dibuat.map((inv) => inv.roomId));
   return {

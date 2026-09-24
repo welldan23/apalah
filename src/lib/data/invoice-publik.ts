@@ -1,13 +1,13 @@
 // Data halaman invoice publik (/invoice/[token]) — dibuka penyewa tanpa login.
 // Hanya berisi data satu invoice milik token tersebut; tidak ada data kos atau penyewa lain.
 
-import { eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { tanggalWib } from "../waktu.ts";
 import type { InvoiceStatus } from "@/lib/types";
 
-const { invoices, organizations, rooms, tenants, users } = schema;
+const { invoiceItems, invoices, organizations, rooms, tenants, users } = schema;
 
 export type InvoicePublik = {
   nomorInvoice: string;
@@ -20,6 +20,8 @@ export type InvoicePublik = {
   tipeKamar: string;
   periode: string;
   nominal: number;
+  /** Komponen tagihan (sewa kamar di atas); totalnya sama dengan nominal. */
+  rincian: { label: string; nominal: number }[];
   jatuhTempo: string;
   status: InvoiceStatus;
   diterbitkanPada: string;
@@ -58,8 +60,16 @@ export async function getInvoicePublik(db: Db, token: string): Promise<InvoicePu
     .where(eq(invoices.tokenPublik, token));
   if (!inv) return null;
 
+  const rincian = await db
+    .select({ label: invoiceItems.label, nominal: invoiceItems.nominal })
+    .from(invoiceItems)
+    .innerJoin(invoices, eq(invoices.id, invoiceItems.invoiceId))
+    .where(eq(invoices.tokenPublik, token))
+    .orderBy(sql`${invoiceItems.label} <> 'Sewa kamar'`, asc(invoiceItems.label));
+
   return {
     ...inv,
+    rincian: rincian.length > 0 ? rincian : [{ label: "Sewa kamar", nominal: inv.nominal }],
     nomorInvoice: `INV-${inv.periode.replace("-", "")}-${inv.nomorKamar}`,
     diterbitkanPada: tanggalWib(inv.diterbitkanPada),
     dibayarPada: inv.dibayarPada ? tanggalWib(inv.dibayarPada) : undefined,

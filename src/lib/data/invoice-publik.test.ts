@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 
+import { and, eq } from "drizzle-orm";
+
 import type { Db } from "../../db/index.ts";
+import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
+import { buatTagihan } from "../aksi/tagihan.ts";
 import { getInvoicePublik, tokenValid } from "./invoice-publik.ts";
 
 describe("getInvoicePublik", () => {
@@ -28,11 +32,35 @@ describe("getInvoicePublik", () => {
       tipeKamar: "KM Dalam",
       periode: "2026-09",
       nominal: 650_000,
+      rincian: [{ label: "Sewa kamar", nominal: 650_000 }],
       jatuhTempo: "2026-09-18",
       status: "jatuh_tempo",
       diterbitkanPada: "2026-09-11",
       dibayarPada: undefined,
     });
+  });
+
+  it("rincian: sewa kamar di atas, lalu biaya tambahan", async () => {
+    await buatTagihan(db, "org_kos_melati", {
+      periode: "2026-10",
+      jatuhTempo: "2026-10-03",
+      roomIds: ["room_A01"],
+      biayaTambahan: [
+        { label: "Listrik", nominal: 75_000 },
+        { label: "Air", nominal: 25_000 },
+      ],
+    });
+    const [{ token }] = await db
+      .select({ token: schema.invoices.tokenPublik })
+      .from(schema.invoices)
+      .where(and(eq(schema.invoices.roomId, "room_A01"), eq(schema.invoices.periode, "2026-10")));
+    const inv = await getInvoicePublik(db, token);
+    assert.equal(inv?.nominal, 600_000);
+    assert.deepEqual(inv?.rincian, [
+      { label: "Sewa kamar", nominal: 500_000 },
+      { label: "Air", nominal: 25_000 },
+      { label: "Listrik", nominal: 75_000 },
+    ]);
   });
 
   it("invoice lunas membawa tanggal bayar", async () => {

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, FilePlus2, Search } from "lucide-react";
+import { Check, FilePlus2, Plus, Search, X } from "lucide-react";
 
 import {
   FieldError,
@@ -32,7 +32,10 @@ import { cn } from "@/lib/utils";
 
 type Langkah = "isi" | "preview" | "menyimpan" | "selesai";
 type Hasil = { dibuat: number; totalNominal: number; dilewati: string[] };
-type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal", string>>;
+type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal" | "biaya", string>>;
+type BarisBiaya = { id: number; label: string; nominal: number | null };
+
+const MAKS_BIAYA = 10;
 
 /** Buat Tagihan: pilih satu/banyak kamar, nominal & jatuh tempo → preview → konfirmasi owner. */
 export function InvoiceFlow({
@@ -59,6 +62,8 @@ export function InvoiceFlow({
   const [dipilih, setDipilih] = useState(() => new Set(kamar.map((k) => k.id)));
   const [modeNominal, setModeNominal] = useState<"sewa" | "khusus">("sewa");
   const [nominalKhusus, setNominalKhusus] = useState<number | null>(null);
+  const [biaya, setBiaya] = useState<BarisBiaya[]>([]);
+  const idBiaya = useRef(0);
   const [cari, setCari] = useState("");
   const [galat, setGalat] = useState<Galat>({});
   // Kamar yang sudah punya tagihan di periode terpilih (dicek ke server tiap periode berganti).
@@ -93,8 +98,16 @@ export function InvoiceFlow({
       )
     : kamar;
 
+  // Baris biaya yang benar-benar kosong diabaikan.
+  const biayaTerisi = biaya.filter((b) => b.label.trim() || b.nominal);
+  const tambahan = biayaTerisi.reduce((jumlah, b) => jumlah + (b.nominal ?? 0), 0);
   const nominalUntuk = (k: RoomCell) =>
-    modeNominal === "sewa" ? (k.hargaSewaPenghuni ?? k.hargaSewa) : (nominalKhusus ?? 0);
+    (modeNominal === "sewa" ? (k.hargaSewaPenghuni ?? k.hargaSewa) : (nominalKhusus ?? 0)) + tambahan;
+
+  function ubahBiaya(id: number, perubahan: Partial<BarisBiaya>) {
+    bersihkan("biaya");
+    setBiaya((daftar) => daftar.map((b) => (b.id === id ? { ...b, ...perubahan } : b)));
+  }
   const tersedia = sudahDitagih ? kamar.filter((k) => !sudahDitagih.has(k.id)) : kamar;
   const penerima = tersedia.filter((k) => dipilih.has(k.id));
   const total = penerima.reduce((jumlah, k) => jumlah + nominalUntuk(k), 0);
@@ -118,6 +131,9 @@ export function InvoiceFlow({
     if (tersedia.length === 0) g.kamar = "Semua kamar sudah punya tagihan untuk periode ini.";
     else if (penerima.length === 0) g.kamar = "Pilih minimal satu kamar.";
     if (modeNominal === "khusus" && !nominalKhusus) g.nominal = "Isi nominal tagihan.";
+    if (biayaTerisi.some((b) => !b.label.trim() || !b.nominal)) {
+      g.biaya = "Lengkapi nama dan nominal setiap biaya tambahan.";
+    }
     setGalat(g);
     if (Object.keys(g).length === 0) setLangkah("preview");
   }
@@ -131,6 +147,7 @@ export function InvoiceFlow({
         jatuhTempo,
         roomIds: penerima.map((k) => k.id),
         nominalKhusus: modeNominal === "khusus" ? nominalKhusus : null,
+        biayaTambahan: biayaTerisi.map((b) => ({ label: b.label.trim(), nominal: b.nominal })),
       });
       setHasil(data);
       setLangkah("selesai");
@@ -170,6 +187,14 @@ export function InvoiceFlow({
                   ? "Sesuai harga sewa penghuni"
                   : `${formatRupiah(nominalKhusus ?? 0)} per kamar`,
               ],
+              ...(biayaTerisi.length > 0
+                ? [
+                    [
+                      "Biaya tambahan",
+                      `${biayaTerisi.map((b) => `${b.label.trim()} ${formatRupiah(b.nominal ?? 0)}`).join(" + ")} per kamar`,
+                    ] as [string, string],
+                  ]
+                : []),
               ["Total nominal", formatRupiah(total)],
               ...(jumlahSudahDitagih > 0
                 ? [["Dilewati", `${jumlahSudahDitagih} kamar sudah ditagih`] as [string, string]]
@@ -303,6 +328,62 @@ export function InvoiceFlow({
               />
               <FieldError id="tagihan-nominal-galat" pesan={galat.nominal} />
             </>
+          )}
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-sm font-medium">
+            Biaya tambahan <span className="font-normal text-muted-foreground">(opsional)</span>
+          </legend>
+          {biaya.map((b, i) => (
+            <div key={b.id} className="flex items-center gap-2">
+              <Input
+                aria-label={`Nama biaya ${i + 1}`}
+                placeholder="Mis. Listrik"
+                maxLength={60}
+                className="h-10 min-w-0 flex-1 bg-card"
+                value={b.label}
+                onChange={(e) => ubahBiaya(b.id, { label: e.target.value })}
+                aria-describedby="tagihan-biaya-galat"
+              />
+              <RupiahInput
+                aria-label={`Nominal biaya ${i + 1}`}
+                placeholder="50.000"
+                className="w-32 shrink-0"
+                value={b.nominal}
+                onChange={(nilai) => ubahBiaya(b.id, { nominal: nilai })}
+                aria-describedby="tagihan-biaya-galat"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10 shrink-0"
+                aria-label={`Hapus biaya ${b.label.trim() || i + 1}`}
+                onClick={() => {
+                  bersihkan("biaya");
+                  setBiaya((daftar) => daftar.filter((x) => x.id !== b.id));
+                }}
+              >
+                <X />
+              </Button>
+            </div>
+          ))}
+          <FieldError id="tagihan-biaya-galat" pesan={galat.biaya} />
+          {biaya.length < MAKS_BIAYA && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 self-start bg-card"
+              onClick={() => setBiaya((daftar) => [...daftar, { id: ++idBiaya.current, label: "", nominal: null }])}
+            >
+              <Plus data-icon="inline-start" />
+              Tambah biaya (listrik, air…)
+            </Button>
+          )}
+          {biaya.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Ditambahkan ke setiap tagihan dan tampil sebagai rincian di invoice.
+            </p>
           )}
         </fieldset>
 

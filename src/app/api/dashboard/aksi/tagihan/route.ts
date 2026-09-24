@@ -1,5 +1,6 @@
-// POST /api/dashboard/aksi/tagihan — buat tagihan untuk kamar terpilih (setelah owner
-// mengonfirmasi preview). Body: { periode, jatuhTempo, roomIds, nominalKhusus? }.
+// POST /api/dashboard/aksi/tagihan — buat tagihan massal untuk kamar terpilih beserta rinciannya
+// (setelah owner mengonfirmasi preview).
+// Body: { periode, jatuhTempo, roomIds, nominalKhusus?, biayaTambahan?: [{ label, nominal }] }.
 
 import { getDb } from "@/db";
 import { bacaJson, pastikanPengelola, responGalat } from "@/lib/aksi/galat";

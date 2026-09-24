@@ -60,6 +60,44 @@ describe("aksi cepat dashboard", () => {
       assert.equal(baru.length, 3);
       assert.ok(baru.every((inv) => inv.status === "menunggu" && inv.tokenPublik.length >= 24));
       assert.equal(new Set(baru.map((inv) => inv.tokenPublik)).size, 3);
+
+      const rincian = await db
+        .select({ label: schema.invoiceItems.label, nominal: schema.invoiceItems.nominal })
+        .from(schema.invoiceItems)
+        .where(eq(schema.invoiceItems.invoiceId, baru.find((inv) => inv.roomId === "room_C01")!.id));
+      assert.deepEqual(rincian, [{ label: "Sewa kamar", nominal: 800_000 }]);
+    });
+
+    it("biaya tambahan masuk ke nominal dan rincian setiap tagihan", async () => {
+      const hasil = await buatTagihan(db, ORG, {
+        periode: "2026-12",
+        jatuhTempo: "2026-12-10",
+        roomIds: ["room_A01", "room_C01"],
+        biayaTambahan: [
+          { label: "Listrik", nominal: 75_000 },
+          { label: "Air", nominal: 25_000 },
+        ],
+      });
+      assert.deepEqual(hasil, { dibuat: 2, totalNominal: 1_500_000, dilewati: [] });
+
+      const baris = await db
+        .select({
+          kamar: schema.invoices.roomId,
+          nominal: schema.invoices.nominal,
+          label: schema.invoiceItems.label,
+          rincian: schema.invoiceItems.nominal,
+        })
+        .from(schema.invoices)
+        .innerJoin(schema.invoiceItems, eq(schema.invoiceItems.invoiceId, schema.invoices.id))
+        .where(and(eq(schema.invoices.periode, "2026-12"), eq(schema.invoices.roomId, "room_C01")));
+      assert.deepEqual(
+        baris.map((b) => [b.nominal, b.label, b.rincian]).sort(),
+        [
+          [900_000, "Air", 25_000],
+          [900_000, "Listrik", 75_000],
+          [900_000, "Sewa kamar", 800_000],
+        ],
+      );
     });
 
     it("kamar yang sudah punya tagihan periode itu dilewati (aman terkirim dua kali)", async () => {
@@ -83,7 +121,19 @@ describe("aksi cepat dashboard", () => {
       assert.deepEqual(bacaInputBuatTagihan({ ...benar, roomIds: ["room_A01", "room_A01"] }), {
         ...benar,
         nominalKhusus: undefined,
+        biayaTambahan: [],
       });
+      assert.deepEqual(
+        bacaInputBuatTagihan({ ...benar, biayaTambahan: [{ label: "  Listrik ", nominal: 50_000 }] }).biayaTambahan,
+        [{ label: "Listrik", nominal: 50_000 }],
+      );
+      const biaya = (biayaTambahan: unknown) => () => bacaInputBuatTagihan({ ...benar, biayaTambahan });
+      assert.throws(biaya("Listrik"), GalatAksi);
+      assert.throws(biaya([{ label: " ", nominal: 50_000 }]), GalatAksi);
+      assert.throws(biaya([{ label: "Listrik", nominal: 0 }]), GalatAksi);
+      assert.throws(biaya([null]), GalatAksi);
+      assert.throws(biaya(Array.from({ length: 11 }, () => ({ label: "Iuran", nominal: 1_000 }))), GalatAksi);
+      assert.throws(biaya(Array.from({ length: 3 }, () => ({ label: "Denda", nominal: 900_000_000 }))), GalatAksi);
       assert.throws(() => bacaInputBuatTagihan({ ...benar, periode: "2026-13" }), GalatAksi);
       assert.throws(() => bacaInputBuatTagihan({ ...benar, jatuhTempo: "2026-02-30" }), GalatAksi);
       assert.throws(() => bacaInputBuatTagihan({ ...benar, roomIds: [] }), GalatAksi);

@@ -83,12 +83,14 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
           <h2 id="rincian-judul" className="mb-2 text-sm font-medium">
             Rincian
           </h2>
-          <div className="flex items-start justify-between gap-4 text-sm">
-            <span>
-              Sewa kamar {inv.nomorKamar} · {formatPeriode(inv.periode)}
-            </span>
-            <span className="font-medium tabular-nums">{formatRupiah(inv.nominal)}</span>
-          </div>
+          <ul className="flex flex-col gap-2 text-sm">
+            {inv.rincian.map((r, i) => (
+              <li key={i} className="flex items-start justify-between gap-4">
+                <span>{r.label}</span>
+                <span className="font-medium tabular-nums">{formatRupiah(r.nominal)}</span>
+              </li>
+            ))}
+          </ul>
           <div className="mt-3 flex items-center justify-between gap-4 border-t pt-3 font-semibold">
             <span>Total</span>
             <span className="tabular-nums">{formatRupiah(inv.nominal)}</span>
