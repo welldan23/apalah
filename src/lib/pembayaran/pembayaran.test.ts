@@ -8,6 +8,7 @@ import type { Db } from "../../db/index.ts";
 import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
+import type { PesanWhatsApp } from "../whatsapp/index.ts";
 import { bacaNotifikasiMidtrans, tandaTanganMidtransValid } from "./midtrans.ts";
 import { kirimKonfirmasiLunas } from "./konfirmasi.ts";
 import { kirimNotifikasiPerluReview } from "./notifikasi-review.ts";
@@ -150,11 +151,11 @@ describe("prosesNotifikasiPembayaran", () => {
 describe("kirimKonfirmasiLunas", () => {
   let db: Db;
   let tutup: () => Promise<void>;
-  const terkirim: { ke: string; teks: string }[] = [];
+  const terkirim: PesanWhatsApp[] = [];
   const wa = {
     provider: "uji",
     simulasi: false,
-    async kirim(p: { ke: string; teks: string }) {
+    async kirim(p: PesanWhatsApp) {
       terkirim.push(p);
       return { ok: true as const };
     },
@@ -172,6 +173,7 @@ describe("kirimKonfirmasiLunas", () => {
     assert.equal(terkirim[0].ke, "6281320465838");
     assert.match(terkirim[0].teks, /^Halo Yoga, pembayaran sewa kamar A03 di Kos Melati periode September 2026 sebesar Rp500\.000 sudah kami terima\./);
     assert.match(terkirim[0].teks, /https:\/\/kostera\.id\/invoice\/demo-a03-2026-09$/);
+    assert.deepEqual([terkirim[0].template?.nama, terkirim[0].template?.tombolUrl], ["kostera_pembayaran_diterima", "demo-a03-2026-09"]);
     const [r] = await db
       .select()
       .from(schema.reminders)

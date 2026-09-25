@@ -67,6 +67,8 @@ describe("kirim tagihan & ubah status", () => {
       const a03 = terkirim.find((p) => p.teks.includes("kamar A03"))!;
       assert.match(a03.teks, /^Halo Yoga, ini tagihan sewa kamar A03 di Kos Melati periode September 2026/);
       assert.match(a03.teks, /https:\/\/kostera\.id\/invoice\/demo-a03-2026-09$/);
+      // Template resmi untuk WhatsApp Cloud API: tombolnya membuka invoice yang sama.
+      assert.deepEqual([a03.template?.nama, a03.template?.tombolUrl], ["kostera_tagihan_baru", "demo-a03-2026-09"]);
 
       const riwayat = await db
         .select()

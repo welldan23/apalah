@@ -1,7 +1,21 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { isiTemplate, pesanOtp, pesanPengingat, pesanPengingatAwal, TEMPLATE_PENGINGAT, templateOtp, templatePengingat } from "./pesan.ts";
+import {
+  isiTemplate,
+  pesanLunas,
+  pesanOtp,
+  pesanPengingat,
+  pesanPengingatAwal,
+  pesanTagihan,
+  TEMPLATE_LUNAS,
+  TEMPLATE_PENGINGAT,
+  TEMPLATE_TAGIHAN,
+  templateLunas,
+  templateOtp,
+  templatePengingat,
+  templateTagihan,
+} from "./pesan.ts";
 
 const inv = (jatuhTempo: string) => ({
   namaPenghuni: "Yoga Saputra",
@@ -42,13 +56,46 @@ describe("template WhatsApp resmi pengingat", () => {
   });
 
   it("memenuhi aturan Meta: variabel {{1}}…{{n}} berurutan, tidak di awal/akhir isi, nilai tanpa baris baru", () => {
-    for (const { isi } of Object.values(TEMPLATE_PENGINGAT)) {
+    const semua = [...Object.values(TEMPLATE_PENGINGAT), TEMPLATE_TAGIHAN, TEMPLATE_LUNAS];
+    for (const { isi } of semua) {
       const nomor = [...isi.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
-      assert.deepEqual(nomor, [1, 2, 3, 4, 5, 6]);
+      assert.deepEqual(nomor, Array.from({ length: nomor.length }, (_, i) => i + 1));
       assert.doesNotMatch(isi, /^\{\{|\}\}$/);
     }
-    const t = templatePengingat(inv("2026-09-20"), "Kos Melati", "2026-09-24", "x");
-    assert.ok(t.variabel.every((v) => v && !/[\n\t]| {5}/.test(v)));
+    assert.equal(new Set(semua.map((t) => t.nama)).size, semua.length);
+    for (const t of [
+      templatePengingat(inv("2026-09-20"), "Kos Melati", "2026-09-24", "x"),
+      templateTagihan(inv("2026-09-20"), "Kos Melati", "x"),
+      templateLunas(inv("2026-09-20"), "Kos Melati", "x"),
+    ]) {
+      assert.ok(t.variabel.every((v) => v && !/[\n\t]| {5}/.test(v)));
+    }
+  });
+});
+
+describe("template WhatsApp resmi tagihan baru & pembayaran diterima", () => {
+  const LINK = "https://kostera.id/invoice/demo-a03-2026-09";
+
+  it("tagihan baru: teks provider teks = isi template + baris link; tombol ke invoice", () => {
+    const teks = pesanTagihan(inv("2026-09-26"), "Kos Melati", LINK);
+    assert.equal(
+      teks,
+      `Halo Yoga, ini tagihan sewa kamar A03 di Kos Melati periode September 2026 sebesar Rp500.000, jatuh tempo 26 Sep 2026. Rincian dan cara bayar ada di link berikut. Terima kasih.\n${LINK}`,
+    );
+    const t = templateTagihan(inv("2026-09-26"), "Kos Melati", "demo-a03-2026-09");
+    assert.deepEqual([t.nama, t.bahasa, t.tombolUrl], ["kostera_tagihan_baru", "id", "demo-a03-2026-09"]);
+    assert.equal(`${isiTemplate(TEMPLATE_TAGIHAN.isi, t.variabel)}\n${LINK}`, teks);
+  });
+
+  it("pembayaran diterima: teks provider teks = isi template + baris link; tombol ke bukti bayar", () => {
+    const teks = pesanLunas(inv("2026-09-26"), "Kos Melati", LINK);
+    assert.equal(
+      teks,
+      `Halo Yoga, pembayaran sewa kamar A03 di Kos Melati periode September 2026 sebesar Rp500.000 sudah kami terima. Terima kasih! Bukti pembayaran:\n${LINK}`,
+    );
+    const t = templateLunas(inv("2026-09-26"), "Kos Melati", "demo-a03-2026-09");
+    assert.deepEqual([t.nama, t.bahasa, t.tombolUrl], ["kostera_pembayaran_diterima", "id", "demo-a03-2026-09"]);
+    assert.equal(`${isiTemplate(TEMPLATE_LUNAS.isi, t.variabel)}\n${LINK}`, teks);
   });
 });
 

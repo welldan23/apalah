@@ -4,7 +4,7 @@
 import { eq } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import { pesanLunas } from "../pesan.ts";
+import { pesanLunas, templateLunas } from "../pesan.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import { kirimDanCatat } from "../whatsapp/log.ts";
 
@@ -42,7 +42,7 @@ export async function kirimKonfirmasiLunas(
   const kirim = await kirimDanCatat(
     db,
     wa,
-    { ke: inv.nomorWa, teks },
+    { ke: inv.nomorWa, teks, template: templateLunas(inv, inv.namaKos, inv.tokenPublik) },
     { jenis: "konfirmasi_lunas", organizationId: inv.organizationId, referensiId: inv.id },
   );
   await db.insert(reminders).values({

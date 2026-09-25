@@ -6,24 +6,25 @@ import type { InvoiceRow } from "@/lib/types";
 
 type DataTagihan = Pick<InvoiceRow, "namaPenghuni" | "nomorKamar" | "periode" | "nominal" | "jatuhTempo">;
 
-/** Pesan tagihan baru untuk penyewa, berisi link invoice. */
-export function pesanTagihan(inv: DataTagihan, namaKos: string, linkInvoice: string) {
-  const namaDepan = inv.namaPenghuni.split(" ")[0];
-  return `Halo ${namaDepan}, ini tagihan sewa kamar ${inv.nomorKamar} di ${namaKos} periode ${formatPeriode(inv.periode)} sebesar ${formatRupiah(inv.nominal)}, jatuh tempo ${formatTanggal(inv.jatuhTempo)}. Rincian dan cara bayar ada di link berikut. Terima kasih.\n${linkInvoice}`;
-}
+// Template resmi WhatsApp Cloud API (Meta) — pesan yang dimulai bisnis ke penyewa wajib template
+// yang disetujui. Daftarkan di WhatsApp Manager persis seperti di bawah: kategori Utility, bahasa
+// Indonesia (id), isi berikut, dan satu tombol URL ("Lihat tagihan" / "Lihat bukti bayar") ke
+// `{APP_URL}/invoice/{{1}}` (diisi token invoice). Provider teks (WAHA, log) mengirim isi yang sama
+// plus link invoice di baris terakhir.
 
-/** Konfirmasi ke penyewa setelah pembayaran terverifikasi dan tagihan Lunas. */
-export function pesanLunas(inv: DataTagihan, namaKos: string, linkInvoice: string) {
-  const namaDepan = inv.namaPenghuni.split(" ")[0];
-  return `Halo ${namaDepan}, pembayaran sewa kamar ${inv.nomorKamar} di ${namaKos} periode ${formatPeriode(inv.periode)} sebesar ${formatRupiah(inv.nominal)} sudah kami terima. Terima kasih! Bukti pembayaran:\n${linkInvoice}`;
-}
+/** Tagihan baru; {{1}} nama depan, {{2}} kamar, {{3}} kos, {{4}} periode, {{5}} nominal, {{6}} jatuh tempo. */
+export const TEMPLATE_TAGIHAN = {
+  nama: "kostera_tagihan_baru",
+  isi: "Halo {{1}}, ini tagihan sewa kamar {{2}} di {{3}} periode {{4}} sebesar {{5}}, jatuh tempo {{6}}. Rincian dan cara bayar ada di link berikut. Terima kasih.",
+} as const;
 
-/**
- * Template pengingat untuk WhatsApp Cloud API (Meta) — pesan yang dimulai bisnis wajib template yang
- * disetujui. Daftarkan di WhatsApp Manager persis seperti ini: kategori Utility, bahasa Indonesia
- * (id), isi berikut, dan satu tombol URL "Lihat tagihan" ke `{APP_URL}/invoice/{{1}}` (diisi token
- * invoice). Provider teks (WAHA, log) mengirim isi yang sama plus link invoice di baris terakhir.
- */
+/** Pembayaran diterima (Lunas); variabel {{1}}–{{5}} sama dengan tagihan baru. */
+export const TEMPLATE_LUNAS = {
+  nama: "kostera_pembayaran_diterima",
+  isi: "Halo {{1}}, pembayaran sewa kamar {{2}} di {{3}} periode {{4}} sebesar {{5}} sudah kami terima. Terima kasih! Bukti pembayaran:",
+} as const;
+
+/** Pengingat bayar; {{1}} nama depan, {{2}} kos, {{3}} kamar, {{4}} periode, {{5}} nominal, {{6}} kapan jatuh tempo. */
 export const TEMPLATE_PENGINGAT = {
   sebelum: {
     nama: "kostera_pengingat_sebelum",
@@ -41,9 +42,42 @@ export const isiTemplate = (isi: string, variabel: string[]) =>
 
 const denganLink = (pesan: string, linkInvoice?: string) => (linkInvoice ? `${pesan}\n${linkInvoice}` : pesan);
 
+const namaDepan = (inv: DataTagihan) => inv.namaPenghuni.split(" ")[0];
+
+/** Variabel {{1}}–{{5}} template tagihan baru & pembayaran diterima. */
+const variabelTagihan = (inv: DataTagihan, namaKos: string) => [
+  namaDepan(inv),
+  inv.nomorKamar,
+  namaKos,
+  formatPeriode(inv.periode),
+  formatRupiah(inv.nominal),
+];
+
+/** Pesan tagihan baru untuk penyewa, berisi link invoice. */
+export function pesanTagihan(inv: DataTagihan, namaKos: string, linkInvoice: string) {
+  const variabel = [...variabelTagihan(inv, namaKos), formatTanggal(inv.jatuhTempo)];
+  return denganLink(isiTemplate(TEMPLATE_TAGIHAN.isi, variabel), linkInvoice);
+}
+
+/** Template resmi yang isinya sama dengan pesanTagihan; tombol membuka invoice `tokenInvoice`. */
+export function templateTagihan(inv: DataTagihan, namaKos: string, tokenInvoice: string): TemplateWhatsApp {
+  const variabel = [...variabelTagihan(inv, namaKos), formatTanggal(inv.jatuhTempo)];
+  return { nama: TEMPLATE_TAGIHAN.nama, bahasa: "id", variabel, tombolUrl: tokenInvoice };
+}
+
+/** Konfirmasi ke penyewa setelah pembayaran terverifikasi dan tagihan Lunas. */
+export function pesanLunas(inv: DataTagihan, namaKos: string, linkInvoice: string) {
+  return denganLink(isiTemplate(TEMPLATE_LUNAS.isi, variabelTagihan(inv, namaKos)), linkInvoice);
+}
+
+/** Template resmi yang isinya sama dengan pesanLunas; tombol membuka bukti bayar (invoice Lunas). */
+export function templateLunas(inv: DataTagihan, namaKos: string, tokenInvoice: string): TemplateWhatsApp {
+  return { nama: TEMPLATE_LUNAS.nama, bahasa: "id", variabel: variabelTagihan(inv, namaKos), tombolUrl: tokenInvoice };
+}
+
 /** Variabel {{1}}–{{6}} template pengingat; {{6}} = kapan jatuh tempo. */
 function variabelPengingat(inv: DataTagihan, namaKos: string, kapan: string) {
-  return [inv.namaPenghuni.split(" ")[0], namaKos, inv.nomorKamar, formatPeriode(inv.periode), formatRupiah(inv.nominal), kapan];
+  return [namaDepan(inv), namaKos, inv.nomorKamar, formatPeriode(inv.periode), formatRupiah(inv.nominal), kapan];
 }
 
 function kapanJatuhTempo(inv: DataTagihan, hariIni: string) {
