@@ -57,6 +57,8 @@ const KUNCI_PAYLOAD = new Set([
   "tanggalJatuhTempo",
   "setuju",
   "kode",
+  "kamar",
+  "rentang",
 ]);
 
 const saringNilai = (nilai: unknown): unknown => {

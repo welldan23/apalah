@@ -1,7 +1,7 @@
 // Tool baca Kosta: menjawab pertanyaan owner dengan angka langsung dari database (bukan dari AI).
 // Setiap tool mengembalikan teks singkat + lampiran terstruktur untuk ditampilkan/dikirim.
 
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lt, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { getKamarKosong } from "../data/kamar.ts";
@@ -9,9 +9,10 @@ import { getRekapPemasukan } from "../data/pemasukan.ts";
 import { formatPeriode, formatRupiah, formatTanggal, formatTanggalPendek, selisihHari } from "../format.ts";
 import { tanggalWib } from "../waktu.ts";
 import { hariKosong } from "../kamar-kosong.ts";
+import { geserHari } from "../reminder.ts";
 import type { LampiranKosta } from "@/lib/types";
 
-const { invoices, rooms, tenants } = schema;
+const { invoices, payments, rooms, tenants } = schema;
 
 export type BalasanKosta = { teks: string; lampiran?: LampiranKosta };
 
@@ -118,11 +119,45 @@ export async function toolKamarKosong(
  * Rekap pemasukan satu periode (bawaan bulan berjalan): uang yang sudah masuk dari pembayaran
  * terverifikasi, plus tagihan yang masih menunggu, jatuh tempo, dan perlu review.
  */
+/**
+ * Uang masuk minggu berjalan (Senin s.d. hari ini, WIB) dari pembayaran yang sudah terverifikasi
+ * payment gateway — dihitung dari waktu verifikasi, bukan periode tagihan.
+ */
+async function rekapMingguIni(db: Db, organizationId: string, hariIni: string): Promise<BalasanKosta> {
+  const senin = geserHari(hariIni, -((new Date(`${hariIni}T00:00:00Z`).getUTCDay() + 6) % 7));
+  const [r] = await db
+    .select({
+      total: sql<number>`coalesce(sum(${payments.nominalDibayar}), 0)`.mapWith(Number),
+      jumlah: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(payments)
+    .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
+    .where(
+      and(
+        eq(invoices.organizationId, organizationId),
+        eq(payments.status, "valid"),
+        gte(payments.diverifikasiPada, new Date(`${senin}T00:00:00+07:00`)),
+        lt(payments.diverifikasiPada, new Date(`${geserHari(hariIni, 1)}T00:00:00+07:00`)),
+      ),
+    );
+  const rentang = `${formatTanggalPendek(senin)}–${formatTanggalPendek(hariIni)}`;
+  if (r.jumlah === 0) return { teks: `Belum ada pembayaran terverifikasi minggu ini (${rentang}).` };
+  return {
+    teks: "Ini rekap pemasukan minggu ini, dihitung dari pembayaran yang sudah terverifikasi.",
+    lampiran: {
+      jenis: "rekap",
+      judul: `Pemasukan minggu ini (${rentang})`,
+      baris: [{ label: "Sudah masuk", nominal: r.total, catatan: `${r.jumlah} pembayaran` }],
+    },
+  };
+}
+
 export async function toolRekapPemasukan(
   db: Db,
   organizationId: string,
-  { periode, hariIni }: { periode?: string; hariIni: string },
+  { periode, rentang, hariIni }: { periode?: string; rentang?: "minggu_ini"; hariIni: string },
 ): Promise<BalasanKosta> {
+  if (rentang === "minggu_ini") return rekapMingguIni(db, organizationId, hariIni);
   const p = periode ?? hariIni.slice(0, 7);
   const { tagihan, pemasukan } = await getRekapPemasukan(db, organizationId, { periode: p });
   if (tagihan.total.jumlah === 0 && pemasukan.jumlahPembayaran === 0) {

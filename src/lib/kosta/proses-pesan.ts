@@ -54,7 +54,7 @@ async function susunBalasan(
   { conversationId, messageId, teks }: { conversationId: string; messageId?: string; teks: string },
   deps: DepsKosta,
   jejak: Jejak,
-): Promise<{ balasan: BalasanKosta; organizationId: string | null }> {
+): Promise<{ balasan: BalasanKosta; organizationId: string | null; namaKos?: string }> {
   const konteks = await cocokkanNomorWa(db, conversationId);
   jejak.statusPengirim = konteks.status;
   if (konteks.status !== "tidak_dikenal") jejak.actorUserId = konteks.userId;
@@ -104,10 +104,10 @@ async function susunBalasan(
     {
       lihat_tunggakan: (i) => toolTunggakan(db, organizationId, { periode: i.periode, hariIni }),
       kamar_kosong: () => toolKamarKosong(db, organizationId, { hariIni }),
-      rekap_pemasukan: (i) => toolRekapPemasukan(db, organizationId, { periode: i.periode, hariIni }),
+      rekap_pemasukan: (i) => toolRekapPemasukan(db, organizationId, { periode: i.periode, rentang: i.rentang, hariIni }),
       cek_kamar: (i) => toolCekKamar(db, organizationId, { nomorKamar: i.nomorKamar, periode: i.periode, hariIni }),
       draft_tagihan: (i) => toolDraftTagihan(db, pemilik, { periode: i.periode, hariIni }),
-      siapkan_reminder: () => toolSiapkanReminder(db, pemilik),
+      siapkan_reminder: (i) => toolSiapkanReminder(db, pemilik, { kamar: i.kamar, hariIni, sekarang: deps.sekarang }),
       koreksi_draft: (i) =>
         toolKoreksiDraft(db, percakapan, { kecualikan: i.kecualikan, nominal: i.nominal, tanggalJatuhTempo: i.tanggalJatuhTempo }),
       konfirmasi: async ({ setuju, kode }) => {
@@ -162,7 +162,7 @@ async function susunBalasan(
     if (preview) Object.assign(jejak, { hasil: "menunggu_konfirmasi", actionId: preview.draftId, statusKonfirmasi: preview.status });
     else jejak.hasil = ["bantuan", "konfirmasi", "ganti_kos"].includes(intent.intent) ? "klarifikasi" : "dijawab";
   }
-  return { balasan, organizationId };
+  return { balasan, organizationId, namaKos: workspace.namaKos };
 }
 
 /**
@@ -174,7 +174,7 @@ export async function prosesPesanKosta(
   pesan: { conversationId: string; messageId?: string; teks: string; saluran: "whatsapp" | "web" },
   deps: DepsKosta,
 ): Promise<PesanKosta> {
-  let hasil: { balasan: BalasanKosta; organizationId: string | null };
+  let hasil: { balasan: BalasanKosta; organizationId: string | null; namaKos?: string };
   // "galat" sampai ada hasil — pesan yang gagal diproses tetap tercatat sebagai galat.
   const jejak: Jejak = { statusPengirim: "tidak_dikenal", hasil: "galat" };
   try {
@@ -210,7 +210,7 @@ export async function prosesPesanKosta(
     const kirim = await kirimDanCatat(
       db,
       deps.wa,
-      { ke: p.nomorWa, teks: formatWhatsApp(hasil.balasan) },
+      { ke: p.nomorWa, teks: formatWhatsApp(hasil.balasan, { namaKos: hasil.namaKos }) },
       { jenis: "kosta", organizationId: hasil.organizationId, referensiId: tersimpan.id },
     );
     if (!kirim.ok) console.error(`Balasan Kosta ke percakapan ${pesan.conversationId} gagal terkirim.`);

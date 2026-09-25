@@ -7,10 +7,12 @@ import { periodeValid } from "../waktu.ts";
 export type Intent =
   | { intent: "lihat_tunggakan"; periode?: string }
   | { intent: "kamar_kosong" }
-  | { intent: "rekap_pemasukan"; periode?: string }
+  /** `rentang` "minggu_ini" = uang masuk sejak Senin minggu berjalan; kosong = per bulan (periode). */
+  | { intent: "rekap_pemasukan"; periode?: string; rentang?: "minggu_ini" }
   | { intent: "cek_kamar"; nomorKamar: string; periode?: string }
   | { intent: "draft_tagihan"; periode?: string }
-  | { intent: "siapkan_reminder" }
+  /** `kamar` kosong = semua yang menunggak; berisi = hanya tagihan belum dibayar kamar-kamar itu. */
+  | { intent: "siapkan_reminder"; kamar?: string[] }
   | { intent: "pindah_penghuni"; dariKamar: string; keKamar: string }
   /** `kode` = kode aksi 6 digit dari preview; wajib untuk menyetujui. */
   | { intent: "konfirmasi"; setuju: boolean; kode?: string }
@@ -34,7 +36,14 @@ const kamar = (description: string) => ({ type: "string", description });
 export const ALAT: { name: Exclude<NamaIntent, "bantuan">; description: string; properties: Properti; required?: string[] }[] = [
   { name: "lihat_tunggakan", description: "Tagihan yang belum dibayar / menunggak / jatuh tempo.", properties: { periode } },
   { name: "kamar_kosong", description: "Kamar yang masih kosong / belum terisi.", properties: {} },
-  { name: "rekap_pemasukan", description: "Rekap uang masuk / pemasukan / pendapatan.", properties: { periode } },
+  {
+    name: "rekap_pemasukan",
+    description: "Rekap uang masuk / pemasukan / pendapatan.",
+    properties: {
+      periode,
+      rentang: { type: "string", description: 'Isi "minggu_ini" bila owner minta rekap minggu ini; kosongkan untuk rekap per bulan.' },
+    },
+  },
   {
     name: "cek_kamar",
     description: "Status tagihan & pembayaran satu kamar tertentu (mis. 'A03 sudah bayar?').",
@@ -42,7 +51,17 @@ export const ALAT: { name: Exclude<NamaIntent, "bantuan">; description: string; 
     required: ["nomorKamar"],
   },
   { name: "draft_tagihan", description: "Siapkan draft tagihan sewa untuk penghuni.", properties: { periode } },
-  { name: "siapkan_reminder", description: "Siapkan pesan pengingat untuk penyewa yang menunggak.", properties: {} },
+  {
+    name: "siapkan_reminder",
+    description: "Siapkan pesan pengingat bayar untuk penyewa yang menunggak, atau untuk kamar tertentu yang disebut.",
+    properties: {
+      kamar: {
+        type: "array",
+        description: "Nomor kamar yang mau diingatkan, mis. A01. Kosongkan untuk semua yang menunggak.",
+        items: { type: "string" },
+      },
+    },
+  },
   {
     name: "pindah_penghuni",
     description: "Pindahkan penghuni dari satu kamar ke kamar lain.",
@@ -96,10 +115,14 @@ export function validasiIntent(mentah: unknown): Intent {
   switch (x.intent) {
     case "lihat_tunggakan":
     case "rekap_pemasukan":
+      return { intent: x.intent, ...periodeAtauKosong(x.periode), ...(x.rentang === "minggu_ini" ? { rentang: "minggu_ini" as const } : {}) };
     case "draft_tagihan":
       return { intent: x.intent, ...periodeAtauKosong(x.periode) };
+    case "siapkan_reminder": {
+      const kamar = [...new Set((Array.isArray(x.kamar) ? x.kamar : []).map(normalisasiKamar).filter((k): k is string => !!k))].slice(0, 50);
+      return kamar.length ? { intent: "siapkan_reminder", kamar } : { intent: "siapkan_reminder" };
+    }
     case "kamar_kosong":
-    case "siapkan_reminder":
     case "ganti_kos":
       return { intent: x.intent };
     case "cek_kamar": {
@@ -236,13 +259,15 @@ export function parseKataKunci(teks: string, hariIni: string): Intent {
   if (/\bpindah(kan)?\b/.test(t) && kamarDisebut.length >= 2) {
     return validasiIntent({ intent: "pindah_penghuni", dariKamar: kamarDisebut[0], keKamar: kamarDisebut[1] });
   }
-  if (/remind|ingatkan|pengingat|tagih yang/.test(t)) return { intent: "siapkan_reminder" };
+  if (/remind|ingatkan|pengingat|tagih yang/.test(t)) return validasiIntent({ intent: "siapkan_reminder", kamar: kamarDisebut });
   if (/(buat|bikin|siapkan|terbitkan).*tagihan|draft tagihan/.test(t)) return { intent: "draft_tagihan", ...p };
   if (kamarDisebut.length === 1 && /bayar|lunas|tagihan|status/.test(t)) {
     return { intent: "cek_kamar", nomorKamar: kamarDisebut[0], ...p };
   }
   if (/tunggak|nunggak|belum bayar|belum lunas|jatuh tempo|telat/.test(t)) return { intent: "lihat_tunggakan", ...p };
   if (/kosong|belum terisi|kamar (yang )?(masih )?tersedia/.test(t)) return { intent: "kamar_kosong" };
-  if (/rekap|pemasukan|pendapatan|uang masuk|omzet/.test(t)) return { intent: "rekap_pemasukan", ...p };
+  if (/rekap|pemasukan|pendapatan|uang masuk|omzet/.test(t)) {
+    return /(minggu|pekan) ini/.test(t) ? { intent: "rekap_pemasukan", rentang: "minggu_ini" } : { intent: "rekap_pemasukan", ...p };
+  }
   return { intent: "bantuan" };
 }

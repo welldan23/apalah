@@ -1,11 +1,12 @@
 // Tool aksi Kosta: menyiapkan draft yang MENUNGGU KONFIRMASI owner — belum ada data yang diubah
 // atau pesan yang dikirim sampai owner menyetujui preview (lihat putuskanDraft).
 
-import { and, eq, gte } from "drizzle-orm";
+import { and, eq, gte, inArray } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { formatPeriode, formatRupiah, periodeBerikutnya } from "../format.ts";
-import { pesanReminder } from "../pesan.ts";
+import { pesanPengingat, pesanReminder } from "../pesan.ts";
+import { STATUS_BISA_DIINGATKAN } from "../reminder.ts";
 import {
   batalkanDraft,
   draftMenungguTerakhir,
@@ -76,14 +77,28 @@ export async function toolBatalDraft(db: Db, { organizationId, conversationId }:
 }
 
 /**
- * Susun pengingat bayar untuk penyewa yang menunggak: preview penerima & total + contoh isi pesan.
- * Belum ada pesan terkirim sampai owner mengonfirmasi. Yang sudah dihubungi 24 jam terakhir dilewati.
+ * Susun pengingat bayar: tanpa `kamar` untuk semua penyewa yang menunggak, dengan `kamar` hanya untuk
+ * tagihan belum dibayar kamar-kamar itu. Preview penerima & total + contoh isi pesan; belum ada pesan
+ * terkirim sampai owner mengonfirmasi. Yang sudah dihubungi 24 jam terakhir dilewati.
  */
 export async function toolSiapkanReminder(
   db: Db,
   pemilik: Pemilik,
-  { sekarang = new Date() }: { sekarang?: Date } = {},
+  { kamar = [], hariIni, sekarang = new Date() }: { kamar?: string[]; hariIni?: string; sekarang?: Date } = {},
 ): Promise<BalasanKosta> {
+  // Kamar yang disebut tapi tidak ada di kos ini: tanya ulang, jangan menebak.
+  if (kamar.length) {
+    const ada = (
+      await db
+        .select({ nomorKamar: rooms.nomorKamar })
+        .from(rooms)
+        .where(and(eq(rooms.organizationId, pemilik.organizationId), inArray(rooms.nomorKamar, kamar)))
+    ).map((r) => r.nomorKamar);
+    const tidakAda = kamar.filter((k) => !ada.includes(k));
+    if (tidakAda.length) return { teks: `Kamar ${tidakAda.join(", ")} tidak ada di kos ini. Cek lagi nomor kamarnya, ya.` };
+  }
+
+  // Tagihan kandidat yang penyewanya sudah diingatkan dalam 24 jam terakhir.
   const baruDihubungi = (
     await db
       .selectDistinct({ id: reminders.invoiceId })
@@ -94,13 +109,18 @@ export async function toolSiapkanReminder(
           eq(reminders.organizationId, pemilik.organizationId),
           eq(reminders.status, "terkirim"),
           gte(reminders.terkirimPada, new Date(sekarang.getTime() - JEDA_PENGINGAT_MS)),
-          eq(invoices.status, "jatuh_tempo"),
+          inArray(invoices.status, kamar.length ? [...STATUS_BISA_DIINGATKAN] : ["jatuh_tempo"]),
         ),
       )
   ).map((r) => r.id);
 
-  const preview = await siapkanDraftReminder(db, pemilik, { kecuali: baruDihubungi });
+  const preview = await siapkanDraftReminder(db, pemilik, { kecuali: baruDihubungi, kamar });
   if (!preview) {
+    if (kamar.length) {
+      return {
+        teks: `Tidak ada tagihan yang perlu diingatkan untuk kamar ${kamar.join(", ")}: sudah dibayar, belum ditagih, atau penyewanya sudah dihubungi dalam 24 jam terakhir.`,
+      };
+    }
     return {
       teks: baruDihubungi.length
         ? "Semua penyewa yang menunggak sudah dihubungi dalam 24 jam terakhir. Coba lagi besok supaya tidak terkesan spam."
@@ -124,15 +144,28 @@ export async function toolSiapkanReminder(
     .innerJoin(tenants, eq(tenants.id, invoices.tenantId))
     .innerJoin(rooms, eq(rooms.id, invoices.roomId))
     .where(eq(invoices.id, draft.ringkasanPreview.invoiceIds![0]));
+  const isiContoh = hariIni
+    ? pesanPengingat(contoh, contoh.namaKos, hariIni, "[link invoice]")
+    : pesanReminder(contoh, contoh.namaKos, "[link invoice]");
 
-  const dilewati = baruDihubungi.length
-    ? ` ${baruDihubungi.length} tagihan dilewati karena penyewanya sudah dihubungi dalam 24 jam terakhir.`
-    : "";
+  const dilewati = kamar.length
+    ? kamar.filter((k) => !preview.penerima.some((p) => p.nomorKamar === k))
+    : [];
+  const catatan = kamar.length
+    ? dilewati.length
+      ? ` Kamar ${dilewati.join(", ")} dilewati: tidak ada tagihan yang belum dibayar atau sudah diingatkan dalam 24 jam.`
+      : ""
+    : baruDihubungi.length
+      ? ` ${baruDihubungi.length} tagihan dilewati karena penyewanya sudah dihubungi dalam 24 jam terakhir.`
+      : "";
+  const untuk = kamar.length
+    ? `kamar ${[...new Set(preview.penerima.map((p) => p.nomorKamar))].join(", ")}`
+    : `${preview.penerima.length} penyewa yang menunggak`;
   return {
     teks:
-      `Ini preview pengingat untuk ${preview.penerima.length} penyewa yang menunggak, total ${formatRupiah(preview.total)}. ` +
-      `Belum ada pesan yang dikirim sampai kamu konfirmasi.${dilewati}\n\n` +
-      `Contoh pesan ke ${contoh.namaPenghuni} (${contoh.nomorKamar}):\n${pesanReminder(contoh, contoh.namaKos, "[link invoice]")}`,
+      `Ini preview pengingat untuk ${untuk}, total ${formatRupiah(preview.total)}. ` +
+      `Belum ada pesan yang dikirim sampai kamu konfirmasi.${catatan}\n\n` +
+      `Contoh pesan ke ${contoh.namaPenghuni} (${contoh.nomorKamar}):\n${isiContoh}`,
     lampiran: { jenis: "preview_aksi", ...preview },
   };
 }

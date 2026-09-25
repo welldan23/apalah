@@ -10,6 +10,7 @@ import { kirimReminder } from "../aksi/reminder.ts";
 import { sisipkanTagihan } from "../aksi/tagihan.ts";
 import { getPengaturanTagihanTerjadwal } from "../aksi/tagihan-terjadwal.ts";
 import { formatPeriode, formatRupiah, formatTanggal, periodeBerikutnya } from "../format.ts";
+import { STATUS_BISA_DIINGATKAN } from "../reminder.ts";
 import { jatuhTempoUntuk } from "../tagihan-terjadwal.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import { kodeAksi } from "./kode-aksi.ts";
@@ -54,12 +55,14 @@ async function simpanDraft(db: Db, pemilik: Pemilik, data: DataDraftAksi): Promi
 }
 
 /**
- * Draft pengingat untuk semua tagihan jatuh tempo (kecuali `kecuali`); null bila tidak ada yang menunggak.
+ * Draft pengingat untuk semua tagihan jatuh tempo — atau, bila `kamar` diisi, untuk tagihan belum
+ * dibayar (menunggu/terkirim/jatuh tempo) kamar-kamar itu saja. `kecuali` = invoice yang dilewati.
+ * null bila tidak ada yang perlu diingatkan.
  */
 export async function siapkanDraftReminder(
   db: Db,
   pemilik: Pemilik,
-  { kecuali = [] }: { kecuali?: string[] } = {},
+  { kecuali = [], kamar = [] }: { kecuali?: string[]; kamar?: string[] } = {},
 ): Promise<PreviewAksi | null> {
   const tunggakan = await db
     .select({
@@ -75,7 +78,9 @@ export async function siapkanDraftReminder(
     .where(
       and(
         eq(invoices.organizationId, pemilik.organizationId),
-        eq(invoices.status, "jatuh_tempo"),
+        kamar.length
+          ? and(inArray(rooms.nomorKamar, kamar), inArray(invoices.status, [...STATUS_BISA_DIINGATKAN]))
+          : eq(invoices.status, "jatuh_tempo"),
         kecuali.length ? notInArray(invoices.id, kecuali) : undefined,
       ),
     );
@@ -276,7 +281,7 @@ async function jalankanReminder(
   { wa, baseUrl }: { wa: PengirimWhatsApp; baseUrl: string },
 ) {
   const target = data.invoiceIds ?? [];
-  // Hanya yang masih jatuh tempo — yang sudah bayar sejak preview dibuat tidak diingatkan.
+  // Hanya yang masih belum dibayar — yang lunas / sedang direview sejak preview dibuat tidak diingatkan.
   const masih = target.length
     ? await db
         .select({ id: invoices.id })
@@ -284,7 +289,7 @@ async function jalankanReminder(
         .where(
           and(
             eq(invoices.organizationId, organizationId),
-            eq(invoices.status, "jatuh_tempo"),
+            inArray(invoices.status, [...STATUS_BISA_DIINGATKAN]),
             inArray(invoices.id, target),
           ),
         )
