@@ -65,6 +65,18 @@
   "drizzle/0013_kode_perusahaan_transaksi.sql": {
     "summary": "Migrasi kecil yang menambah kolom kode_perusahaan di payment_attempts untuk VA Mandiri Bill Payment (kode perusahaan/biller + kode bayar)."
   },
+  "drizzle/0014_audit_kosta.sql": {
+    "summary": "Migrasi 0014: membuat tabel kosta_audit_logs (jejak terstruktur tiap pesan/aksi Kosta: saluran, status pengirim, intent kanonik, tool, payload tersaring, action id, status konfirmasi, hasil) dan wa_webhook_events (jejak webhook WhatsApp masuk tanpa isi pesan: provider, status, jumlah pesan, pesan baru, ID pesan provider), lengkap dengan check constraint dan index per organisasi+waktu."
+  },
+  "drizzle/0015_audit_saluran_sistem.sql": {
+    "summary": "Migrasi 0015: memperluas check constraint saluran di kosta_audit_logs agar menerima nilai 'sistem' untuk catatan otomatis seperti kedaluwarsa preview aksi oleh cron harian."
+  },
+  "drizzle/0016_jenis_aksi_hunian.sql": {
+    "summary": "Migrasi 0016: menambah nilai pindah_kamar dan keluar_penghuni ke enum jenis_aksi sehingga action_drafts bisa menyimpan preview aksi hunian dari Kosta."
+  },
+  "drizzle/0017_platform_admin.sql": {
+    "summary": "Migrasi 0017: membuat tabel platform_admins (user yang boleh membuka konsol /platform), platform_admin_logs (log aksi admin dengan check aksi lihat_workspace, suspend_pilot, resume_pilot, tambah_admin, hapus_admin) dan kosta_pilot (status aktif/suspend pilot Kosta per organisasi beserta alasan), plus foreign key dan index waktu."
+  },
   "drizzle/meta/0000_snapshot.json": {
     "summary": "Snapshot skema Drizzle hasil generate setelah migrasi 0000 (skema dashboard awal); dipakai drizzle-kit untuk menghitung selisih migrasi berikutnya."
   },
@@ -107,8 +119,35 @@
   "drizzle/meta/0013_snapshot.json": {
     "summary": "Snapshot skema Drizzle terbaru setelah migrasi 0013 (kolom kode_perusahaan di payment_attempts)."
   },
+  "drizzle/meta/0014_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0014 (tabel kosta_audit_logs dan wa_webhook_events); dipakai drizzle-kit untuk menghitung diff migrasi berikutnya."
+  },
+  "drizzle/meta/0015_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0015 (saluran audit 'sistem'); dipakai drizzle-kit untuk menghitung diff migrasi berikutnya."
+  },
+  "drizzle/meta/0016_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0016 (enum jenis_aksi dengan pindah_kamar dan keluar_penghuni); dipakai drizzle-kit untuk diff migrasi berikutnya."
+  },
+  "drizzle/meta/0017_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0017 (platform_admins, platform_admin_logs, kosta_pilot); dipakai drizzle-kit untuk diff migrasi berikutnya."
+  },
   "drizzle/meta/_journal.json": {
-    "summary": "Jurnal migrasi Drizzle: urutan dan tag semua migrasi 0000 sampai 0013 yang dibaca migrator untuk menentukan migrasi mana yang belum dijalankan."
+    "summary": "Jurnal migrasi Drizzle: urutan, tag, dan waktu semua migrasi 0000 sampai 0017 yang dibaca migrator untuk menentukan migrasi mana yang belum dijalankan; nilai waktu dipakai juga oleh skrip rollback."
+  },
+  "drizzle/rollback/0014_audit_kosta.down.sql": {
+    "summary": "Rollback manual migrasi 0014: menghapus tabel kosta_audit_logs dan wa_webhook_events lalu menghapus baris migrasinya dari drizzle.__drizzle_migrations."
+  },
+  "drizzle/rollback/0015_audit_saluran_sistem.down.sql": {
+    "summary": "Rollback manual migrasi 0015: menghapus audit bersaluran 'sistem', mengembalikan check constraint saluran lama, dan menghapus baris migrasinya dari jurnal database."
+  },
+  "drizzle/rollback/0016_jenis_aksi_hunian.down.sql": {
+    "summary": "Rollback manual migrasi 0016: menghapus draft pindah_kamar/keluar_penghuni lalu membuat ulang enum jenis_aksi tanpa dua nilai itu, dan menghapus baris migrasinya dari jurnal database."
+  },
+  "drizzle/rollback/0017_platform_admin.down.sql": {
+    "summary": "Rollback manual migrasi 0017: menghapus tabel kosta_pilot, platform_admin_logs, dan platform_admins lalu menghapus baris migrasinya dari jurnal database."
+  },
+  "drizzle/rollback/README.md": {
+    "summary": "Panduan rollback migrasi Kosta: tiap file *.down.sql membatalkan satu migrasi (urut dari yang terbaru) dan menghapus barisnya di drizzle.__drizzle_migrations agar bisa dimigrasi ulang."
   },
   "drizzle.config.ts": {
     "summary": "Konfigurasi drizzle-kit: dialek PostgreSQL, skema dari src/db/schema.ts, output migrasi ke folder drizzle, penamaan kolom snake_case, dan koneksi dari variabel DATABASE_URL."
@@ -123,13 +162,13 @@
     "summary": "Lockfile npm yang mengunci versi semua dependensi Kostera (Next.js, React, Drizzle ORM, PGlite, postgres, Better Auth, Tailwind, shadcn/radix, qrcode, dan dev tools) agar instalasi konsisten."
   },
   "package.json": {
-    "summary": "Manifest proyek kostera: script dev (predev menjalankan migrasi + seed), build, start, lint, test (node test runner untuk src/**/*.test.ts), db:generate, db:migrate, db:seed; dependensi Next.js 16, React, Drizzle ORM, PGlite, postgres, Better Auth, radix-ui, lucide-react, qrcode."
+    "summary": "Manifest proyek kostera: script dev (predev menjalankan migrasi + seed), build, start, lint, test (node test runner untuk src/**/*.test.ts), db:generate, db:migrate, db:seed, dan platform:admin untuk mengelola platform_admin lewat CLI; dependensi Next.js 16, React, Drizzle ORM, PGlite, postgres, Better Auth, radix-ui, lucide-react, qrcode."
   },
   "postcss.config.mjs": {
     "summary": "Konfigurasi PostCSS yang hanya memakai plugin @tailwindcss/postcss untuk Tailwind CSS v4."
   },
   "src/app/(app)/dashboard/page.tsx": {
-    "summary": "Halaman /dashboard (Dashboard Kos) untuk owner/admin: sapaan, ringkasan kos, banner Perlu review dan tiket keluhan, aksi cepat, ringkasan kamar, pemasukan bulan ini, dan tabel status invoice, semua dari getDashboardData."
+    "summary": "Halaman /dashboard (Dashboard Kos) untuk owner/admin: sapaan, ringkasan kos, banner Perlu review dan tiket, kartu kontrol Kosta (getKontrolKosta), aksi cepat, ringkasan kamar, pemasukan bulan ini, dan tabel status invoice dari getDashboardData."
   },
   "src/app/(app)/kamar/kosong/page.tsx": {
     "summary": "Halaman /kamar/kosong: daftar kamar kosong yang siap diisi dan kamar nonaktif, dari getHalamanKamarKosong."
@@ -194,6 +233,21 @@
   "src/app/(marketing)/page.tsx": {
     "summary": "Landing page Kostera di /: hero, masalah yang diselesaikan, manfaat, preview dashboard, cara kerja, FAQ, dan CTA tengah/penutup dari konten landing."
   },
+  "src/app/(platform)/layout.tsx": {
+    "summary": "Layout konsol platform: memanggil guard platform_admin, menampilkan header Konsol platform dengan navigasi Ringkasan, Workspace, Log admin, dan menandai halaman noindex."
+  },
+  "src/app/(platform)/platform/log/page.tsx": {
+    "summary": "Halaman /platform/log (Log admin): daftar aksi platform_admin dari getLogPlatform — lihat workspace, suspend/resume pilot, tambah/hapus admin — beserta waktu, admin, kos, dan alasan."
+  },
+  "src/app/(platform)/platform/page.tsx": {
+    "summary": "Halaman /platform (Ringkasan platform): kartu metrik workspace, provider WhatsApp & AI (mode pilot WAHA, nomor uji, kiriman ditahan), webhook masuk 24 jam, pesan keluar & Kosta 24 jam, dan aksi Kosta dari getMetrikPlatform."
+  },
+  "src/app/(platform)/platform/workspace/[id]/page.tsx": {
+    "summary": "Halaman /platform/workspace/[id]: detail integrasi satu kos dari getDetailWorkspace (pengelola dengan nomor disamarkan, status pilot, event Kosta terbaru, kiriman WhatsApp gagal) tanpa data penyewa, plus FormPilot untuk suspend atau mengaktifkan kembali pilot."
+  },
+  "src/app/(platform)/platform/workspace/page.tsx": {
+    "summary": "Halaman /platform/workspace: form pencarian workspace berdasarkan nama atau ID dan tabel hasil cariWorkspace dengan status pilot, menuju halaman detail."
+  },
   "src/app/api/akun/workspace/route.ts": {
     "summary": "API /api/akun/workspace (butuh sesi): GET mengembalikan daftar kos yang bisa dibuka beserta peran dan kos aktif; POST membuat kos pertama saat daftar (nama pemilik, nama kos, jumlah kamar 1–500) sekaligus keanggotaan owner, jadwal pengingat bawaan, dan kos aktif di sesi."
   },
@@ -204,7 +258,7 @@
     "summary": "Route catch-all Better Auth /api/auth/*: kirim OTP WhatsApp (phone-number/send-otp, dibatasi per IP), verifikasi kode (phone-number/verify, akun dibuat otomatis untuk nomor baru dan cookie sesi dipasang), get-session, dan sign-out; semua diteruskan ke auth.handler."
   },
   "src/app/api/cron/harian/route.ts": {
-    "summary": "Endpoint cron GET /api/cron/harian (header Bearer CRON_SECRET): sekali sehari 00.05 WIB menerbitkan tagihan terjadwal lalu menandai tagihan yang lewat jatuh tempo; aman dipanggil berulang."
+    "summary": "Endpoint cron GET /api/cron/harian (header Bearer CRON_SECRET): sekali sehari menerbitkan tagihan terjadwal, menandai tagihan lewat jatuh tempo, dan membatalkan preview aksi Kosta yang kedaluwarsa (tercatat di audit); aman dipanggil berulang."
   },
   "src/app/api/cron/pengingat/route.ts": {
     "summary": "Endpoint cron GET /api/cron/pengingat (header Bearer CRON_SECRET): menjalankan kirimPengingatOtomatis untuk semua kos; idealnya tiap jam di VPS, di Vercel Hobby sekali sehari 09.05 WIB; aman dipanggil bersamaan."
@@ -276,7 +330,7 @@
     "summary": "API publik tiket penyewa lewat token invoice: GET daftar tiket milik penyewa invoice itu; POST membuat tiket baru berstatus Baru (kategori, deskripsi) dengan respons 201."
   },
   "src/app/api/kosta/draft/[id]/route.ts": {
-    "summary": "API POST /api/kosta/draft/[id]: owner/admin menyetujui atau membatalkan preview aksi Kosta dari web; keputusan dan balasan Kosta dicatat di percakapan."
+    "summary": "API POST /api/kosta/draft/[id]: owner/admin menyetujui atau membatalkan preview aksi Kosta dari web atau dashboard lewat putuskanDraftDariDashboard; keputusan, penolakan, dan balasan Kosta tercatat di percakapan dan audit."
   },
   "src/app/api/kosta/pesan/route.ts": {
     "summary": "API POST /api/kosta/pesan { teks }: owner/admin chat dengan Kosta dari web; percakapannya sama dengan di WhatsApp (per nomor WA pengguna) tetapi balasan tidak dikirim ke WA."
@@ -287,11 +341,14 @@
   "src/app/api/landing/konten/route.ts": {
     "summary": "API GET /api/landing/konten: konten landing publik read-only tanpa login, dirender statis saat build."
   },
+  "src/app/api/platform/workspace/[id]/pilot/route.ts": {
+    "summary": "API POST /api/platform/workspace/[id]/pilot: khusus platform_admin, memvalidasi input dengan bacaInputPilot lalu suspend atau resume pilot Kosta lewat aturPilotKosta (tercatat di log admin)."
+  },
   "src/app/api/webhook/pembayaran/midtrans/route.ts": {
     "summary": "Webhook POST /api/webhook/pembayaran/midtrans: memverifikasi signature_key dengan MIDTRANS_SERVER_KEY, menormalkan notifikasi, memprosesnya secara idempoten (prosesNotifikasiPembayaran), lalu setelah respons mengirim konfirmasi Lunas ke penyewa atau notifikasi Perlu review ke owner/admin; galat server dibalas 500 agar Midtrans mencoba lagi."
   },
   "src/app/api/webhook/whatsapp/route.ts": {
-    "summary": "Webhook WhatsApp untuk Kosta: POST menerima payload WAHA atau Meta Cloud API bertanda tangan HMAC, menyimpan pesan teks ke percakapan per nomor, membalas 200 segera, lalu Kosta memproses dan membalas lewat WhatsApp setelah respons; GET memverifikasi langganan webhook Meta dengan verify token."
+    "summary": "Webhook WhatsApp untuk Kosta: POST /api/webhook/whatsapp memakai terimaWebhookWhatsApp (tanda tangan HMAC WAHA/Meta, idempoten per ID pesan, tercatat di wa_webhook_events; content-length berlebih langsung ditolak dan dicatat), membalas segera lalu Kosta memproses dan membalas setelah respons; GET memverifikasi langganan webhook Meta."
   },
   "src/app/globals.css": {
     "summary": "Stylesheet global Tailwind CSS v4 + tw-animate + shadcn: token warna tema Kostera (hijau pinus, mint, putih hangat) termasuk success/warning/danger dan versi soft-nya, font Plus Jakarta Sans, radius, serta varian dark."
@@ -310,6 +367,9 @@
   },
   "src/app/layout.tsx": {
     "summary": "Root layout Next.js: font Plus Jakarta Sans, bahasa id, metadata situs (judul default dan template, deskripsi, metadataBase dari urlSitus), warna tema viewport, dan globals.css."
+  },
+  "src/app/platform-masuk-ulang/page.tsx": {
+    "summary": "Halaman /platform-masuk-ulang: meminta platform_admin yang sesinya lebih dari 12 jam untuk masuk ulang; tanpa sesi diarahkan ke /masuk, bukan admin mendapat 404, admin dengan sesi baru diarahkan ke /platform."
   },
   "src/app/robots.ts": {
     "summary": "robots.txt dinamis: landing boleh diindeks, rute privat (aplikasi, API, invoice) dilarang, dan menunjuk sitemap.xml."
@@ -377,35 +437,6 @@
   "src/components/invoice/form-tiket.tsx": {
     "summary": "Komponen FormTiket untuk penyewa tanpa login: memilih jenis masalah (KATEGORI_TIKET) dan menceritakan masalahnya dengan validasi periksaTiket, lalu mengirim ke POST /api/invoice/[token]/tiket; berhasil menampilkan nomor tiket dan tautan status, galat server ditampilkan di atas tombol."
   },
-  "src/components/invoice/pembayaran-tagihan.tsx": {
-    "summary": "Komponen PembayaranTagihan di halaman bayar penyewa: pilih metode (QRIS atau Virtual Account BCA/BNI/BRI/Mandiri/Permata), minta instruksi ke POST /api/invoice/[token]/bayar, tampilkan kode QR (digambar dengan pustaka qrcode yang dimuat saat perlu) atau nomor VA plus kode perusahaan Mandiri dengan tombol salin, hitung mundur batas bayar, langkah bayar, cek status otomatis tiap 5 detik ke GET /api/invoice/[token], dan layar akhir Lunas atau sedang diperiksa; catatan mode contoh hanya saat gateway simulasi.",
-    "sections": [
-      {
-        "symbol": "PembayaranTagihan",
-        "startLine": 33,
-        "endLine": 132,
-        "summary": "Pemilih metode bayar dan pemanggilan endpoint pembuat transaksi, dengan status memuat dan pesan galat dari server."
-      },
-      {
-        "symbol": "InstruksiPembayaran",
-        "startLine": 134,
-        "endLine": 273,
-        "summary": "Instruksi QRIS/VA, hitung mundur kedaluwarsa, salin nomor VA, langkah bayar, dan polling status konfirmasi sampai lunas atau diperiksa."
-      },
-      {
-        "symbol": "KodeQr",
-        "startLine": 275,
-        "endLine": 299,
-        "summary": "Menggambar kode QR SVG dari isi QRIS lewat pustaka qrcode yang di-import dinamis, dengan ikon cadangan saat belum siap."
-      },
-      {
-        "symbol": "KonfirmasiPembayaran",
-        "startLine": 301,
-        "endLine": 334,
-        "summary": "Layar akhir pembayaran: diterima (Lunas) atau masuk tapi nominalnya diperiksa pemilik kos, dengan tautan ke rincian tagihan."
-      }
-    ]
-  },
   "src/components/kamar/daftar-kamar-kosong.tsx": {
     "summary": "Komponen DaftarKamarKosong dan DaftarKamarNonaktif di /kamar/kosong: kartu kamar kosong siap ditawarkan dengan lama kosong (penanda kosong ≥ 30 hari), saring per tipe dan urutan tersimpan di URL, isi penghuni lewat sheet, serta nonaktifkan/aktifkan kamar lewat PATCH /api/dashboard/kamar/[id]."
   },
@@ -437,13 +468,16 @@
     "summary": "Komponen ChatKosta: panel chat owner dengan Kosta di web (isi sama dengan percakapan WhatsApp) — kirim pesan ke POST /api/kosta/pesan, setujui/batalkan draft aksi lewat /api/kosta/draft/[id], ganti kos lewat /api/kosta/workspace, riwayat per hari, dan saran perintah."
   },
   "src/components/kosta/kartu-preview-aksi.tsx": {
-    "summary": "Komponen KartuPreviewAksi: kartu preview aksi Kosta (draft tagihan atau reminder) berisi penerima, periode, nominal, dan status draft sebelum owner mengonfirmasi."
+    "summary": "Komponen KartuPreviewAksi: kartu preview aksi Kosta (tagihan, reminder, pindah kamar, penghuni keluar) berisi judul dan ikon sesuai LABEL_AKSI, penerima atau keterangan, periode, total, dan status draft sebelum owner mengonfirmasi."
   },
   "src/components/kosta/konfirmasi-aksi.tsx": {
-    "summary": "Komponen KonfirmasiAksi: tombol Setuju dan Batal di kartu preview Kosta, hanya tampil saat draft masih menunggu konfirmasi."
+    "summary": "Komponen KonfirmasiAksi: tombol setuju dan batal di kartu preview Kosta dengan label dan ikon sesuai jenis aksi, hanya tampil saat draft masih menunggu konfirmasi."
+  },
+  "src/components/kosta/kontrol-kosta.tsx": {
+    "summary": "Komponen KontrolKosta di dashboard owner: menampilkan nomor WA, status pilot dan mode kanal, aksi Kosta yang menunggu dengan tombol setuju/tolak (POST /api/kosta/draft/[id], muat ulang juga saat galat), dan riwayat aksi."
   },
   "src/components/kosta/panel-riwayat.tsx": {
-    "summary": "Komponen PanelRiwayat: daftar ringkasan percakapan Kosta per hari; memilih satu hari melompat ke percakapan hari itu."
+    "summary": "Komponen PanelRiwayat: daftar ringkasan percakapan Kosta per hari termasuk label aksi hunian; memilih satu hari melompat ke percakapan hari itu."
   },
   "src/components/kosta/pemilih-workspace.tsx": {
     "summary": "Komponen PemilihWorkspace: pilihan kos yang sedang dibahas Kosta, untuk owner/admin yang mengelola lebih dari satu kos."
@@ -495,6 +529,9 @@
   },
   "src/components/pembayaran/detail-tagihan.tsx": {
     "summary": "Komponen DetailTagihan: rincian satu tagihan (status, pembayaran, link invoice) dengan aksi owner yang selalu lewat konfirmasi — kirim tagihan ke penyewa atau tandai Perlu review sudah diperiksa."
+  },
+  "src/components/platform/form-pilot.tsx": {
+    "summary": "Komponen FormPilot: form alasan wajib untuk suspend atau mengaktifkan kembali pilot Kosta suatu kos lewat API platform, lalu menyegarkan data halaman (tercatat di log admin)."
   },
   "src/components/quick-actions/action-sheet.tsx": {
     "summary": "Kumpulan komponen sheet aksi cepat: ActionSheet (dari bawah di HP, dari kanan di desktop), SheetBody, SheetActions, PreviewRows, CatatanSimulasi, GalatServer, SelesaiState, FieldError, dan helper kirimAksi untuk memanggil API JSON dan membaca galat server."
@@ -607,6 +644,9 @@
   "src/db/migrate.ts": {
     "summary": "Skrip npm run db:migrate: menjalankan migrasi SQL di folder drizzle ke database aktif (Supabase atau PGlite lokal) lewat jalankanMigrasi; aman diulang karena migrasi yang sudah jalan dilewati."
   },
+  "src/db/platform-admin.ts": {
+    "summary": "Skrip CLI npm run platform:admin untuk daftar, tambah, atau hapus platform_admin berdasarkan nomor WA user yang sudah terdaftar; setiap perubahan dicatat di platform_admin_logs. Satu-satunya cara mengangkat admin platform."
+  },
   "src/db/schema-akun.test.ts": {
     "summary": "Uji skema akun Better Auth: OTP tersimpan di verifications, nomor baru membuat akun dan sesi aktif, nomor terdaftar masuk ke akun yang sama, format nomor selain 628… ditolak, dan workspace aktif sesi hanya kos yang dikelola (dikosongkan saat keluar dari kos)."
   },
@@ -629,7 +669,27 @@
     "summary": "Uji skema dan migrasi utama: data contoh Kos Melati sesuai angka PRD, rincian invoice sama dengan nominal, seed aman diulang, serta constraint nominal positif, format periode, token publik unik, satu penghuni aktif per kamar, aturan tagihan terjadwal, dan webhook event unik."
   },
   "src/db/schema.ts": {
-    "summary": "Skema database Kostera (Drizzle, PostgreSQL) mengikuti PRD: enum status dan peran, tabel users, organizations, members, sessions, accounts, verifications, rate_limits (Better Auth), rooms, tenants, riwayat_hunian, invoices, invoice_items, invoice_schedules, payments, payment_attempts, webhook_events, reminders, reminder_schedules, wa_conversations, wa_messages, action_drafts, tickets, whatsapp_logs; nominal integer rupiah, constraint dan index untuk menjaga data tetap deterministik."
+    "summary": "Skema database Kostera (Drizzle, PostgreSQL): enum status/peran dan jenis_aksi (reminder, tagihan, pindah_kamar, keluar_penghuni), tabel Better Auth, rooms, tenants, riwayat_hunian, invoices, payments, webhook_events, reminders, wa_conversations, wa_messages, action_drafts, tickets, whatsapp_logs, serta tabel pilot Kosta: kosta_audit_logs, wa_webhook_events, platform_admins, platform_admin_logs, kosta_pilot; nominal integer rupiah dengan constraint dan index.",
+    "sections": [
+      {
+        "symbol": "kostaAuditLogs",
+        "startLine": 650,
+        "endLine": 689,
+        "summary": "Tabel kosta_audit_logs: jejak tiap pesan/aksi Kosta per organisasi (saluran, idPesanMasuk, statusPengirim, intent, tool, payload tersaring, actionId, statusKonfirmasi, hasil) dengan check nilai dan index org+waktu serta action."
+      },
+      {
+        "symbol": "waWebhookEvents",
+        "startLine": 690,
+        "endLine": 716,
+        "summary": "Tabel wa_webhook_events: jejak setiap panggilan webhook WhatsApp (provider, status diterima/tanda tangan invalid/payload invalid/terlalu besar, jumlah pesan, pesan baru, ID pesan provider) tanpa isi pesan atau nomor."
+      },
+      {
+        "symbol": "platformAdmins/platformAdminLogs/kostaPilot",
+        "startLine": 717,
+        "endLine": 754,
+        "summary": "Tabel konsol platform: platform_admins (user admin platform), platform_admin_logs (aksi admin tercatat dengan detail) dan kosta_pilot (status aktif/suspend pilot Kosta per organisasi, alasan, pengubah)."
+      }
+    ]
   },
   "src/db/seed.ts": {
     "summary": "Seed npm run db:seed: isiDataContoh mengisi data contoh Kos Melati (owner, 40 kamar, penghuni, tagihan, rincian, pembayaran, reminder, jadwal pengingat bawaan, percakapan Kosta, kos lain, dan tiket contoh) ke database; dilewati bila Kos Melati sudah ada."
@@ -784,6 +844,12 @@
   "src/lib/data/kamar.ts": {
     "summary": "Data kamar untuk halaman Kamar & Penghuni: getDaftarKamarPenghuni (kamar dan penghuni aktif beserta tagihan terbuka), getPenghuniNonaktif, getKamarKosong (kapan dan siapa penghuni terakhir), dan getKamarNonaktif; selalu satu organisasi."
   },
+  "src/lib/data/kontrol-kosta.test.ts": {
+    "summary": "Uji getKontrolKosta: nomor tertaut, aksi menunggu tanpa ID invoice, riwayat hanya aksi relevan, isolasi antar-kos, aksi kedaluwarsa disembunyikan, status pilot disuspend terlihat owner, dan kanal Cloud API dianggap produksi."
+  },
+  "src/lib/data/kontrol-kosta.ts": {
+    "summary": "getKontrolKosta: data kartu Kosta di dashboard owner — nomor WA tertaut, status pilot (aktif atau disuspend beserta alasan), mode kanal (simulasi, pilot WAHA, produksi), aksi yang menunggu konfirmasi tanpa ID internal, dan riwayat aksi Kosta berlabel bahasa Indonesia dari kosta_audit_logs."
+  },
   "src/lib/data/kos.test.ts": {
     "summary": "Uji getRingkasanKos: 40 kamar dan 34 terisi sesuai PRD, daftar kamar urut nomor, hanya kamar organisasinya, kamar nonaktif tidak dihitung, kos tanpa kamar persen 0, dan organisasi tak dikenal null."
   },
@@ -814,6 +880,9 @@
   "src/lib/data/perlu-review.ts": {
     "summary": "getPerluReview: tagihan berstatus Perlu review (nominal bayar tidak cocok) di semua periode beserta uang diterima, untuk banner di Dashboard dan halaman Pembayaran."
   },
+  "src/lib/data/platform.ts": {
+    "summary": "Guard server konsol platform: pastikanPlatformAdmin (tanpa sesi ke /masuk, bukan admin → 404, sesi lama ke /platform-masuk-ulang), getAksesPlatform, dan pastikanPlatformAdminApi untuk API (401 atau 404)."
+  },
   "src/lib/data/reminder.test.ts": {
     "summary": "Uji data reminder: riwayat pengingat terbaru dengan nama dan kamar, riwayat per bulan kirim WIB dan batas jumlah, statistik terkirim/gagal/penyewa unik, kandidat tagihan belum lunas dengan terakhir diingatkan, filter status/jenis/periode tagihan/pencarian aman wildcard, kursor halaman lanjut, dan pembaca query endpoint."
   },
@@ -839,7 +908,7 @@
     "summary": "Uji statusSetelah: draft menunggu konfirmasi bisa disetujui atau dibatalkan, disetujui menjadi dijalankan, dan keputusan yang tidak berlaku ditolak."
   },
   "src/lib/draft-aksi.ts": {
-    "summary": "Alur status draft aksi Kosta (action_drafts): statusSetelah menentukan status berikutnya (menunggu_konfirmasi → disetujui → dijalankan, atau dibatalkan) atau null bila keputusan tidak berlaku."
+    "summary": "Alur status draft aksi Kosta (action_drafts): statusSetelah menentukan status berikutnya (menunggu_konfirmasi → disetujui → dijalankan, atau dibatalkan) dan LABEL_AKSI berisi judul, kata kerja, satuan, dan label total untuk tiap jenis aksi (reminder, tagihan, pindah kamar, penghuni keluar)."
   },
   "src/lib/format.test.ts": {
     "summary": "Uji format Indonesia: formatRupiah dan formatAngka dengan pemisah titik, formatRupiahSingkat (rb/jt/M), tanggal yang tidak bergeser zona waktu, formatWaktu dan formatJam WIB, selisihHari, serta periode sebelum/berikutnya melewati pergantian tahun."
@@ -859,32 +928,178 @@
   "src/lib/kamar-kosong.ts": {
     "summary": "Saring dan urutkan kamar kosong untuk /kamar/kosong: PILIHAN_URUT_KOSONG, parseUrutKosong, saringKamarKosong (tipe, harga maksimal, urutan), bacaFilterKamarKosong untuk query endpoint, dan hariKosong sejak penghuni terakhir keluar."
   },
+  "src/lib/kosta/audit.test.ts": {
+    "summary": "Uji slice 1 Kosta: webhook bertanda tangan valid tersimpan dan tercatat tanpa isi pesan, kiriman ulang dianggap duplikat, tanda tangan/JSON/ukuran salah ditolak; nomor asing dan nomor penyewa dapat balasan aman; list_arrears deterministik dan teraudit; owner multi-kos memilih kos; isolasi dua kos; saringPayload."
+  },
+  "src/lib/kosta/audit.ts": {
+    "summary": "Audit log Kosta: INTENT_KANONIK memetakan intent internal ke nama kanonik (list_arrears, get_room_availability, get_income_summary, prepare_invoice_generation, prepare_reminder, prepare_tenant_move, confirm_action, dll.), saringPayload hanya menyimpan parameter intent yang dikenal dan memotong nilainya, dan catatAuditKosta menulis ke kosta_audit_logs tanpa pernah menggagalkan alur utama.",
+    "sections": [
+      {
+        "symbol": "INTENT_KANONIK",
+        "startLine": 9,
+        "endLine": 50,
+        "summary": "Peta intent internal ke nama kanonik serta tipe SaluranAudit (whatsapp, web, dashboard, sistem), StatusPengirim, HasilAudit, dan EntriAudit."
+      },
+      {
+        "symbol": "saringPayload",
+        "startLine": 51,
+        "endLine": 85,
+        "summary": "Daftar kunci payload yang boleh disimpan; nilai teks dipotong dan array dibatasi agar audit tidak menyimpan isi pesan atau data sensitif."
+      },
+      {
+        "symbol": "catatAuditKosta",
+        "startLine": 86,
+        "endLine": 104,
+        "summary": "Menyimpan satu entri audit ke kosta_audit_logs; galat dicatat ke console tanpa melempar ke pemanggil."
+      }
+    ]
+  },
   "src/lib/kosta/deps.ts": {
     "summary": "getDepsKosta: dependensi Kosta dari environment — adapter WhatsApp, parser LLM opsional, alamat situs, dan tanggal hari ini WIB."
   },
   "src/lib/kosta/draft.test.ts": {
-    "summary": "Uji alur preview → konfirmasi aksi Kosta: draft pengingat disetujui terkirim ke penunggak, konfirmasi ganda ditolak, aturan 24 jam, yang sudah bayar dilewati, batal tidak mengirim, preview kedaluwarsa, draft tagihan dibuat saat disetujui, dan riwayat percakapan dari database."
+    "summary": "Uji alur preview → konfirmasi aksi Kosta dengan jam uji tetap: draft pengingat disetujui terkirim ke penunggak, konfirmasi ganda ditolak, aturan 24 jam kontak, yang sudah bayar dilewati, batal tidak mengirim, preview kedaluwarsa, draft tagihan dibuat saat disetujui, dan riwayat percakapan dari database."
   },
   "src/lib/kosta/draft.ts": {
-    "summary": "Alur preview → konfirmasi aksi Kosta (action_drafts): siapkanDraftReminder, siapkanDraftTagihan (penghuni belum ditagih, jatuh tempo mengikuti aturan tagihan terjadwal), koreksiDraftTagihan, draftMenungguTerakhir, batalkanDraft, dan putuskanDraft yang atomik (menunggu → disetujui) lalu menjalankan pengiriman atau pembuatan tagihan; preview kedaluwarsa setelah MASA_BERLAKU_DRAFT_MS."
+    "summary": "Alur preview → konfirmasi aksi Kosta (action_drafts): simpanDraft, siapkanDraftReminder (bisa per kamar), siapkanDraftTagihan, draftMenungguTerakhir, cariDraftDenganKode, kedaluwarsakanDraft, batalkanDraft, putuskanDraft yang atomik lalu menjalankan reminder, tagihan, pindah kamar, atau penghuni keluar; bila eksekusi gagal draft dibatalkan tanpa mengubah data; preview kedaluwarsa setelah 24 jam.",
+    "sections": [
+      {
+        "symbol": "simpanDraft",
+        "startLine": 24,
+        "endLine": 71,
+        "summary": "Masa berlaku draft 24 jam dan penyimpanan draft baru menunggu_konfirmasi (menggantikan draft menunggu sebelumnya di percakapan)."
+      },
+      {
+        "symbol": "siapkanDraftReminder",
+        "startLine": 72,
+        "endLine": 112,
+        "summary": "Preview reminder ke penyewa dengan tagihan yang bisa diingatkan, opsional dibatasi ke kamar tertentu."
+      },
+      {
+        "symbol": "siapkanDraftTagihan",
+        "startLine": 113,
+        "endLine": 156,
+        "summary": "Preview tagihan untuk penghuni yang belum ditagih pada periode itu dengan jatuh tempo sesuai aturan."
+      },
+      {
+        "symbol": "cariDraftDenganKode/kedaluwarsakanDraft",
+        "startLine": 157,
+        "endLine": 203,
+        "summary": "Mencari draft menunggu terakhir atau berdasarkan kode 6 digit di percakapan dan kos yang sama; membatalkan massal draft yang lewat 24 jam."
+      },
+      {
+        "symbol": "putuskanDraft/batalkanDraft",
+        "startLine": 204,
+        "endLine": 299,
+        "summary": "Perubahan status atomik agar draft tidak bisa diputuskan dua kali; draft kedaluwarsa dibatalkan; hasil keputusan dilaporkan."
+      },
+      {
+        "symbol": "jalankan",
+        "startLine": 300,
+        "endLine": 374,
+        "summary": "Dispatcher eksekusi: kirim pengingat (melewati yang sudah bayar atau baru dihubungi), buat tagihan, pindahKamar, atau keluarPenghuni; galat aksi mengembalikan draft ke dibatalkan."
+      },
+      {
+        "symbol": "koreksiDraftTagihan",
+        "startLine": 375,
+        "endLine": 435,
+        "summary": "Mengoreksi draft tagihan (kecualikan kamar, nominal, jatuh tempo) menjadi draft baru."
+      }
+    ]
   },
   "src/lib/kosta/format-balasan.ts": {
-    "summary": "Format balasan Kosta untuk WhatsApp: formatWhatsApp mengubah lampiran daftar/rekap/preview menjadi teks berformat WA (di web tampil sebagai kartu), plus TEKS_BANTUAN berisi contoh perintah."
+    "summary": "Format balasan Kosta untuk WhatsApp: formatWhatsApp mengubah lampiran daftar/rekap/preview menjadi teks WA dengan nama kos di header, baris dampak aksi, dan instruksi balas YA + kode (berlaku 24 jam); TEKS_BANTUAN berisi contoh perintah."
+  },
+  "src/lib/kosta/hunian-kosta.test.ts": {
+    "summary": "Uji prepare_tenant_move: parser pindah/keluar dan tanggal, kalimat ambigu atau tanggal mendatang memicu pertanyaan tanpa draft, pindah kamar lewat preview lalu YA + kode, kamar tujuan yang keburu terisi membatalkan aksi, penghuni keluar dengan tunggakan tetap tercatat, dan isolasi antar-kos."
   },
   "src/lib/kosta/intent.test.ts": {
     "summary": "Uji parser intent Kosta: parseCepat (konfirmasi, ganti kos), periodeDariTeks, parseKataKunci sebagai cadangan tanpa LLM, validasiIntent untuk hasil LLM, normalisasiKamar, parseRupiah, dan parseKoreksi (kecualikan kamar, ubah nominal, ubah jatuh tempo)."
   },
   "src/lib/kosta/intent.ts": {
-    "summary": "Intent pesan owner ke Kosta dan daftar ALAT (tool) terbatas untuk parser: normalisasiKamar, validasiIntent (hasil LLM divalidasi deterministik), parseCepat, periodeDariTeks, parseRupiah, parseKoreksi, dan parseKataKunci; parser hanya menghasilkan intent dan parameter, angka tetap dari database."
+    "summary": "Intent pesan owner ke Kosta dan daftar ALAT terbatas untuk parser LLM: lihat tunggakan, kamar kosong, rekap pemasukan (bulan atau minggu ini), cek kamar, draft tagihan, reminder (bisa per kamar), pindah/keluar penghuni, koreksi, konfirmasi dengan kode 6 digit, ganti kos; validasiIntent memvalidasi hasil LLM, parseCepat, mintaTandaiLunas, tanggalDariTeks, periodeDariTeks, parseRupiah, parseKoreksi, dan parseKataKunci. Parser hanya menghasilkan intent + parameter, angka tetap dari database.",
+    "sections": [
+      {
+        "symbol": "Intent/ALAT",
+        "startLine": 8,
+        "endLine": 115,
+        "summary": "Tipe Intent dan skema ALAT (tool) untuk LLM, termasuk parameter kamar untuk reminder, rentang minggu_ini untuk rekap, dariKamar/keKamar/tanggal untuk pindah dan keluar, serta kode untuk konfirmasi."
+      },
+      {
+        "symbol": "validasiIntent",
+        "startLine": 116,
+        "endLine": 188,
+        "summary": "Validasi deterministik hasil LLM: nomor kamar dinormalkan, tanggal dan periode dicek, kode konfirmasi harus 6 digit; parameter tak valid dibuang."
+      },
+      {
+        "symbol": "parseCepat/mintaTandaiLunas",
+        "startLine": 189,
+        "endLine": 217,
+        "summary": "parseCepat mengenali YA/BATAL (dengan atau tanpa kode 6 digit) dan pilihan kos; mintaTandaiLunas mendeteksi permintaan menandai tagihan lunas agar ditolak."
+      },
+      {
+        "symbol": "tanggalDariTeks/periodeDariTeks/parseRupiah",
+        "startLine": 218,
+        "endLine": 271,
+        "summary": "Ekstraksi tanggal (hari ini, besok, akhir bulan, tgl N, N bulan), periode bulan, dan nominal rupiah dari teks."
+      },
+      {
+        "symbol": "parseKoreksi",
+        "startLine": 272,
+        "endLine": 299,
+        "summary": "Mengenali koreksi draft tagihan: kecualikan kamar, ubah nominal, atau ubah tanggal jatuh tempo."
+      },
+      {
+        "symbol": "parseKataKunci",
+        "startLine": 300,
+        "endLine": 332,
+        "summary": "Parser kata kunci cadangan saat LLM tidak tersedia, termasuk reminder per kamar, rekap minggu ini, dan pindah/keluar penghuni setelah frasa tanggal dibuang."
+      }
+    ]
+  },
+  "src/lib/kosta/keputusan.ts": {
+    "summary": "Keputusan draft aksi dari luar chat: putuskanDraftDariDashboard menyetujui/membatalkan draft dari dashboard dan mencatat hasil maupun penolakannya (409, 404) ke audit, sedangkan kedaluwarsakanDraftDanCatat membatalkan preview yang menunggu lebih dari 24 jam dan mencatatnya dengan saluran sistem (intent expire_action)."
+  },
+  "src/lib/kosta/kode-aksi.ts": {
+    "summary": "kodeAksi: menurunkan kode konfirmasi 6 digit yang stabil dari ID draft aksi (hash FNV-1a), dipakai di preview dan dicocokkan saat owner membalas YA atau BATAL beserta kodenya."
+  },
+  "src/lib/kosta/konfirmasi.test.ts": {
+    "summary": "Uji konfirmasi aksi Kosta: parser YA/BATAL + kode, ya tanpa kode hanya meminta kode, kode benar menjalankan tepat sekali dan kode ulang ditolak, kode dari kos lain tidak cocok, preview lewat 24 jam dibatalkan, cron mencatat kedaluwarsa, keputusan dashboard teraudit, dan permintaan tandai lunas selalu ditolak tanpa mengubah invoice atau payments."
   },
   "src/lib/kosta/llm.ts": {
     "summary": "Klien LLM parser pesan owner (API chat completions gaya OpenAI lewat OpenRouter/gateway): buatParserLlm mengirim teks dengan konteks minimum dan tool terbatas lalu membaca tool call; getParserLlm null bila LLM belum dikonfigurasi; hasil tetap divalidasi validasiIntent."
   },
+  "src/lib/kosta/pilot-owner.test.ts": {
+    "summary": "Uji prepare_reminder per kamar dan get_income_summary mingguan: parser kamar dan 'minggu ini', preview reminder jelas lalu hanya kamar itu yang dikirimi setelah YA + kode, kamar tak valid ditanya ulang, rekap minggu ini hanya dari pembayaran valid kos aktif."
+  },
+  "src/lib/kosta/pilot.ts": {
+    "summary": "statusPilotKosta membaca tabel kosta_pilot (tanpa baris berarti aktif) dan PILOT_DISUSPEND berisi balasan sopan saat pilot Kosta untuk suatu kos sedang dinonaktifkan tim Kostera."
+  },
   "src/lib/kosta/proses-pesan.test.ts": {
-    "summary": "Uji prosesPesanKosta lewat WhatsApp: pertanyaan tunggakan dijawab dari database dengan lampiran, draft tagihan → koreksi → batal lewat chat, ganti dan pilih kos tanpa membaca data kos lain, serta bantuan untuk pesan di luar kemampuan dan nomor asing."
+    "summary": "Uji prosesPesanKosta lewat WhatsApp dengan jam uji tetap: pertanyaan tunggakan dari database, YA + kode menyetujui preview dan ya ulang tidak menjalankan apa pun, draft tagihan → koreksi → batal, ganti dan pilih kos tanpa membaca data kos lain, serta bantuan untuk pesan di luar kemampuan dan nomor asing."
   },
   "src/lib/kosta/proses-pesan.ts": {
-    "summary": "Orkestrator Kosta prosesPesanKosta: cocokkan nomor dan kos, pahami intent, jalankan tool baca/aksi, simpan balasan di wa_messages, dan untuk saluran WhatsApp kirim balasan lewat kirimDanCatat (tercatat di whatsapp_logs); semua angka dari database, LLM hanya memilih intent."
+    "summary": "Orkestrator Kosta prosesPesanKosta: cocokkan nomor dan kos, tolak bila pilot kos disuspend, tolak permintaan tandai lunas (TOLAK_TANDAI_LUNAS), pahami intent, jalankan tool baca/aksi, tangani konfirmasi YA/BATAL + kode, simpan balasan di wa_messages, kirim lewat WhatsApp, dan catat jejak lengkap ke kosta_audit_logs; semua angka dari database, LLM hanya memilih intent.",
+    "sections": [
+      {
+        "symbol": "DepsKosta/TOLAK_TANDAI_LUNAS",
+        "startLine": 28,
+        "endLine": 52,
+        "summary": "Dependensi (WhatsApp, LLM, baseUrl, hariIni, jam sekarang), teks penolakan tandai lunas, dan helper kos terpilih serta tipe Jejak audit."
+      },
+      {
+        "symbol": "susunBalasan",
+        "startLine": 53,
+        "endLine": 176,
+        "summary": "Rute intent ke tool: guard pilot suspend dan tandai lunas, konfirmasi wajib kode (ya tanpa kode → minta kode, kode salah/sudah diputuskan → ditolak), reminder, rekap, pindah/keluar, koreksi, ganti kos, bantuan; mengisi jejak audit."
+      },
+      {
+        "symbol": "prosesPesanKosta",
+        "startLine": 177,
+        "endLine": 224,
+        "summary": "Menjalankan susunBalasan, menyimpan balasan, mengirim ke WhatsApp dengan nama kos di header, lalu mencatat audit dengan saluran dan ID pesan masuk."
+      }
+    ]
   },
   "src/lib/kosta/riwayat.ts": {
     "summary": "Riwayat percakapan Kosta dari wa_messages: pastikanPercakapan (buat percakapan per nomor WA pengguna), getPercakapanPengguna, dan catatPesan; status kartu preview mengikuti draft terbaru di action_drafts."
@@ -905,13 +1120,68 @@
     "summary": "Uji tool aksi Kosta: toolDraftTagihan (periode sudah ditagih, bulan depan, penghuni baru, preview baru menggantikan lama), koreksi dan batal draft, penolakan kamar di luar draft, dan toolSiapkanReminder."
   },
   "src/lib/kosta/tool-aksi.ts": {
-    "summary": "Tool aksi Kosta yang menyiapkan draft menunggu konfirmasi owner tanpa mengubah data atau mengirim pesan: toolDraftTagihan, toolKoreksiDraft, toolBatalDraft, dan toolSiapkanReminder (penerima dan total, melewati penyewa yang dihubungi dalam 24 jam)."
+    "summary": "Tool aksi Kosta yang hanya menyiapkan draft menunggu konfirmasi owner, tanpa mengubah data atau mengirim pesan: toolDraftTagihan, toolKoreksiDraft, toolBatalDraft, toolSiapkanReminder (bisa per kamar, melaporkan kamar yang dilewati), toolSiapkanPindah dan toolSiapkanKeluar (validasi kamar, klarifikasi bila ambigu atau tanggalnya belum tiba).",
+    "sections": [
+      {
+        "symbol": "toolDraftTagihan/toolKoreksiDraft/toolBatalDraft",
+        "startLine": 24,
+        "endLine": 84,
+        "summary": "Tool draft tagihan, koreksi, dan pembatalan draft lewat chat."
+      },
+      {
+        "symbol": "toolSiapkanReminder",
+        "startLine": 85,
+        "endLine": 174,
+        "summary": "Preview reminder: validasi kamar yang disebut, lewati penyewa yang dihubungi dalam 24 jam, contoh pesan pengingat, total dan dampak."
+      },
+      {
+        "symbol": "toolSiapkanPindah",
+        "startLine": 175,
+        "endLine": 237,
+        "summary": "Preview pindah kamar: cek penghuni aktif di kamar asal, kamar tujuan ada dan kosong, tanggal hari ini; bila tujuan tidak disebut Kosta bertanya pindah atau keluar."
+      },
+      {
+        "symbol": "toolSiapkanKeluar",
+        "startLine": 238,
+        "endLine": 272,
+        "summary": "Preview penghuni keluar: menyebut tunggakan yang tetap tercatat; tanggal mendatang diminta dikirim ulang saat hari-H."
+      }
+    ]
   },
   "src/lib/kosta/tool-baca.test.ts": {
     "summary": "Uji tool baca Kosta: rekap pemasukan dari pembayaran terverifikasi, cek status tagihan satu kamar, tunggakan urut paling lama telat termasuk bulan lalu, isolasi kos, dan kamar kosong per tipe dengan potensi sewa."
   },
   "src/lib/kosta/tool-baca.ts": {
-    "summary": "Tool baca Kosta yang menjawab dengan angka langsung dari database: toolTunggakan, toolKamarKosong, toolRekapPemasukan, dan toolCekKamar, masing-masing mengembalikan teks singkat plus lampiran terstruktur (BalasanKosta)."
+    "summary": "Tool baca Kosta yang menjawab dengan angka langsung dari database: toolTunggakan, toolKamarKosong, toolRekapPemasukan (bulan ini atau minggu ini lewat rekapMingguIni), dan toolCekKamar; masing-masing mengembalikan BalasanKosta berisi teks singkat, lampiran terstruktur, dan penanda klarifikasi.",
+    "sections": [
+      {
+        "symbol": "toolTunggakan",
+        "startLine": 18,
+        "endLine": 77,
+        "summary": "Tipe BalasanKosta dan daftar tunggakan (list_arrears) per kos dari invoice belum lunas."
+      },
+      {
+        "symbol": "toolKamarKosong",
+        "startLine": 78,
+        "endLine": 126,
+        "summary": "Daftar kamar kosong per tipe, potensi sewa per bulan, dan sudah berapa lama kosong."
+      },
+      {
+        "symbol": "rekapMingguIni/toolRekapPemasukan",
+        "startLine": 127,
+        "endLine": 185,
+        "summary": "Rekap pemasukan bulan ini atau minggu ini (Senin sampai hari ini WIB) dari pembayaran valid yang sudah diverifikasi."
+      },
+      {
+        "symbol": "toolCekKamar",
+        "startLine": 186,
+        "endLine": 231,
+        "summary": "Status satu kamar: penghuni dan status tagihannya."
+      }
+    ]
+  },
+  "src/lib/kosta/webhook-masuk.ts": {
+    "summary": "Penerimaan webhook WhatsApp yang bisa diuji tanpa HTTP: terimaWebhookWhatsApp memeriksa ukuran (413), tanda tangan HMAC (401), JSON (400), menormalkan pesan WAHA/Meta, menyimpan pesan baru secara idempoten lewat simpanPesanMasuk, lalu mencatat hasilnya ke wa_webhook_events lewat catatEventWebhook; juga providerWebhook dan UKURAN_MAKS_WEBHOOK."
   },
   "src/lib/kosta/workspace.test.ts": {
     "summary": "Uji pencocokan nomor WA ke workspace Kosta: owner multi-kos mempertahankan kos aktif, diminta memilih bila belum, keanggotaan nonaktif ditolak, satu kos langsung dipakai, nomor asing/belum terverifikasi tidak dikenal, penyewa tidak memakai Kosta, dan cariPilihanWorkspace."
@@ -960,23 +1230,6 @@
   },
   "src/lib/pembayaran/metode.ts": {
     "summary": "Metode bayar lewat tautan invoice (fungsi murni): METODE_BAYAR (QRIS dan VA BCA/BNI/BRI/Mandiri/Permata dengan masa berlaku), cariMetode, tipe InstruksiBayar (nomor VA, kode perusahaan, isi QR, batas waktu), sisaTagihan, tagihanBisaDibayar (ada sisa, bukan draf, bukan lunas), formatNomorVa, formatSisaWaktu, dan langkahBayar."
-  },
-  "src/lib/pembayaran/midtrans.ts": {
-    "summary": "Integrasi Midtrans Core API: buatGatewayMidtrans membuat transaksi QRIS/VA lewat POST /v2/charge (sandbox atau produksi, Basic auth server key, custom expiry, Mandiri lewat echannel) dan membaca instruksinya; tandaTanganMidtransValid memverifikasi signature SHA-512 notifikasi; bacaNotifikasiMidtrans menormalkan notifikasi (status, nominal, metode, waktu WIB, orderId, invoiceIdDariOrder).",
-    "sections": [
-      {
-        "symbol": "bacaNotifikasiMidtrans",
-        "startLine": 1,
-        "endLine": 89,
-        "summary": "Tipe NotifikasiPembayaran, verifikasi tanda tangan, pemetaan status dan metode Midtrans, serta normalisasi notifikasi HTTP."
-      },
-      {
-        "symbol": "buatGatewayMidtrans",
-        "startLine": 90,
-        "endLine": 158,
-        "summary": "Body charge per metode, pembacaan respons (qr_string, va_numbers, permata_va_number, bill_key + biller_code, expiry_time), dan galat bila gateway menolak."
-      }
-    ]
   },
   "src/lib/pembayaran/notifikasi-review.ts": {
     "summary": "kirimNotifikasiPerluReview: saat tagihan ditandai Perlu review, mengirim WhatsApp ke owner/admin aktif berisi uang diterima vs tagihan dan selisihnya lewat kirimDanCatat, serta mencatatnya di riwayat chat Kosta mereka."
@@ -1041,6 +1294,53 @@
   "src/lib/pindah-kamar.ts": {
     "summary": "kamarTujuan: pilihan kamar tujuan pindah kamar — hanya kamar kosong, tipe yang sama didahulukan."
   },
+  "src/lib/platform/akses.ts": {
+    "summary": "Akses konsol platform: periksaAksesPlatform mengembalikan admin, bukan_admin, atau sesi_lama (sesi lebih dari MAKS_UMUR_SESI_PLATFORM_JAM = 12 jam) berdasarkan tabel platform_admins; catatLogPlatform menulis aksi admin ke platform_admin_logs."
+  },
+  "src/lib/platform/konsol.test.ts": {
+    "summary": "Uji konsol platform: hanya platform_admin dengan sesi ≤ 12 jam yang lolos dan admin dikelola lewat skrip, metrik agregat benar tanpa data penyewa atau rahasia, pencarian workspace aman dari wildcard, detail tanpa data penyewa dengan nomor disamarkan dan akses tercatat, serta suspend pilot hanya menghentikan Kosta untuk kos itu tanpa mengubah data."
+  },
+  "src/lib/platform/konsol.ts": {
+    "summary": "Data konsol platform_admin: metrik lintas workspace yang aman (tanpa data penyewa atau nilai rahasia), pencarian workspace, detail integrasi per kos dengan nomor disamarkan dan akses tercatat, suspend/resume pilot Kosta yang tercatat, serta log admin.",
+    "sections": [
+      {
+        "symbol": "samarkanNomor/ringkasProvider",
+        "startLine": 15,
+        "endLine": 38,
+        "summary": "Menyamarkan nomor WA dan meringkas status provider (mode, jumlah nomor uji, ada/tidaknya rahasia webhook dan LLM, model, kiriman ditahan) tanpa membuka nilainya."
+      },
+      {
+        "symbol": "getMetrikPlatform",
+        "startLine": 39,
+        "endLine": 119,
+        "summary": "Metrik: jumlah workspace, pemilik aktif, pemakai Kosta 30 hari, pilot disuspend, webhook 24 jam (diterima, galat, duplikat), kiriman WA 24 jam, dan aksi Kosta menunggu/kedaluwarsa."
+      },
+      {
+        "symbol": "cariWorkspace",
+        "startLine": 120,
+        "endLine": 144,
+        "summary": "Cari workspace berdasarkan potongan nama atau ID persis; karakter wildcard di-escape."
+      },
+      {
+        "symbol": "getDetailWorkspace",
+        "startLine": 145,
+        "endLine": 211,
+        "summary": "Detail satu kos untuk support: pengelola (nomor disamarkan), status pilot, event Kosta dan kiriman gagal tanpa isi pesan; setiap akses dicatat sebagai lihat_workspace."
+      },
+      {
+        "symbol": "bacaInputPilot/aturPilotKosta",
+        "startLine": 212,
+        "endLine": 237,
+        "summary": "Validasi input suspend/resume (alasan wajib) lalu simpan status kosta_pilot dan catat suspend_pilot atau resume_pilot."
+      },
+      {
+        "symbol": "getLogPlatform",
+        "startLine": 238,
+        "endLine": 253,
+        "summary": "Daftar log admin terbaru dengan nama admin dan nama kos."
+      }
+    ]
+  },
   "src/lib/reminder.test.ts": {
     "summary": "Uji aturan pengingat: label jadwal H-3/H/H+3, antrianPengingat 7 hari ke depan, periksaJadwal (batas offset, jam wajar, bentrok, jumlah), bolehDiingatkan (jeda 24 jam), saring riwayat, dan slot pengingat jatuh waktu."
   },
@@ -1060,7 +1360,7 @@
     "summary": "Ringkasan riwayat percakapan Kosta per hari WIB untuk panel riwayat: ringkasRiwayat, labelHari, dan tanggalPesan."
   },
   "src/lib/situs.ts": {
-    "summary": "urlSitus (alamat publik dari APP_URL untuk metadata, sitemap, dan link absolut) dan RUTE_PRIVAT (aplikasi, API, dan link invoice yang tidak diindeks)."
+    "summary": "urlSitus (alamat publik dari APP_URL untuk metadata, sitemap, dan link absolut) dan RUTE_PRIVAT (aplikasi, API, konsol /platform, dan link invoice yang tidak diindeks)."
   },
   "src/lib/tagihan-terjadwal.test.ts": {
     "summary": "Uji aturan tagihan terjadwal: terbitBerikutnya, jatuhTempoUntuk (ikut tanggal masuk, dipotong ke akhir bulan pendek, tanggal tetap), peringatanJadwal, dan ringkasJadwal."
@@ -1075,7 +1375,7 @@
     "summary": "Aturan murni tiket keluhan: KATEGORI_TIKET, LABEL_STATUS_TIKET, PANJANG_DESKRIPSI, formatNomorTiket (TKT-0012), labelKategori, periksaTiket, URUTAN_STATUS_TIKET, tipe TiketPenyewa dan TiketKos, urutkanTiket, hitungTiket, dan statusBerikutnya (baru → diproses → selesai)."
   },
   "src/lib/types.ts": {
-    "summary": "Tipe domain Kostera mengikuti skema database: Organization, Owner, Room, Tenant, Invoice dan InvoiceStatus, Payment, InvoiceRow, ringkasan kamar dan kos, rekap tagihan dan pemasukan, DashboardData (termasuk ringkasan tiket), tipe Kosta (LampiranKosta, PreviewAksi, DataDraftAksi, PesanKosta, WorkspaceRingkas); nominal integer rupiah dan tanggal ISO."
+    "summary": "Tipe domain Kostera mengikuti skema database: Organization, Room, Tenant, Invoice, Payment, ringkasan kamar dan kos, rekap tagihan/pemasukan, DashboardData, dan tipe Kosta (LampiranKosta, PreviewAksi dengan aksi reminder/tagihan/pindah_kamar/keluar_penghuni dan keterangan, DataDraftAksi dengan data pindah dan keluar, PesanKosta, WorkspaceRingkas); nominal integer rupiah dan tanggal ISO."
   },
   "src/lib/utils.ts": {
     "summary": "Mengekspor ulang helper cn dari paket cn untuk menggabungkan class Tailwind secara kondisional."
@@ -1087,7 +1387,27 @@
     "summary": "Waktu kalender Kostera selalu WIB (Asia/Jakarta): jamWib, tanggalWib, hariIniWib, periodeWib, dan periodeValid."
   },
   "src/lib/whatsapp/index.ts": {
-    "summary": "Adapter pengiriman WhatsApp dengan satu antarmuka PengirimWhatsApp: provider log (bawaan, simulasi), WAHA untuk sandbox/pilot, atau Meta Cloud API untuk produksi, dipilih lewat WHATSAPP_PROVIDER dengan daftar nomor uji opsional; tipe TemplateWhatsApp, PesanWhatsApp, HasilKirim, dan kirimAman yang tidak pernah melempar."
+    "summary": "Adapter pengiriman WhatsApp dengan satu antarmuka PengirimWhatsApp: provider log (simulasi), WAHA untuk pilot/sandbox, atau Meta Cloud API untuk produksi, dipilih lewat WHATSAPP_PROVIDER; WAHA tanpa daftar nomor uji menahan semua kiriman kecuali diizinkan eksplisit (wahaDitahan), modeWhatsApp melabeli kanal, dan kirimAman tidak pernah melempar.",
+    "sections": [
+      {
+        "symbol": "PengirimWhatsApp/kirimAman",
+        "startLine": 19,
+        "endLine": 57,
+        "summary": "Tipe template, pesan, hasil kirim, antarmuka pengirim, pengirim log bawaan, dan kirimAman yang mengubah galat menjadi hasil gagal."
+      },
+      {
+        "symbol": "wahaDitahan/modeWhatsApp",
+        "startLine": 58,
+        "endLine": 78,
+        "summary": "Pengaman pilot: WAHA tanpa nomor uji dan tanpa izin eksplisit menahan semua kiriman; label mode kanal (simulasi, pilot/sandbox WAHA, produksi Cloud API)."
+      },
+      {
+        "symbol": "getPengirimWhatsApp",
+        "startLine": 79,
+        "endLine": 108,
+        "summary": "Memilih provider dari env; WAHA tanpa daftar nomor uji mendapat pengirim yang selalu menahan kiriman."
+      }
+    ]
   },
   "src/lib/whatsapp/log.test.ts": {
     "summary": "Uji kirimDanCatat dan tabel whatsapp_logs: kiriman berhasil tercatat dengan provider, template, dan ID pesan tanpa isi pesan, galat provider tercatat gagal tanpa melempar, gagal menulis log tidak membatalkan kiriman, constraint jenis dan galat, serta log terhapus bersama kosnya."
@@ -1102,7 +1422,7 @@
     "summary": "buatPengirimMeta: adapter WhatsApp Cloud API resmi untuk produksi — kirim ke Graph API messages dengan Bearer token, pesan yang dimulai bisnis dikirim sebagai template (variabel isi dan tombol URL), teks bebas hanya dalam jendela 24 jam; galat dikembalikan sebagai ok false."
   },
   "src/lib/whatsapp/waha.test.ts": {
-    "summary": "Uji adapter WAHA: kirim teks ke /api/sendText dengan chatId dan X-Api-Key, galat HTTP atau server mati menjadi ok false, daftar nomor uji, dan pemilihan provider getPengirimWhatsApp."
+    "summary": "Uji adapter WAHA: kirim teks ke endpoint sendText dengan chatId dan header API key, galat HTTP atau server mati menjadi ok false, daftar nomor uji, pemilihan provider getPengirimWhatsApp, dan pilot WAHA tanpa daftar nomor uji menahan semua kiriman."
   },
   "src/lib/whatsapp/waha.ts": {
     "summary": "buatPengirimWaha: adapter WAHA (WhatsApp HTTP API self-hosted) untuk lokal, sandbox, dan pilot — mengirim teks ke endpoint sendText dengan sesi dan API key, opsional membatasi ke nomor uji."
@@ -1114,7 +1434,7 @@
     "summary": "Webhook pesan masuk WhatsApp: tandaTanganValid memverifikasi HMAC Meta atau WAHA, tantanganMeta menjawab verifikasi langganan, dan bacaPesanMasuk menormalkan payload menjadi PesanMasuk (hanya teks pribadi dari nomor lain)."
   },
   "src/proxy.ts": {
-    "summary": "Proxy Next.js (pengganti middleware): pemeriksaan awal optimistis untuk halaman dan API aplikasi — tanpa cookie sesi halaman diarahkan ke /masuk dan API dijawab 401; keabsahan sesi dan hak akses kos tetap diperiksa di lapisan data."
+    "summary": "Proxy Next.js (pengganti middleware): pemeriksaan awal optimistis untuk halaman dan API aplikasi termasuk /platform, /platform-masuk-ulang, dan /api/platform — tanpa cookie sesi halaman diarahkan ke /masuk dan API dijawab 401; keabsahan sesi, peran platform_admin, dan hak akses kos tetap diperiksa di lapisan data."
   },
   "tsconfig.json": {
     "summary": "Konfigurasi TypeScript: strict, noEmit, moduleResolution bundler, plugin Next.js, alias @/* ke src/*, dan izin impor ekstensi .ts agar modul bisa diuji langsung dengan node test runner."
