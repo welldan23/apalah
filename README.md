@@ -82,9 +82,11 @@ yang sudah disetujui. Daftarkan di WhatsApp Manager (bahasa Indonesia `id`), isi
 | `kostera_pengingat_sebelum` | Utility | Pengingat sebelum/tepat jatuh tempo |
 | `kostera_pengingat_lewat` | Utility | Pengingat setelah lewat jatuh tempo |
 | `kostera_pembayaran_diterima` | Utility | Konfirmasi pembayaran diterima (Lunas) |
+| `kostera_tiket_diperbarui` | Utility | Kabar tiket keluhan sedang ditangani / selesai |
 | `kostera_kode_otp` | Authentication | Kode OTP daftar/masuk |
 
-Semua template Utility punya satu tombol URL ke `https://domain-kamu/invoice/{{1}}`.
+Semua template Utility punya satu tombol URL ke `https://domain-kamu/invoice/{{1}}` (untuk tiket,
+`{{1}}` diisi `<token>/tiket/status`).
 
 Buka http://localhost:3000 — otomatis diarahkan ke `/dashboard`.
 

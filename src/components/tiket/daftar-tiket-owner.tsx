@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CircleCheck, CircleDot, Clock, MessageCircle } from "lucide-react";
 
-import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,15 +32,17 @@ const parseSaringan = (nilai: string | null): Saringan => (SARINGAN.includes(nil
 
 /**
  * Tiket keluhan penyewa untuk owner/admin: saring per status (disimpan di URL), lalu tangani —
- * Baru → Diproses → Selesai — atau hubungi penyewanya lewat WhatsApp.
- * Tahap frontend: perubahan status hanya di layar (PATCH /api/dashboard/tiket/[id] menyusul).
+ * Baru → Diproses → Selesai (PATCH /api/dashboard/tiket/[id]; penyewa dikabari lewat WhatsApp) —
+ * atau hubungi penyewanya langsung.
  */
 export function DaftarTiketOwner({ tiket: awal }: { tiket: TiketKos[] }) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const saringan = parseSaringan(searchParams.get("status"));
   const [tiket, setTiket] = useState(awal);
-  const [diubah, setDiubah] = useState(false);
+  const [memproses, setMemproses] = useState<string | null>(null);
+  const [kabar, setKabar] = useState<{ ok: boolean; teks: string } | null>(null);
   const jumlah = hitungTiket(tiket);
 
   function saring(s: Saringan) {
@@ -52,10 +53,33 @@ export function DaftarTiketOwner({ tiket: awal }: { tiket: TiketKos[] }) {
     window.history.replaceState(null, "", `${pathname}${query ? `?${query}` : ""}`);
   }
 
-  function ubahStatus(id: string, status: StatusTiket) {
-    const sekarang = new Date().toISOString();
-    setTiket((daftar) => daftar.map((t) => (t.id === id ? { ...t, status, diperbaruiPada: sekarang } : t)));
-    setDiubah(true);
+  async function ubahStatus(id: string, status: StatusTiket) {
+    setMemproses(id);
+    setKabar(null);
+    try {
+      const res = await fetch(`/api/dashboard/tiket/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setKabar({ ok: false, teks: data?.galat ?? "Status tiket belum tersimpan. Coba lagi." });
+        return;
+      }
+      const baru: TiketKos = data.tiket;
+      setTiket((daftar) => daftar.map((t) => (t.id === id ? baru : t)));
+      // Jumlah di judul halaman & banner dashboard ikut diperbarui.
+      router.refresh();
+      setKabar({
+        ok: true,
+        teks: `Tiket ${baru.nomor} ditandai ${LABEL_STATUS_TIKET[baru.status]}. ${baru.namaPenghuni.split(" ")[0]} dikabari lewat WhatsApp.`,
+      });
+    } catch {
+      setKabar({ ok: false, teks: "Koneksi terputus. Periksa internet kamu, lalu coba lagi." });
+    } finally {
+      setMemproses(null);
+    }
   }
 
   const tampil = saringan === "semua" ? tiket : tiket.filter((t) => t.status === saringan);
@@ -92,7 +116,14 @@ export function DaftarTiketOwner({ tiket: awal }: { tiket: TiketKos[] }) {
         })}
       </div>
 
-      {diubah && <CatatanSimulasi>Mode contoh: perubahan status belum tersimpan ke server.</CatatanSimulasi>}
+      {kabar && (
+        <p
+          role={kabar.ok ? "status" : "alert"}
+          className={cn("rounded-lg px-3 py-2 text-sm", kabar.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}
+        >
+          {kabar.teks}
+        </p>
+      )}
 
       {tampil.length === 0 ? (
         <Card className="items-center gap-1 px-4 py-12 text-center shadow-none">
@@ -133,8 +164,8 @@ export function DaftarTiketOwner({ tiket: awal }: { tiket: TiketKos[] }) {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {lanjut && (
-                      <Button size="lg" className="h-10" onClick={() => ubahStatus(t.id, lanjut)}>
-                        {AKSI[lanjut as Exclude<StatusTiket, "baru">]}
+                      <Button size="lg" className="h-10" disabled={memproses !== null} onClick={() => ubahStatus(t.id, lanjut)}>
+                        {memproses === t.id ? "Menyimpan…" : AKSI[lanjut as Exclude<StatusTiket, "baru">]}
                       </Button>
                     )}
                     {t.nomorWa && (

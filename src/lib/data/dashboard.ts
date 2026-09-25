@@ -6,10 +6,10 @@ import { connection } from "next/server";
 import { getDb } from "@/db";
 import { getDaftarInvoice } from "@/lib/data/invoice";
 import { getRingkasanKos } from "@/lib/data/kos";
-import { getRingkasanTiket } from "@/lib/data/halaman-tiket";
 import { getRekapPemasukan } from "@/lib/data/pemasukan";
 import { getPerluReview } from "@/lib/data/perlu-review";
 import { getWorkspaceSession } from "@/lib/data/session";
+import { getRingkasanTiket } from "@/lib/data/tiket";
 import type { DashboardData } from "@/lib/types";
 import { hariIniWib } from "@/lib/waktu";
 
@@ -23,11 +23,12 @@ export async function getDashboardData(): Promise<DashboardData> {
   const periode = hariIni.slice(0, 7);
 
   const db = await getDb();
-  const [ringkasan, invoices, rekap, perluReview] = await Promise.all([
+  const [ringkasan, invoices, rekap, perluReview, tiket] = await Promise.all([
     getRingkasanKos(db, organizationId),
     getDaftarInvoice(db, organizationId, { periode }),
     getRekapPemasukan(db, organizationId, { periode }),
     getPerluReview(db, organizationId),
+    getRingkasanTiket(db, organizationId),
   ]);
   if (!ringkasan) throw new Error(`Organisasi ${organizationId} tidak ditemukan`);
 
@@ -41,6 +42,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     pemasukan: rekap.pemasukan,
     invoices,
     perluReview,
-    tiket: getRingkasanTiket(organizationId),
+    tiket,
   };
 }

@@ -4,28 +4,49 @@ import { useState } from "react";
 import Link from "next/link";
 import { CircleCheck } from "lucide-react";
 
-import { CatatanSimulasi, FieldError } from "@/components/quick-actions/action-sheet";
+import { FieldError } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { KATEGORI_TIKET, labelKategori, PANJANG_DESKRIPSI, periksaTiket, type GalatTiket } from "@/lib/tiket";
+import {
+  KATEGORI_TIKET,
+  labelKategori,
+  PANJANG_DESKRIPSI,
+  periksaTiket,
+  type GalatTiket,
+  type TiketPenyewa,
+} from "@/lib/tiket";
 import { cn } from "@/lib/utils";
 
-/**
- * Penyewa mengirim keluhan / permintaan perbaikan ke pemilik kos lewat tautan invoice (tanpa login).
- * Tahap frontend: pengiriman masih contoh; tahap backend: POST /api/invoice/[token]/tiket.
- */
+/** Penyewa mengirim keluhan / permintaan perbaikan ke pemilik kos lewat tautan invoice (tanpa login). */
 export function FormTiket({ token, namaKos }: { token: string; namaKos: string }) {
   const [kategori, setKategori] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
   const [galat, setGalat] = useState<GalatTiket>({});
-  const [terkirim, setTerkirim] = useState<{ kategori: string } | null>(null);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
+  const [mengirim, setMengirim] = useState(false);
+  const [terkirim, setTerkirim] = useState<TiketPenyewa | null>(null);
 
-  function kirim(e: React.FormEvent) {
+  async function kirim(e: React.FormEvent) {
     e.preventDefault();
     const g = periksaTiket({ kategori, deskripsi });
     setGalat(g);
+    setGalatServer(null);
     if (Object.keys(g).length > 0) return;
-    setTerkirim({ kategori });
+    setMengirim(true);
+    try {
+      const res = await fetch(`/api/invoice/${token}/tiket`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kategori, deskripsi }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) setTerkirim(data.tiket);
+      else setGalatServer(data?.galat ?? "Tiket belum terkirim. Coba lagi.");
+    } catch {
+      setGalatServer("Koneksi terputus. Periksa internet kamu, lalu coba lagi.");
+    } finally {
+      setMengirim(false);
+    }
   }
 
   if (terkirim) {
@@ -35,13 +56,12 @@ export function FormTiket({ token, namaKos }: { token: string; namaKos: string }
           <CircleCheck className="size-7" aria-hidden="true" />
         </span>
         <div>
-          <h2 className="text-lg font-semibold">Tiket terkirim</h2>
+          <h2 className="text-lg font-semibold">Tiket {terkirim.nomor} terkirim</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Laporan {labelKategori(terkirim.kategori).toLowerCase()} kamu sudah diteruskan ke pemilik {namaKos} dengan
             status Baru. Kabar tindak lanjutnya dikirim lewat WhatsApp.
           </p>
         </div>
-        <CatatanSimulasi>Mode contoh: tiket belum benar-benar tersimpan.</CatatanSimulasi>
         <div className="flex w-full flex-col gap-2">
           <Button asChild size="lg" className="h-11">
             <Link href={`/invoice/${token}/tiket/status`}>Lihat status tiket</Link>
@@ -110,8 +130,13 @@ export function FormTiket({ token, namaKos }: { token: string; namaKos: string }
         <FieldError id="tiket-deskripsi-galat" pesan={galat.deskripsi} />
       </div>
 
-      <Button type="submit" size="lg" className="h-12 text-base">
-        Kirim tiket
+      {galatServer && (
+        <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
+          {galatServer}
+        </p>
+      )}
+      <Button type="submit" size="lg" className="h-12 text-base" disabled={mengirim}>
+        {mengirim ? "Mengirim…" : "Kirim tiket"}
       </Button>
     </form>
   );

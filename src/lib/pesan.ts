@@ -36,6 +36,16 @@ export const TEMPLATE_PENGINGAT = {
   },
 } as const;
 
+/**
+ * Kabar tindak lanjut tiket keluhan; {{1}} nama depan, {{2}} nomor tiket, {{3}} jenis masalah,
+ * {{4}} kamar, {{5}} kos, {{6}} status. Tombol URL ke `{APP_URL}/invoice/{{1}}` diisi
+ * "<token>/tiket/status" sehingga membuka halaman status tiket penyewa.
+ */
+export const TEMPLATE_TIKET = {
+  nama: "kostera_tiket_diperbarui",
+  isi: "Halo {{1}}, tiket {{2}} ({{3}}) untuk kamar {{4}} di {{5}} sekarang {{6}}. Detailnya ada di link berikut.",
+} as const;
+
 /** Ganti variabel {{1}}, {{2}}, … dengan nilai berurutan. */
 export const isiTemplate = (isi: string, variabel: string[]) =>
   isi.replace(/\{\{(\d+)\}\}/g, (_, n: string) => variabel[Number(n) - 1] ?? "");
@@ -129,4 +139,25 @@ export function pesanOtp(kode: string, masaBerlakuMenit: number) {
 /** Template OTP resmi: kode di isi pesan dan di tombol salin kode. */
 export function templateOtp(kode: string): TemplateWhatsApp {
   return { nama: TEMPLATE_OTP.nama, bahasa: "id", variabel: [kode], tombolUrl: kode };
+}
+
+type DataTiket = { namaPenghuni: string; nomorTiket: string; jenis: string; nomorKamar: string; status: "diproses" | "selesai" };
+
+const variabelTiket = (t: DataTiket, namaKos: string) => [
+  t.namaPenghuni.split(" ")[0],
+  t.nomorTiket,
+  t.jenis.toLowerCase(),
+  t.nomorKamar,
+  namaKos,
+  t.status === "diproses" ? "sedang ditangani" : "sudah selesai ditangani",
+];
+
+/** Kabar tiket untuk provider teks (WAHA, log), dengan link status tiket di baris terakhir. */
+export function pesanTiket(t: DataTiket, namaKos: string, linkStatus: string) {
+  return denganLink(isiTemplate(TEMPLATE_TIKET.isi, variabelTiket(t, namaKos)), linkStatus);
+}
+
+/** Template resmi yang isinya sama dengan pesanTiket; tombol membuka status tiket lewat token invoice. */
+export function templateTiket(t: DataTiket, namaKos: string, tokenInvoice: string): TemplateWhatsApp {
+  return { nama: TEMPLATE_TIKET.nama, bahasa: "id", variabel: variabelTiket(t, namaKos), tombolUrl: `${tokenInvoice}/tiket/status` };
 }

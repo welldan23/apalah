@@ -11,10 +11,12 @@ import {
   TEMPLATE_LUNAS,
   TEMPLATE_PENGINGAT,
   TEMPLATE_TAGIHAN,
+  TEMPLATE_TIKET,
   templateLunas,
   templateOtp,
   templatePengingat,
   templateTagihan,
+  templateTiket,
 } from "./pesan.ts";
 
 const inv = (jatuhTempo: string) => ({
@@ -56,7 +58,7 @@ describe("template WhatsApp resmi pengingat", () => {
   });
 
   it("memenuhi aturan Meta: variabel {{1}}…{{n}} berurutan, tidak di awal/akhir isi, nilai tanpa baris baru", () => {
-    const semua = [...Object.values(TEMPLATE_PENGINGAT), TEMPLATE_TAGIHAN, TEMPLATE_LUNAS];
+    const semua = [...Object.values(TEMPLATE_PENGINGAT), TEMPLATE_TAGIHAN, TEMPLATE_LUNAS, TEMPLATE_TIKET];
     for (const { isi } of semua) {
       const nomor = [...isi.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
       assert.deepEqual(nomor, Array.from({ length: nomor.length }, (_, i) => i + 1));
@@ -67,6 +69,11 @@ describe("template WhatsApp resmi pengingat", () => {
       templatePengingat(inv("2026-09-20"), "Kos Melati", "2026-09-24", "x"),
       templateTagihan(inv("2026-09-20"), "Kos Melati", "x"),
       templateLunas(inv("2026-09-20"), "Kos Melati", "x"),
+      templateTiket(
+        { namaPenghuni: "Yoga Saputra", nomorTiket: "TKT-0015", jenis: "Air & listrik", nomorKamar: "A03", status: "selesai" },
+        "Kos Melati",
+        "x",
+      ),
     ]) {
       assert.ok(t.variabel.every((v) => v && !/[\n\t]| {5}/.test(v)));
     }
