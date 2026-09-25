@@ -23,7 +23,8 @@ import {
   type SlotPengingat,
 } from "../reminder.ts";
 import { hariIniWib } from "../waktu.ts";
-import { kirimAman, type PengirimWhatsApp } from "../whatsapp/index.ts";
+import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimDanCatat } from "../whatsapp/log.ts";
 
 const { invoices, organizations, reminderSchedules, reminders } = schema;
 
@@ -145,7 +146,12 @@ export async function kirimPengingatOtomatis(
         .returning({ id: reminders.id });
       if (!klaim) continue;
 
-      const kirim = await kirimAman(wa, { ke: p.nomorWa, teks: p.teks, template: p.template });
+      const kirim = await kirimDanCatat(
+        db,
+        wa,
+        { ke: p.nomorWa, teks: p.teks, template: p.template },
+        { jenis: "pengingat", organizationId, referensiId: klaim.id },
+      );
       await db
         .update(reminders)
         .set({ status: kirim.ok ? "terkirim" : "gagal", galat: kirim.ok ? null : kirim.galat })

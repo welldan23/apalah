@@ -10,7 +10,8 @@ import { schema, type Db } from "../../db/index.ts";
 import { kontakPenyewa } from "../data/reminder.ts";
 import { GALAT_TERPUTUS, JEDA_PENGINGAT_JAM } from "../reminder.ts";
 import { hariIniWib } from "../waktu.ts";
-import { kirimAman, type PengirimWhatsApp } from "../whatsapp/index.ts";
+import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimDanCatat } from "../whatsapp/log.ts";
 import { GalatAksi } from "./galat.ts";
 import { susunPesanReminder, type PesanReminder } from "./pesan-reminder.ts";
 
@@ -92,7 +93,12 @@ export async function kirimReminder(
   // Dikirim satu per satu supaya tidak membanjiri provider WhatsApp; hasilnya menimpa klaim.
   const hasil: { p: PesanReminder; ok: boolean }[] = [];
   for (const { p, id } of diklaim) {
-    const kirim = await kirimAman(wa, { ke: p.nomorWa, teks: p.teks, template: p.template });
+    const kirim = await kirimDanCatat(
+      db,
+      wa,
+      { ke: p.nomorWa, teks: p.teks, template: p.template },
+      { jenis: "pengingat", organizationId, referensiId: id },
+    );
     await db
       .update(reminders)
       .set({ status: kirim.ok ? "terkirim" : "gagal", galat: kirim.ok ? null : kirim.galat })

@@ -39,7 +39,7 @@ describe("endpoint pendaftaran nomor WhatsApp (POST /api/auth/phone-number/send-
       }),
     );
   const buat = (wa: PengirimWhatsApp, batasPermintaan = false) =>
-    buatAuth(db, { secret: "rahasia-uji-yang-cukup-panjang-untuk-better-auth", baseURL: BASE, kirimOtp: kirimOtpLewatWa(wa), batasPermintaan });
+    buatAuth(db, { secret: "rahasia-uji-yang-cukup-panjang-untuk-better-auth", baseURL: BASE, kirimOtp: kirimOtpLewatWa(wa, db), batasPermintaan });
 
   before(async () => {
     ({ db, tutup } = await buatDbUji());
@@ -58,6 +58,13 @@ describe("endpoint pendaftaran nomor WhatsApp (POST /api/auth/phone-number/send-
     assert.deepEqual(pesan.template, { nama: "kostera_kode_otp", bahasa: "id", variabel: [kode], tombolUrl: kode });
     const [otp] = await db.select().from(schema.verifications).where(eq(schema.verifications.identifier, "6281299990001"));
     assert.equal(otp.value, `${kode}:0`);
+    // Log kiriman hanya metadata: kode OTP tidak tersimpan di kolom mana pun.
+    const [log] = await db.select().from(schema.whatsappLogs).where(eq(schema.whatsappLogs.tujuan, "6281299990001"));
+    assert.deepEqual(
+      [log.jenis, log.organizationId, log.referensiId, log.provider, log.template, log.status],
+      ["otp", null, null, "uji", "kostera_kode_otp", "terkirim"],
+    );
+    assert.ok(!JSON.stringify(log).includes(kode));
   });
 
   it("nomor yang bukan format 628… ditolak tanpa mengirim apa pun", async () => {
@@ -76,6 +83,8 @@ describe("endpoint pendaftaran nomor WhatsApp (POST /api/auth/phone-number/send-
     const data = (await res.json()) as { code: string; message: string };
     assert.deepEqual(data, { code: "OTP_GAGAL_TERKIRIM", message: GALAT_KIRIM_OTP });
     assert.equal(pesanGalatAuth(res.status, data.code, data.message), GALAT_KIRIM_OTP);
+    const [log] = await db.select().from(schema.whatsappLogs).where(eq(schema.whatsappLogs.tujuan, "6281299990003"));
+    assert.deepEqual([log.jenis, log.status, log.galat], ["otp", "gagal", "nomor tidak terdaftar di WhatsApp"]);
   });
 
   it("dibatasi 5 permintaan per 10 menit per IP (biaya WhatsApp & anti-spam)", async () => {

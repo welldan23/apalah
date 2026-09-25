@@ -72,6 +72,12 @@ describe("penjadwal pengingat otomatis", () => {
       "B15 H+3 terkirim null",
       "C12 H-3 terkirim null",
     ]);
+    // Tiap kiriman juga masuk log WhatsApp dan menunjuk ke baris reminder-nya.
+    const logWa = await db
+      .select({ jenis: schema.whatsappLogs.jenis, org: schema.whatsappLogs.organizationId, status: schema.whatsappLogs.status })
+      .from(schema.whatsappLogs)
+      .innerJoin(schema.reminders, eq(schema.reminders.id, schema.whatsappLogs.referensiId));
+    assert.deepEqual(logWa, Array(4).fill({ jenis: "pengingat", org: ORG, status: "terkirim" }));
   });
 
   it("putaran ulang (termasuk bersamaan) tidak mengirim dobel; yang gagal tercatat & tidak diulang otomatis", async () => {

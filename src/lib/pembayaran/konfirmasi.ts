@@ -5,7 +5,8 @@ import { eq } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { pesanLunas } from "../pesan.ts";
-import { kirimAman, type PengirimWhatsApp } from "../whatsapp/index.ts";
+import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimDanCatat } from "../whatsapp/log.ts";
 
 const { invoices, organizations, reminders, rooms, tenants } = schema;
 
@@ -38,7 +39,12 @@ export async function kirimKonfirmasiLunas(
   if (!inv || inv.status !== "lunas") return false;
 
   const teks = pesanLunas(inv, inv.namaKos, `${baseUrl}/invoice/${inv.tokenPublik}`);
-  const kirim = await kirimAman(wa, { ke: inv.nomorWa, teks });
+  const kirim = await kirimDanCatat(
+    db,
+    wa,
+    { ke: inv.nomorWa, teks },
+    { jenis: "konfirmasi_lunas", organizationId: inv.organizationId, referensiId: inv.id },
+  );
   await db.insert(reminders).values({
     organizationId: inv.organizationId,
     invoiceId: inv.id,

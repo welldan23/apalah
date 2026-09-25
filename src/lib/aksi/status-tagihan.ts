@@ -8,7 +8,8 @@ import { and, eq, inArray } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { pesanTagihan } from "../pesan.ts";
-import { kirimAman, type HasilKirim, type PengirimWhatsApp } from "../whatsapp/index.ts";
+import type { HasilKirim, PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimDanCatat } from "../whatsapp/log.ts";
 import type { InvoiceStatus } from "@/lib/types";
 import { GalatAksi } from "./galat.ts";
 
@@ -130,7 +131,8 @@ export async function kirimTagihan(
   const hasil: { t: (typeof tagihan)[number]; kirim: HasilKirim }[] = [];
   for (const t of tagihan) {
     const teks = pesanTagihan(t, kos.namaKos, `${baseUrl}/invoice/${t.tokenPublik}`);
-    hasil.push({ t, kirim: await kirimAman(wa, { ke: t.nomorWa, teks }) });
+    const kirim = await kirimDanCatat(db, wa, { ke: t.nomorWa, teks }, { jenis: "tagihan", organizationId, referensiId: t.id });
+    hasil.push({ t, kirim });
   }
 
   await db.transaction(async (tx) => {

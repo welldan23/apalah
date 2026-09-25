@@ -11,7 +11,7 @@ export function getAuth(): Promise<Auth> {
   global.kosteraAuth ??= getDb().then((db) =>
     buatAuth(db, {
       baseURL: process.env.BETTER_AUTH_URL || process.env.APP_URL || "http://localhost:3000",
-      kirimOtp: kirimOtpLewatWa(getPengirimWhatsApp()),
+      kirimOtp: kirimOtpLewatWa(getPengirimWhatsApp(), db),
     }),
   );
   return global.kosteraAuth;

@@ -7,6 +7,7 @@ import { schema, type Db } from "../../db/index.ts";
 import { formatPeriode, formatRupiah } from "../format.ts";
 import { catatPesan, pastikanPercakapan } from "../kosta/riwayat.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimDanCatat } from "../whatsapp/log.ts";
 
 const { invoices, members, organizations, payments, rooms, tenants, users } = schema;
 
@@ -61,7 +62,12 @@ export async function kirimNotifikasiPerluReview(
 
   let terkirim = 0;
   for (const { nomorWa } of pengelola) {
-    const { ok } = await wa.kirim({ ke: nomorWa, teks }).catch(() => ({ ok: false }) as const);
+    const { ok } = await kirimDanCatat(
+      db,
+      wa,
+      { ke: nomorWa, teks },
+      { jenis: "perlu_review", organizationId: inv.organizationId, referensiId: invoiceId },
+    );
     if (ok) terkirim += 1;
     const percakapan = await pastikanPercakapan(db, nomorWa);
     await catatPesan(db, { conversationId: percakapan.id, organizationId: inv.organizationId, arah: "keluar", isi: teks });

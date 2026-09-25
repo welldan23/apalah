@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { schema, type Db } from "../../db/index.ts";
 import { GalatAksi } from "../aksi/galat.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimDanCatat } from "../whatsapp/log.ts";
 import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 import { batalkanDraft, draftMenungguTerakhir, putuskanDraft } from "./draft.ts";
 import { formatWhatsApp, TEKS_BANTUAN } from "./format-balasan.ts";
@@ -141,7 +142,12 @@ export async function prosesPesanKosta(
       .select({ nomorWa: waConversations.nomorWa })
       .from(waConversations)
       .where(eq(waConversations.id, pesan.conversationId));
-    const kirim = await deps.wa.kirim({ ke: p.nomorWa, teks: formatWhatsApp(hasil.balasan) }).catch(() => ({ ok: false }) as const);
+    const kirim = await kirimDanCatat(
+      db,
+      deps.wa,
+      { ke: p.nomorWa, teks: formatWhatsApp(hasil.balasan) },
+      { jenis: "kosta", organizationId: hasil.organizationId, referensiId: tersimpan.id },
+    );
     if (!kirim.ok) console.error(`Balasan Kosta ke percakapan ${pesan.conversationId} gagal terkirim.`);
   }
   return tersimpan;

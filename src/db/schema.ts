@@ -49,6 +49,7 @@ export const statusPembayaranEnum = pgEnum("status_pembayaran", [
 export const statusReminderEnum = pgEnum("status_reminder", ["terkirim", "gagal"]);
 export const statusTransaksiBayarEnum = pgEnum("status_transaksi_bayar", ["menunggu", "berhasil", "kedaluwarsa", "gagal"]);
 export const statusTiketEnum = pgEnum("status_tiket", ["baru", "diproses", "selesai"]);
+export const statusKirimWaEnum = pgEnum("status_kirim_wa", ["terkirim", "gagal"]);
 export const aturanJatuhTempoEnum = pgEnum("aturan_jatuh_tempo", ["tanggal_masuk", "tanggal_tetap"]);
 export const arahPesanEnum = pgEnum("arah_pesan", ["masuk", "keluar"]);
 export const jenisAksiEnum = pgEnum("jenis_aksi", ["reminder", "tagihan"]);
@@ -603,5 +604,38 @@ export const tickets = pgTable(
       sql`${t.kategori} in ('perbaikan', 'air_listrik', 'kebersihan', 'keamanan', 'tagihan', 'lainnya')`,
     ),
     check("tickets_panjang_deskripsi", sql`char_length(btrim(${t.deskripsi})) between 10 and 1000`),
+  ],
+);
+
+/**
+ * Log setiap pesan WhatsApp keluar (semua jenis & provider) untuk audit, biaya, dan pelacakan
+ * kegagalan. Hanya metadata — isi pesan TIDAK disimpan (mis. kode OTP). Catatan bisnis tetap di
+ * tabelnya masing-masing (reminders, wa_messages); `referensiId` menunjuk baris terkait.
+ */
+export const whatsappLogs = pgTable(
+  "whatsapp_logs",
+  {
+    id: id(),
+    /** Kosong untuk pesan di luar kos tertentu, mis. OTP daftar/masuk. */
+    organizationId: text().references(() => organizations.id, { onDelete: "cascade" }),
+    tujuan: text().notNull(),
+    jenis: text().notNull(),
+    referensiId: text(),
+    provider: text().notNull(),
+    /** Nama template resmi bila dikirim sebagai template (WhatsApp Cloud API). */
+    template: text(),
+    status: statusKirimWaEnum().notNull(),
+    galat: text(),
+    idPesanProvider: text(),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    index("whatsapp_logs_organisasi_waktu").on(t.organizationId, t.dibuatPada),
+    index("whatsapp_logs_jenis_referensi").on(t.jenis, t.referensiId),
+    check(
+      "whatsapp_logs_jenis",
+      sql`${t.jenis} in ('pengingat', 'tagihan', 'konfirmasi_lunas', 'perlu_review', 'kosta', 'otp', 'tiket')`,
+    ),
+    check("whatsapp_logs_galat_bila_gagal", sql`(${t.status} = 'gagal') = (${t.galat} is not null)`),
   ],
 );
