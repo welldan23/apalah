@@ -3,11 +3,15 @@ import type { Metadata } from "next";
 import { IncomeSummary } from "@/components/dashboard/income-summary";
 import { InvoiceStatusTable } from "@/components/dashboard/invoice-status-table";
 import { KosOverview } from "@/components/dashboard/kos-overview";
+import { KontrolKosta } from "@/components/kosta/kontrol-kosta";
 import { BannerPerluReview } from "@/components/pembayaran/banner-perlu-review";
 import { BannerTiket } from "@/components/tiket/banner-tiket";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RoomSummary } from "@/components/dashboard/room-summary";
+import { getDb } from "@/db";
 import { getDashboardData } from "@/lib/data/dashboard";
+import { getKontrolKosta } from "@/lib/data/kontrol-kosta";
+import { getWorkspaceSession } from "@/lib/data/session";
 import { formatHari } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -15,7 +19,11 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  const session = await getWorkspaceSession();
+  const [data, kosta] = await Promise.all([
+    getDashboardData(),
+    getKontrolKosta(await getDb(), { organizationId: session.organization.id, userId: session.user.id }),
+  ]);
   const namaDepan = data.owner.nama.split(" ")[0];
 
   return (
@@ -34,6 +42,7 @@ export default async function DashboardPage() {
         <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-2 lg:row-start-2">
           <BannerPerluReview items={data.perluReview} />
           <BannerTiket jumlah={data.tiket} />
+          <KontrolKosta data={kosta} />
           <KosOverview data={data} />
         </div>
 

@@ -15,6 +15,7 @@ import { batalkanDraft, cariDraftDenganKode, draftMenungguTerakhir, putuskanDraf
 import { formatWhatsApp, TEKS_BANTUAN } from "./format-balasan.ts";
 import { mintaTandaiLunas } from "./intent.ts";
 import { kodeAksi } from "./kode-aksi.ts";
+import { PILOT_DISUSPEND, statusPilotKosta } from "./pilot.ts";
 import type { ParserLlm } from "./llm.ts";
 import { catatPesan } from "./riwayat.ts";
 import { pahamiPesan, ruteTool } from "./router.ts";
@@ -88,6 +89,10 @@ async function susunBalasan(
   const { workspace, userId, workspaces } = konteks;
   const organizationId = workspace.id;
   jejak.organizationId = organizationId;
+  if (!(await statusPilotKosta(db, organizationId)).aktif) {
+    Object.assign(jejak, { intent: "pilot_suspended", hasil: "ditolak" });
+    return { organizationId, balasan: { teks: PILOT_DISUSPEND } };
+  }
   if (mintaTandaiLunas(teks)) {
     Object.assign(jejak, { intent: "mark_invoice_paid", hasil: "ditolak" });
     return { organizationId, balasan: { teks: TOLAK_TANDAI_LUNAS } };

@@ -5,4 +5,4 @@ export function urlSitus() {
 }
 
 /** Rute yang tidak untuk diindeks mesin pencari: aplikasi (butuh login), API, dan link invoice pribadi. */
-export const RUTE_PRIVAT = ["/dashboard", "/tagihan", "/api/", "/invoice/"];
+export const RUTE_PRIVAT = ["/dashboard", "/tagihan", "/api/", "/invoice/", "/platform"];

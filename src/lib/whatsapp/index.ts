@@ -2,7 +2,9 @@
 // bisa diganti lewat env WHATSAPP_PROVIDER tanpa mengubah pemanggil:
 // - "log" (default): tidak mengirim apa pun, hanya mencatat ke log server — untuk pengembangan.
 // - "waha": WAHA self-hosted untuk sandbox/pilot (WAHA_URL, WAHA_API_KEY, WAHA_SESSION);
-//   WHATSAPP_NOMOR_UJI (dipisah koma) membatasi penerima selama uji coba.
+//   WHATSAPP_NOMOR_UJI (dipisah koma) membatasi penerima selama uji coba. Tanpa daftar itu, WAHA
+//   menahan SEMUA kiriman (supaya pilot tidak mengirim ke penyewa sungguhan) kecuali
+//   WAHA_IZINKAN_SEMUA_NOMOR=true diset dengan sengaja.
 // - "meta": WhatsApp Cloud API resmi untuk produksi (META_WA_TOKEN, META_WA_PHONE_NUMBER_ID,
 //   META_WA_API_VERSION opsional); pesan yang dimulai bisnis dikirim sebagai template.
 
@@ -55,6 +57,25 @@ export async function kirimAman(wa: PengirimWhatsApp, pesan: PesanWhatsApp): Pro
 
 type Env = Partial<Record<string, string>>;
 
+export const GALAT_WAHA_TANPA_DAFTAR =
+  "Kiriman WAHA ditahan: isi WHATSAPP_NOMOR_UJI (nomor pilot yang boleh dikirimi), atau set WAHA_IZINKAN_SEMUA_NOMOR=true bila memang disengaja.";
+
+/** true bila WAHA dipakai tanpa daftar nomor uji dan tanpa izin eksplisit — semua kiriman ditahan. */
+export const wahaDitahan = (env: Env = process.env) =>
+  (env.WHATSAPP_PROVIDER || "log") === "waha" &&
+  !(env.WHATSAPP_NOMOR_UJI ?? "").split(",").some((n) => normalisasiNomorWa(n)) &&
+  env.WAHA_IZINKAN_SEMUA_NOMOR !== "true";
+
+/** Mode kanal WhatsApp dari WHATSAPP_PROVIDER — hanya "meta" yang jalur produksi resmi. */
+export function modeWhatsApp(env: Env = process.env) {
+  const provider = env.WHATSAPP_PROVIDER || "log";
+  return {
+    provider,
+    produksi: provider === "meta",
+    mode: provider === "meta" ? "produksi (Cloud API)" : provider === "waha" ? "pilot/sandbox (WAHA)" : "simulasi (log)",
+  };
+}
+
 export function getPengirimWhatsApp(env: Env = process.env): PengirimWhatsApp {
   const provider = env.WHATSAPP_PROVIDER || "log";
   if (provider === "log") return pengirimLog;
@@ -62,6 +83,9 @@ export function getPengirimWhatsApp(env: Env = process.env): PengirimWhatsApp {
   const nomorUji = daftarUji?.length ? daftarUji : undefined;
   if (provider === "waha") {
     if (!env.WAHA_URL) throw new Error("WHATSAPP_PROVIDER=waha butuh WAHA_URL");
+    if (wahaDitahan(env)) {
+      return { provider: "waha", simulasi: false, kirim: async () => ({ ok: false, galat: GALAT_WAHA_TANPA_DAFTAR }) };
+    }
     return buatPengirimWaha({
       url: env.WAHA_URL,
       apiKey: env.WAHA_API_KEY || undefined,

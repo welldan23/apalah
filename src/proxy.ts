@@ -32,5 +32,8 @@ export const config = {
     "/api/dashboard/:path*",
     "/api/kosta/:path*",
     "/api/akun/:path*",
+    "/platform/:path*",
+    "/platform-masuk-ulang",
+    "/api/platform/:path*",
   ],
 };

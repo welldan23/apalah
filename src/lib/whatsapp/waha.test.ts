@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { getPengirimWhatsApp } from "./index.ts";
+import { GALAT_WAHA_TANPA_DAFTAR, getPengirimWhatsApp } from "./index.ts";
 import { buatPengirimWaha } from "./waha.ts";
 
 type Panggilan = { url: string; init: RequestInit };
@@ -53,5 +53,19 @@ describe("getPengirimWhatsApp", () => {
     assert.equal(getPengirimWhatsApp({ WHATSAPP_PROVIDER: "waha", WAHA_URL: "http://waha" }).provider, "waha");
     assert.throws(() => getPengirimWhatsApp({ WHATSAPP_PROVIDER: "waha" }), /WAHA_URL/);
     assert.throws(() => getPengirimWhatsApp({ WHATSAPP_PROVIDER: "twilio" }), /belum didukung/);
+  });
+
+  it("pilot WAHA tanpa daftar nomor uji menahan semua kiriman (tidak ada pesan ke penyewa sungguhan)", async () => {
+    const ditahan = getPengirimWhatsApp({ WHATSAPP_PROVIDER: "waha", WAHA_URL: "http://127.0.0.1:9" });
+    assert.deepEqual(await ditahan.kirim({ ke: "6281320465838", teks: "Pengingat" }), { ok: false, galat: GALAT_WAHA_TANPA_DAFTAR });
+    // Dengan daftar nomor uji: nomor di luar daftar tetap tidak dikirimi (tanpa panggilan jaringan).
+    const pilot = getPengirimWhatsApp({ WHATSAPP_PROVIDER: "waha", WAHA_URL: "http://127.0.0.1:9", WHATSAPP_NOMOR_UJI: "0812 3456 7890" });
+    const luar = await pilot.kirim({ ke: "6281320465838", teks: "Pengingat" });
+    assert.equal(luar.ok, false);
+    assert.notEqual(!luar.ok && luar.galat, GALAT_WAHA_TANPA_DAFTAR);
+    // Izin eksplisit membuka pengiriman ke semua nomor (di sini gagal karena server WAHA uji tidak ada).
+    const semua = getPengirimWhatsApp({ WHATSAPP_PROVIDER: "waha", WAHA_URL: "http://127.0.0.1:9", WAHA_IZINKAN_SEMUA_NOMOR: "true" });
+    const hasil = await semua.kirim({ ke: "6281320465838", teks: "Pengingat" });
+    assert.notEqual(!hasil.ok && hasil.galat, GALAT_WAHA_TANPA_DAFTAR);
   });
 });

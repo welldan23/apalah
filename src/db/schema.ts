@@ -709,3 +709,46 @@ export const waWebhookEvents = pgTable(
     check("wa_webhook_events_jumlah", sql`${t.pesanBaru} between 0 and ${t.jumlahPesan}`),
   ],
 );
+
+/**
+ * Operator platform Kostera (founder/tim) — peran TERPISAH dari owner/admin kos. Hanya bisa ditambah
+ * lewat skrip server (npm run platform:admin), tidak ada jalur dari UI.
+ */
+export const platformAdmins = pgTable("platform_admins", {
+  userId: text()
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  dibuatPada: waktu().notNull().defaultNow(),
+});
+
+/** Jejak setiap akses & perubahan oleh platform admin (lihat workspace, suspend/resume pilot, …). */
+export const platformAdminLogs = pgTable(
+  "platform_admin_logs",
+  {
+    id: id(),
+    /** Kosong bila dilakukan lewat skrip server (mis. menambah platform admin). */
+    adminUserId: text().references(() => users.id, { onDelete: "set null" }),
+    aksi: text().notNull(),
+    organizationId: text().references(() => organizations.id, { onDelete: "set null" }),
+    detail: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    index("platform_admin_logs_waktu").on(t.dibuatPada),
+    check(
+      "platform_admin_logs_aksi",
+      sql`${t.aksi} in ('lihat_workspace', 'suspend_pilot', 'resume_pilot', 'tambah_admin', 'hapus_admin')`,
+    ),
+  ],
+);
+
+/** Status pilot Kosta per kos; tanpa baris = aktif. Suspend hanya menghentikan chat Kosta, bukan data kos. */
+export const kostaPilot = pgTable("kosta_pilot", {
+  organizationId: text()
+    .primaryKey()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  aktif: boolean().notNull().default(true),
+  alasan: text(),
+  diubahOleh: text().references(() => users.id, { onDelete: "set null" }),
+  diubahPada: waktu().notNull().defaultNow(),
+});
