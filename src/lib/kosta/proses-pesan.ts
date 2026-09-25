@@ -41,7 +41,7 @@ const daftarKos = (workspaces: WorkspaceRingkas[]) =>
   ].join("\n");
 
 export const TOLAK_TANDAI_LUNAS =
-  "Kosta tidak bisa menandai tagihan lunas dari chat, bukti transfer, atau pengakuan penyewa. Status Lunas hanya berubah otomatis saat pembayaran terverifikasi oleh payment gateway.";
+  "Kosta AI tidak bisa menandai tagihan lunas dari chat, bukti transfer, atau pengakuan penyewa. Status Lunas hanya berubah otomatis saat pembayaran terverifikasi oleh payment gateway.";
 
 export const kosDipilih = (w: WorkspaceRingkas) =>
   `Oke, sekarang aku bantu untuk ${w.namaKos} (${w.jumlahKamar} kamar). Data kos lain tidak ikut dibaca.`;
@@ -69,7 +69,7 @@ async function susunBalasan(
   if (konteks.status === "tanpa_akses") {
     return {
       organizationId: null,
-      balasan: { teks: "Kosta hanya melayani pemilik atau admin kos. Untuk tagihanmu, buka link invoice yang dikirim pemilik kos." },
+      balasan: { teks: "Kosta AI hanya melayani pemilik atau admin kos. Untuk tagihanmu, buka link invoice yang dikirim pemilik kos." },
     };
   }
   if (konteks.status === "pilih_workspace") {

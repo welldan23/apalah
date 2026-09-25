@@ -49,7 +49,7 @@ export function FormWorkspace({ nomorWa }: { nomorWa: string }) {
   if (siap) {
     const hasil = [
       { judul: `Workspace ${siap.namaKos} dibuat`, ket: `${siap.namaPemilik} tercatat sebagai pemilik.` },
-      { judul: `Nomor ${tampilNomorWa(nomorWa)} tertaut`, ket: "Dipakai untuk masuk dan chat dengan Kosta di WhatsApp." },
+      { judul: `Nomor ${tampilNomorWa(nomorWa)} tertaut`, ket: "Dipakai untuk masuk dan chat dengan Kosta AI di WhatsApp." },
       { judul: `${siap.jumlahKamar} kamar tercatat`, ket: "Lengkapi nomor, tipe, dan harga kamar kapan saja." },
     ];
     return (

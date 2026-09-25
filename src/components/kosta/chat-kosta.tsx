@@ -14,7 +14,7 @@ import type { PesanKosta, StatusDraftAksi, WorkspaceRingkas } from "@/lib/types"
 
 function IndikatorMengetik() {
   return (
-    <li className="flex justify-start" aria-label="Kosta sedang mengetik">
+    <li className="flex justify-start" aria-label="Kosta AI sedang mengetik">
       <span className="flex gap-1 rounded-2xl rounded-bl-sm bg-card px-3 py-3 shadow-xs">
         {[0, 150, 300].map((jeda) => (
           <span
@@ -170,7 +170,7 @@ export function ChatKosta({
           </span>
           <div className="min-w-0 flex-1 leading-tight">
             <h2 id="kosta-judul" className="font-semibold">
-              Kosta
+              Kosta AI
             </h2>
             <p className="truncate text-xs text-primary-foreground/75">
               {mengetik ? "mengetik…" : `${aktif.namaKos} · WhatsApp ${tampilNomorWa(nomorWa)}`}
@@ -202,7 +202,7 @@ export function ChatKosta({
           open={pilihKosTerbuka}
           onOpenChange={setPilihKosTerbuka}
           title="Pilih kos"
-          description="Kosta hanya membaca data kos yang dipilih."
+          description="Kosta AI hanya membaca data kos yang dipilih."
         >
           <div className="overflow-y-auto p-4">
             <PemilihWorkspace workspaces={workspaces} aktifId={aktif.id} onPilih={gantiKos} />
@@ -225,7 +225,7 @@ export function ChatKosta({
 
         <ol
           ref={listRef}
-          aria-label="Percakapan dengan Kosta"
+          aria-label="Percakapan dengan Kosta AI"
           aria-live="polite"
           className="relative flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4 sm:px-5"
         >
@@ -251,12 +251,12 @@ export function ChatKosta({
 
         <form onSubmit={kirim} className="flex items-center gap-2 border-t bg-card/80 px-3 py-2.5">
           <label htmlFor="kosta-pesan" className="sr-only">
-            Tulis pesan untuk Kosta
+            Tulis pesan untuk Kosta AI
           </label>
           <input
             id="kosta-pesan"
             autoComplete="off"
-            placeholder="Tanya Kosta…"
+            placeholder="Tanya Kosta AI…"
             className="h-11 min-w-0 flex-1 rounded-full border border-input bg-card px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm"
             value={draf}
             onChange={(e) => setDraf(e.target.value)}

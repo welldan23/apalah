@@ -38,7 +38,7 @@ export default async function DetailWorkspacePage({ params }: PageProps<"/platfo
           </p>
         </div>
         <StatusBadge tone={w.pilot.aktif ? "success" : "warning"} icon={w.pilot.aktif ? CirclePlay : CirclePause}>
-          {w.pilot.aktif ? "Pilot Kosta aktif" : "Pilot Kosta disuspend"}
+          {w.pilot.aktif ? "Pilot Kosta AI aktif" : "Pilot Kosta AI disuspend"}
         </StatusBadge>
       </header>
       <p className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
@@ -85,7 +85,7 @@ export default async function DetailWorkspacePage({ params }: PageProps<"/platfo
       </div>
 
       <Card className="gap-0 py-0 shadow-none">
-        <h2 className="border-b px-4 py-3 font-semibold">Event Kosta terbaru</h2>
+        <h2 className="border-b px-4 py-3 font-semibold">Event Kosta AI terbaru</h2>
         {w.eventKosta.length === 0 ? (
           <p className="px-4 py-6 text-sm text-muted-foreground">Belum ada event.</p>
         ) : (

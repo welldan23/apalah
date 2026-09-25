@@ -56,7 +56,7 @@ export default async function RingkasanPlatformPage() {
       <Bagian judul="Workspace">
         <Angka label="Total workspace" nilai={m.workspace.total} />
         <Angka label="Owner aktif" nilai={m.workspace.pemilikAktif} />
-        <Angka label="Pakai Kosta (30 hari)" nilai={m.workspace.pakaiKosta30Hari} />
+        <Angka label="Pakai Kosta AI (30 hari)" nilai={m.workspace.pakaiKosta30Hari} />
         <Angka label="Pilot disuspend" nilai={m.workspace.pilotDisuspend} />
       </Bagian>
 
@@ -100,14 +100,14 @@ export default async function RingkasanPlatformPage() {
         <Angka label="Tanda tangan salah" nilai={m.webhook24Jam.perStatus.tanda_tangan_invalid ?? 0} />
       </Bagian>
 
-      <Bagian judul="Pesan keluar & Kosta (24 jam)">
+      <Bagian judul="Pesan keluar & Kosta AI (24 jam)">
         <Angka label="WA terkirim" nilai={m.kirim24Jam.terkirim} />
         <Angka label="WA gagal" nilai={m.kirim24Jam.gagal} catatan={`${Math.round(m.kirim24Jam.rasioGagal * 100)}% gagal`} />
-        <Angka label="Perintah Kosta dijawab" nilai={m.kosta24Jam.dijawab ?? 0} />
-        <Angka label="Kosta ditolak / galat" nilai={(m.kosta24Jam.ditolak ?? 0) + (m.kosta24Jam.galat ?? 0)} />
+        <Angka label="Perintah Kosta AI dijawab" nilai={m.kosta24Jam.dijawab ?? 0} />
+        <Angka label="Kosta AI ditolak / galat" nilai={(m.kosta24Jam.ditolak ?? 0) + (m.kosta24Jam.galat ?? 0)} />
       </Bagian>
 
-      <Bagian judul="Aksi Kosta">
+      <Bagian judul="Aksi Kosta AI">
         <Angka label="Menunggu konfirmasi" nilai={m.aksi.menungguKonfirmasi} />
         <Angka label="Kedaluwarsa belum dibersihkan" nilai={m.aksi.kedaluwarsaBelumDibersihkan} catatan="dibersihkan cron harian" />
         <Angka label="Dijalankan (24 jam)" nilai={m.kosta24Jam.dijalankan ?? 0} />

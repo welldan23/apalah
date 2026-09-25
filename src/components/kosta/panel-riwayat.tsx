@@ -44,7 +44,7 @@ export function PanelRiwayat({
                 {hari.jumlahPesan} pesan
               </span>
             </span>
-            <span className="line-clamp-2 text-sm">{hari.topik || "Pesan dari Kosta"}</span>
+            <span className="line-clamp-2 text-sm">{hari.topik || "Pesan dari Kosta AI"}</span>
             {hari.aksi.map((a, i) => (
               <span key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
                 {a.aksi === "reminder" ? (

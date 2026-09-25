@@ -46,9 +46,9 @@ Variables, tipe *Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
 | `MIDTRANS_SERVER_KEY` | nanti | mulai dari **sandbox** (`SB-Mid-server-…`) |
 | `MIDTRANS_PRODUCTION` | — | biarkan kosong/`false` sampai server key produksi & Notification URL siap |
 | `CRON_SECRET` | nanti | **kosongkan dulu** = semua cron menolak (401). Isi setelah WA & pembayaran terverifikasi |
-| `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` | tidak | tanpa kunci, Kosta memakai parser kata kunci |
+| `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` | tidak | tanpa kunci, Kosta AI memakai parser kata kunci |
 
-\* tanpa ini Kosta lewat WhatsApp tidak aktif. Jangan isi `WAHA_*`, `WHATSAPP_NOMOR_UJI`, atau
+\* tanpa ini Kosta AI lewat WhatsApp tidak aktif. Jangan isi `WAHA_*`, `WHATSAPP_NOMOR_UJI`, atau
 `WAHA_IZINKAN_SEMUA_NOMOR` di produksi.
 
 ## 3. Sebelum deploy

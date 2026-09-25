@@ -39,7 +39,7 @@ export function KontrolKosta({ data }: { data: DataKontrolKosta }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="kontrol-kosta-judul" className="flex items-center gap-2 font-semibold">
           <MessageCircle className="size-4 text-primary" aria-hidden="true" />
-          Kosta WhatsApp
+          Kosta AI di WhatsApp
         </h2>
         <StatusBadge tone={data.pilot.aktif ? "success" : "warning"} icon={data.pilot.aktif ? CirclePlay : CirclePause}>
           {data.pilot.aktif ? "Aktif" : "Dinonaktifkan sementara"}
@@ -54,14 +54,14 @@ export function KontrolKosta({ data }: { data: DataKontrolKosta }) {
       )}
       {!data.pilot.aktif && (
         <p className="rounded-lg bg-muted px-3 py-2 text-sm">
-          Kosta dinonaktifkan sementara oleh tim Kostera{data.pilot.alasan ? ` (${data.pilot.alasan})` : ""}. Dashboard tetap bisa dipakai.
+          Kosta AI dinonaktifkan sementara oleh tim Kostera{data.pilot.alasan ? ` (${data.pilot.alasan})` : ""}. Dashboard tetap bisa dipakai.
         </p>
       )}
 
       <p className="text-sm text-muted-foreground">
         Nomor tertaut:{" "}
         <span className="font-medium text-foreground tabular-nums">{data.nomorWa ? tampilNomorWa(data.nomorWa) : "—"}</span>
-        {data.nomorTerverifikasi ? " · terverifikasi" : " · belum terverifikasi"}. Chat Kosta dari nomor ini untuk cek tunggakan,
+        {data.nomorTerverifikasi ? " · terverifikasi" : " · belum terverifikasi"}. Chat Kosta AI dari nomor ini untuk cek tunggakan,
         kamar kosong, atau menyiapkan tagihan & reminder.
       </p>
 
@@ -99,7 +99,7 @@ export function KontrolKosta({ data }: { data: DataKontrolKosta }) {
 
       <Button asChild variant="outline" size="lg" className="h-11 self-start">
         <Link href="/kosta">
-          Buka chat Kosta
+          Buka chat Kosta AI
           <ChevronRight data-icon="inline-end" />
         </Link>
       </Button>

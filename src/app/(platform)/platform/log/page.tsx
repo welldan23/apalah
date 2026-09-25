@@ -11,8 +11,8 @@ export const metadata: Metadata = { title: "Log admin" };
 
 const LABEL: Record<string, string> = {
   lihat_workspace: "Membuka detail workspace",
-  suspend_pilot: "Suspend pilot Kosta",
-  resume_pilot: "Aktifkan kembali pilot Kosta",
+  suspend_pilot: "Suspend pilot Kosta AI",
+  resume_pilot: "Aktifkan kembali pilot Kosta AI",
   tambah_admin: "Menambah platform admin",
   hapus_admin: "Menghapus platform admin",
 };

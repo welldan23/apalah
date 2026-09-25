@@ -9,7 +9,7 @@ export function SiteFooter() {
           <KosteraLogo />
           <p className="mt-3 text-sm text-muted-foreground">
             Platform manajemen kos untuk owner dan admin: tagihan, pembayaran, dan kamar
-            dalam satu tempat, dengan Kosta di WhatsApp.
+            dalam satu tempat, dengan Kosta AI di WhatsApp.
           </p>
         </div>
         <nav aria-label="Tautan footer">

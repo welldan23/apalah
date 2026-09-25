@@ -40,7 +40,7 @@ export const mockPercakapanKosta: PesanKosta[] = [
     waktu: pada("19:30", "2026-09-22"),
     teks: "Belum. Tagihan A03 (Yoga Saputra) Rp500.000 masih menunggu pembayaran, jatuh tempo 26 Sep.",
   },
-  { id: "m1", dari: "owner", waktu: pada("08:02"), teks: "Kosta, berapa tunggakan bulan ini?" },
+  { id: "m1", dari: "owner", waktu: pada("08:02"), teks: "Kosta AI, berapa tunggakan bulan ini?" },
   {
     id: "m2",
     dari: "kosta",

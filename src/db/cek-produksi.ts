@@ -54,7 +54,7 @@ export function periksaEnvProduksi(env: Env): HasilCek {
   if (provider === "meta" && env.WHATSAPP_NOMOR_UJI) {
     peringatan.push("WHATSAPP_NOMOR_UJI terisi: pesan hanya dikirim ke nomor uji itu, penyewa lain tidak menerima apa pun.");
   }
-  if (!env.WHATSAPP_WEBHOOK_SECRET) peringatan.push("WHATSAPP_WEBHOOK_SECRET kosong: webhook WhatsApp masuk menolak semua, Kosta via WhatsApp tidak aktif.");
+  if (!env.WHATSAPP_WEBHOOK_SECRET) peringatan.push("WHATSAPP_WEBHOOK_SECRET kosong: webhook WhatsApp masuk menolak semua, Kosta AI via WhatsApp tidak aktif.");
   if (provider === "meta" && !env.WHATSAPP_VERIFY_TOKEN) peringatan.push("WHATSAPP_VERIFY_TOKEN kosong: langganan webhook Meta tidak bisa diverifikasi.");
 
   if (!env.CRON_SECRET) peringatan.push("CRON_SECRET kosong: semua /api/cron/* menolak (401) — tagihan terjadwal & pengingat otomatis tidak jalan.");
@@ -68,7 +68,7 @@ export function periksaEnvProduksi(env: Env): HasilCek {
   if (produksiMidtrans) {
     peringatan.push("Midtrans PRODUKSI aktif: pastikan Notification URL di dashboard Midtrans = APP_URL + /api/webhook/pembayaran/midtrans.");
   }
-  if (!env.LLM_API_KEY) peringatan.push("LLM_API_KEY kosong: Kosta hanya memakai parser kata kunci.");
+  if (!env.LLM_API_KEY) peringatan.push("LLM_API_KEY kosong: Kosta AI hanya memakai parser kata kunci.");
   return { galat, peringatan };
 }
 

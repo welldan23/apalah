@@ -13,7 +13,7 @@ describe("menu sesuai peran", () => {
       "Kamar & Penghuni",
       "Pembayaran",
       "Reminder",
-      "Chat Kosta",
+      "Chat Kosta AI",
       "Tiket keluhan",
       "Pengaturan",
     ]);
@@ -26,7 +26,7 @@ describe("menu sesuai peran", () => {
       "Kamar & Penghuni",
       "Pembayaran",
       "Reminder",
-      "Chat Kosta",
+      "Chat Kosta AI",
       "Tiket keluhan",
     ]);
   });

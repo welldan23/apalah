@@ -43,10 +43,10 @@ export function FormPilot({ organizationId, aktif }: { organizationId: string; a
       />
       <GalatServer pesan={galat} />
       <Button type="submit" variant={aktif ? "destructive" : "default"} disabled={mengirim} className="h-11 self-start">
-        {mengirim ? "Menyimpan…" : aktif ? "Suspend pilot Kosta" : "Aktifkan kembali"}
+        {mengirim ? "Menyimpan…" : aktif ? "Suspend pilot Kosta AI" : "Aktifkan kembali"}
       </Button>
       <p className="text-xs text-muted-foreground">
-        Suspend hanya menghentikan chat Kosta untuk kos ini. Data kos, tagihan, dan pembayaran tidak berubah; owner melihat
+        Suspend hanya menghentikan chat Kosta AI untuk kos ini. Data kos, tagihan, dan pembayaran tidak berubah; owner melihat
         statusnya di dashboard.
       </p>
     </form>

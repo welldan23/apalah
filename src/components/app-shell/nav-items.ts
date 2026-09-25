@@ -38,7 +38,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/kamar", label: "Kamar & Penghuni", labelPendek: "Kamar", icon: BedDouble, siap: true, mobile: true, peran: PENGELOLA },
   { href: "/pembayaran", label: "Pembayaran", labelPendek: "Bayar", icon: Wallet, siap: true, mobile: true, peran: PENGELOLA },
   { href: "/reminder", label: "Reminder", labelPendek: "Reminder", icon: BellRing, siap: true, mobile: false, peran: PENGELOLA },
-  { href: "/kosta", label: "Chat Kosta", labelPendek: "Kosta", icon: MessageCircleMore, siap: true, mobile: true, peran: PENGELOLA },
+  { href: "/kosta", label: "Chat Kosta AI", labelPendek: "Kosta AI", icon: MessageCircleMore, siap: true, mobile: true, peran: PENGELOLA },
   { href: "/tiket", label: "Tiket keluhan", labelPendek: "Tiket", icon: MessageSquareWarning, siap: true, mobile: false, peran: PENGELOLA },
   { href: "/pengaturan", label: "Pengaturan", labelPendek: "Atur", icon: Settings, siap: false, mobile: false, peran: ["owner"] },
   { href: "/tagihan-saya", label: "Tagihan saya", labelPendek: "Tagihan", icon: ReceiptText, siap: false, mobile: true, peran: ["penyewa"] },

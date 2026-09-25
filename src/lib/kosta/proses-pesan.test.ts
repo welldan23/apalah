@@ -86,7 +86,7 @@ describe("prosesPesanKosta (WhatsApp)", () => {
   });
 
   it("pesan di luar kemampuan → bantuan; nomor asing tidak mendapat data", async () => {
-    assert.match((await chat("cuaca hari ini gimana")).balasan.teks, /^Aku Kosta, asisten kos kamu/);
+    assert.match((await chat("cuaca hari ini gimana")).balasan.teks, /^Aku Kosta AI, asisten kos kamu/);
     const asing = await chat("berapa tunggakan bulan ini?", "6285700000001");
     assert.match(asing.balasan.teks, /^Nomor ini belum terdaftar di Kostera/);
     assert.equal(asing.balasan.lampiran, undefined);

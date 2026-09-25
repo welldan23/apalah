@@ -98,7 +98,7 @@ export function BenefitsSection() {
           id="fitur-judul"
           eyebrow="Fitur"
           judul="Semua urusan tagihan kos dalam satu tempat"
-          deskripsi="Dashboard untuk melihat kondisi kos sekilas, ditambah Kosta di WhatsApp untuk urusan harian."
+          deskripsi="Dashboard untuk melihat kondisi kos sekilas, ditambah Kosta AI di WhatsApp untuk urusan harian."
         />
         <ul className="mt-8 grid gap-4 md:grid-cols-3">
           {BENEFIT.map(({ icon: Icon, judul, deskripsi, ilustrasi }) => {

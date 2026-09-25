@@ -72,7 +72,7 @@ export function BubblePesan({
           pesan.lampiran && "w-72 max-w-[90%] sm:w-80",
         )}
       >
-        <span className="sr-only">{dariOwner ? "Kamu: " : "Kosta: "}</span>
+        <span className="sr-only">{dariOwner ? "Kamu: " : "Kosta AI: "}</span>
         {pesan.teks}
         {pesan.lampiran && <Lampiran lampiran={pesan.lampiran} onPutuskan={onPutuskan} />}
         <span className="mt-1 flex items-center justify-end gap-1 text-[0.7rem] text-muted-foreground">

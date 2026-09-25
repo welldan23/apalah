@@ -14,4 +14,4 @@ export async function statusPilotKosta(db: Db, organizationId: string) {
 }
 
 export const PILOT_DISUSPEND =
-  "Kosta sedang dinonaktifkan sementara untuk kos ini oleh tim Kostera. Kamu tetap bisa memakai dashboard Kostera seperti biasa.";
+  "Kosta AI sedang dinonaktifkan sementara untuk kos ini oleh tim Kostera. Kamu tetap bisa memakai dashboard Kostera seperti biasa.";

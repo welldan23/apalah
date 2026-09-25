@@ -59,7 +59,7 @@ export function formatWhatsApp({ teks, lampiran }: BalasanKosta, { namaKos }: { 
 }
 
 export const TEKS_BANTUAN = [
-  "Aku Kosta, asisten kos kamu. Contoh yang bisa kamu tanyakan:",
+  "Aku Kosta AI, asisten kos kamu. Contoh yang bisa kamu tanyakan:",
   "• Berapa tunggakan bulan ini?",
   "• Kamar mana yang masih kosong?",
   "• Rekap pemasukan bulan ini",

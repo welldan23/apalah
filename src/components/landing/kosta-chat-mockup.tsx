@@ -70,7 +70,7 @@ function Gelembung({ pesan, baru }: { pesan: PesanChat; baru: boolean }) {
             : "rounded-bl-sm bg-card text-card-foreground",
         )}
       >
-        <span className="sr-only">{dariOwner ? "Owner: " : "Kosta: "}</span>
+        <span className="sr-only">{dariOwner ? "Owner: " : "Kosta AI: "}</span>
         <IsiPesan pesan={pesan} />
         <span className="mt-1 flex items-center justify-end gap-1 text-[0.65rem] text-muted-foreground">
           {pesan.waktu}
@@ -85,7 +85,7 @@ function Gelembung({ pesan, baru }: { pesan: PesanChat; baru: boolean }) {
 
 function IndikatorMengetik() {
   return (
-    <li className="flex justify-start" aria-label="Kosta sedang mengetik">
+    <li className="flex justify-start" aria-label="Kosta AI sedang mengetik">
       <span className="flex gap-1 rounded-2xl rounded-bl-sm bg-card px-3 py-3 shadow-xs">
         {[0, 150, 300].map((jeda) => (
           <span
@@ -148,7 +148,7 @@ export function KostaChatMockup({ className }: { className?: string }) {
             K
           </span>
           <div className="leading-tight">
-            <p className="text-sm font-semibold">Kosta</p>
+            <p className="text-sm font-semibold">Kosta AI</p>
             <p className="text-xs text-primary-foreground/70">
               {mengetik ? "mengetik…" : "Asisten Kostera · Kos Melati"}
             </p>
@@ -157,7 +157,7 @@ export function KostaChatMockup({ className }: { className?: string }) {
 
         <ol
           ref={listRef}
-          aria-label="Contoh percakapan dengan Kosta"
+          aria-label="Contoh percakapan dengan Kosta AI"
           className="flex flex-col justify-end gap-2 overflow-hidden px-3 py-4"
           style={tinggiTetap ? { height: tinggiTetap } : undefined}
         >
@@ -181,7 +181,7 @@ export function KostaChatMockup({ className }: { className?: string }) {
       </div>
 
       <figcaption className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        Contoh percakapan owner dengan Kosta
+        Contoh percakapan owner dengan Kosta AI
         <span aria-hidden="true">·</span>
         <button
           type="button"

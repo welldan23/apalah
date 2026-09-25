@@ -18,7 +18,7 @@ export const HERO = {
   eyebrow: "Untuk owner & admin kos",
   judul: "Tagihan kos rapi, pembayaran lebih pasti",
   deskripsi:
-    "Kostera merapikan tagihan, pembayaran, dan kamar dalam satu tempat. Kosta, asisten AI di WhatsApp, bantu cek tunggakan dan siapkan pengingat. Kamu tinggal konfirmasi.",
+    "Kostera merapikan tagihan, pembayaran, dan kamar dalam satu tempat. Kosta AI, asisten di WhatsApp, bantu cek tunggakan dan siapkan pengingat. Kamu tinggal konfirmasi.",
   ctaUtama: "Mulai gratis",
   ctaKedua: "Lihat cara kerja",
   poin: [
@@ -67,7 +67,7 @@ export type PesanChat =
 
 /** Percakapan contoh owner Kos Melati dengan Kosta di WhatsApp. */
 export const CHAT_KOSTA: PesanChat[] = [
-  { dari: "owner", teks: "Kosta, berapa tunggakan bulan ini?", waktu: "08.02" },
+  { dari: "owner", teks: "Kosta AI, berapa tunggakan bulan ini?", waktu: "08.02" },
   {
     dari: "kosta",
     teks: "Ada 3 tagihan jatuh tempo, total Rp1.950.000. Paling lama: kamar A05 (Rizky), jatuh tempo 15 Sep.",
@@ -118,7 +118,7 @@ export const MASALAH = {
     poin: [
       "Tagihan terbit terjadwal, nominal dan jatuh tempo sudah pasti",
       "Status Lunas berubah sendiri saat dana benar-benar masuk",
-      "Kosta menyiapkan pengingat, kamu cukup cek dan konfirmasi",
+      "Kosta AI menyiapkan pengingat, kamu cukup cek dan konfirmasi",
       "Kamar terisi dan kosong terlihat dalam satu layar",
     ],
   },
@@ -181,7 +181,7 @@ export const CARA_KERJA: Langkah[] = [
     icon: ShieldCheck,
     judul: "Pantau & ingatkan",
     deskripsi:
-      "Lihat siapa yang sudah bayar, lalu kirim pengingat lewat Kosta setelah kamu cek preview-nya.",
+      "Lihat siapa yang sudah bayar, lalu kirim pengingat lewat Kosta AI setelah kamu cek preview-nya.",
     hasil: "Status Lunas berubah otomatis saat dana masuk",
   },
 ];
@@ -264,24 +264,24 @@ export const PREVIEW_DASHBOARD = {
 
 export const FAQ: { tanya: string; jawab: string }[] = [
   {
-    tanya: "Apa bedanya Kostera dan Kosta?",
+    tanya: "Apa bedanya Kostera dan Kosta AI?",
     jawab:
-      "Kostera adalah platformnya: dashboard, tagihan, dan pemantauan pembayaran. Kosta adalah asisten AI di WhatsApp yang ada di dalam Kostera, supaya kamu bisa mengurus kos cukup lewat chat.",
+      "Kostera adalah platformnya: dashboard, tagihan, dan pemantauan pembayaran. Kosta AI adalah asisten di WhatsApp yang ada di dalam Kostera, supaya kamu bisa mengurus kos cukup lewat chat.",
   },
   {
     tanya: "Bagaimana cara daftarnya?",
     jawab:
-      "Cukup pakai nomor WhatsApp dan kode OTP. Ruang kerja kos kamu langsung dibuat, dan nomor WA-mu otomatis tertaut ke Kosta.",
+      "Cukup pakai nomor WhatsApp dan kode OTP. Ruang kerja kos kamu langsung dibuat, dan nomor WA-mu otomatis tertaut ke Kosta AI.",
   },
   {
-    tanya: "Apakah Kosta bisa mengirim pesan tanpa persetujuan saya?",
+    tanya: "Apakah Kosta AI bisa mengirim pesan tanpa persetujuan saya?",
     jawab:
       "Tidak. Setiap aksi yang mengubah data atau mengirim pesan ke banyak penyewa selalu menampilkan preview berisi penerima, periode, dan nominal dulu. Pesan baru terkirim setelah kamu konfirmasi.",
   },
   {
     tanya: "Dari mana angka tunggakan dan pemasukan berasal?",
     jawab:
-      "Semua angka diambil langsung dari database tagihan dan pembayaran kamu, bukan dikarang AI. Kosta hanya membantu membaca pertanyaanmu dan menulis balasan singkat.",
+      "Semua angka diambil langsung dari database tagihan dan pembayaran kamu, bukan dikarang AI. Kosta AI hanya membantu membaca pertanyaanmu dan menulis balasan singkat.",
   },
   {
     tanya: "Kapan status tagihan berubah jadi Lunas?",

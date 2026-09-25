@@ -61,7 +61,7 @@ export function FormNomorWa({ nomorAwal }: { /** Nomor sebelumnya, mis. saat kem
         <p id="daftar-wa-info" className="text-xs text-muted-foreground">
           {nomorValid
             ? `Kode dikirim ke ${tampilNomorWa(nomorValid)}.`
-            : "Pakai nomor yang biasa kamu pakai. Nomor ini jadi akun Kostera dan nomor untuk chat dengan Kosta."}
+            : "Pakai nomor yang biasa kamu pakai. Nomor ini jadi akun Kostera dan nomor untuk chat dengan Kosta AI."}
         </p>
         <FieldError id="daftar-wa-galat" pesan={galat} />
       </div>

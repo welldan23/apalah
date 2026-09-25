@@ -1,7 +1,7 @@
 # Kostera
 
 Platform manajemen kos untuk owner/admin: dashboard, tagihan, dan pemantauan pembayaran
-dalam satu tempat — dengan **Kosta**, asisten AI di WhatsApp.
+dalam satu tempat — dengan **Kosta AI**, asisten di WhatsApp.
 
 Stack: Next.js (App Router) · Tailwind CSS v4 · shadcn/ui · PostgreSQL + Drizzle ORM.
 
