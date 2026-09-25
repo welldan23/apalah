@@ -98,4 +98,23 @@ describe("endpoint kirim & verifikasi OTP", () => {
     if (lama !== baru) assert.equal(await kodeGalat(await verifikasi("6281299990013", lama)), "INVALID_OTP");
     assert.equal((await verifikasi("6281299990013", baru)).status, 200);
   });
+
+  it("jalur password plugin dimatikan: kode reset (tak pernah terkirim ke korban) tidak bisa dipakai memasang password", async () => {
+    const nomor = "6281234567890";
+    const permintaanReset = await minta("/phone-number/request-password-reset", { phoneNumber: nomor });
+    assert.equal(permintaanReset.status, 404);
+    // Andaikan penyerang berhasil menebak kodenya: tetap tidak bisa memasang password maupun masuk dengannya.
+    const [tebakan] = await db
+      .select({ value: schema.verifications.value })
+      .from(schema.verifications)
+      .where(eq(schema.verifications.identifier, `${nomor}-request-password-reset`));
+    const otp = tebakan?.value.split(":")[0] ?? "123456";
+    assert.equal((await minta("/phone-number/reset-password", { phoneNumber: nomor, otp, newPassword: "password-penyerang-123" })).status, 404);
+    assert.equal((await minta("/sign-in/phone-number", { phoneNumber: nomor, password: "password-penyerang-123" })).status, 404);
+    const akunPassword = await db.select().from(schema.accounts).where(eq(schema.accounts.providerId, "credential"));
+    assert.equal(akunPassword.length, 0);
+    // Masuk dengan OTP WhatsApp tetap jalan.
+    await kirim(nomor);
+    assert.equal((await verifikasi(nomor, kode.get(nomor)!)).status, 200);
+  });
 });

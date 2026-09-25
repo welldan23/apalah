@@ -46,6 +46,10 @@ export function buatAuth(db: Db, { secret, baseURL, kirimOtp, batasPermintaan }:
       },
     }),
     advanced: { cookiePrefix: "kostera", database: { generateId: "uuid" } },
+    // Kostera hanya masuk lewat OTP WhatsApp. Jalur password bawaan plugin phone-number membuat kode
+    // reset yang tak pernah terkirim ke pemilik nomor — bila tertebak, penyerang bisa memasang
+    // password lalu masuk tanpa OTP. Jadi dimatikan (404).
+    disabledPaths: ["/phone-number/request-password-reset", "/phone-number/reset-password", "/sign-in/phone-number"],
     user: {
       modelName: "users",
       fields: { name: "nama", emailVerified: "emailTerverifikasi", image: "foto", ...waktu },
