@@ -16,6 +16,9 @@ export const LABEL_STATUS_TIKET: Record<StatusTiket, string> = { baru: "Baru", d
 
 export const PANJANG_DESKRIPSI = { min: 10, maks: 1000 } as const;
 
+/** Nomor urut tiket per kos → "TKT-0012". */
+export const formatNomorTiket = (nomor: number) => `TKT-${String(nomor).padStart(4, "0")}`;
+
 export const labelKategori = (id: string) => KATEGORI_TIKET.find((k) => k.id === id)?.label ?? "Lainnya";
 
 export type GalatTiket = Partial<Record<"kategori" | "deskripsi", string>>;

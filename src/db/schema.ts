@@ -48,6 +48,7 @@ export const statusPembayaranEnum = pgEnum("status_pembayaran", [
 ]);
 export const statusReminderEnum = pgEnum("status_reminder", ["terkirim", "gagal"]);
 export const statusTransaksiBayarEnum = pgEnum("status_transaksi_bayar", ["menunggu", "berhasil", "kedaluwarsa", "gagal"]);
+export const statusTiketEnum = pgEnum("status_tiket", ["baru", "diproses", "selesai"]);
 export const aturanJatuhTempoEnum = pgEnum("aturan_jatuh_tempo", ["tanggal_masuk", "tanggal_tetap"]);
 export const arahPesanEnum = pgEnum("arah_pesan", ["masuk", "keluar"]);
 export const jenisAksiEnum = pgEnum("jenis_aksi", ["reminder", "tagihan"]);
@@ -567,3 +568,40 @@ export const actionDrafts = pgTable(
   ],
 );
 
+
+/**
+ * Tiket keluhan / permintaan perbaikan dari penyewa (dibuat lewat tautan invoice). `nomor` berurutan
+ * per kos dan ditampilkan sebagai "TKT-0012". Kategori & panjang cerita sama dengan aturan form.
+ */
+export const tickets = pgTable(
+  "tickets",
+  {
+    id: id(),
+    organizationId: text()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    tenantId: text()
+      .notNull()
+      .references(() => tenants.id),
+    roomId: text()
+      .notNull()
+      .references(() => rooms.id),
+    nomor: integer().notNull(),
+    kategori: text().notNull(),
+    deskripsi: text().notNull(),
+    status: statusTiketEnum().notNull().default("baru"),
+    dibuatPada: waktu().notNull().defaultNow(),
+    diperbaruiPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("tickets_organisasi_nomor_unik").on(t.organizationId, t.nomor),
+    index("tickets_organisasi_status").on(t.organizationId, t.status),
+    index("tickets_penyewa").on(t.tenantId),
+    check("tickets_nomor_positif", sql`${t.nomor} >= 1`),
+    check(
+      "tickets_kategori",
+      sql`${t.kategori} in ('perbaikan', 'air_listrik', 'kebersihan', 'keamanan', 'tagihan', 'lainnya')`,
+    ),
+    check("tickets_panjang_deskripsi", sql`char_length(btrim(${t.deskripsi})) between 10 and 1000`),
+  ],
+);

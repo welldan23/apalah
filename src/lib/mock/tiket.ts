@@ -1,11 +1,12 @@
 // Tiket contoh penyewa Kos Melati (tahap frontend) — di tahap backend diganti tabel tickets.
 
 import type { TiketKos, TiketPenyewa } from "@/lib/tiket";
-import { mockOrganization, mockRooms, mockTenants } from "./kos-melati";
+import { mockOrganization, mockRooms, mockTenants } from "./kos-melati.ts";
 
 type TiketContoh = TiketPenyewa & { nomorKamar: string };
 
-const TIKET: TiketContoh[] = [
+/** Juga diisikan ke tabel tickets oleh data contoh (seed). */
+export const mockTiketContoh: TiketContoh[] = [
   {
     id: "tkt_b06_1",
     nomor: "TKT-0014",
@@ -65,14 +66,14 @@ function penghuniKamar(nomorKamar: string) {
 
 /** Tiket per kos (hanya Kos Melati punya contoh). */
 export const mockTiketKos: Record<string, TiketKos[]> = {
-  [mockOrganization.id]: TIKET.map((t) => {
+  [mockOrganization.id]: mockTiketContoh.map((t) => {
     const penghuni = penghuniKamar(t.nomorKamar);
     return { ...t, namaPenghuni: penghuni?.nama ?? "-", nomorWa: penghuni?.nomorWa ?? "" };
   }),
 };
 
 /** Tiket per nomor kamar Kos Melati — untuk halaman status tiket penyewa. */
-export const mockTiketPerKamar: Record<string, TiketPenyewa[]> = Object.groupBy(TIKET, (t) => t.nomorKamar) as Record<
+export const mockTiketPerKamar: Record<string, TiketPenyewa[]> = Object.groupBy(mockTiketContoh, (t) => t.nomorKamar) as Record<
   string,
   TiketPenyewa[]
 >;

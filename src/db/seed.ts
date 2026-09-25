@@ -17,6 +17,7 @@ import {
 } from "../lib/mock/kos-melati.ts";
 import { sisipkanJadwalBawaan } from "../lib/aksi/jadwal-pengingat.ts";
 import { mockPemilikLain, mockPercakapanKosta, mockWorkspaceLain } from "../lib/mock/kosta.ts";
+import { mockTiketContoh } from "../lib/mock/tiket.ts";
 import { getDb, tutupDb, type Db } from "./index.ts";
 import * as schema from "./schema.ts";
 
@@ -84,6 +85,20 @@ export async function isiDataContoh(db: Db) {
 
     await tx.insert(schema.reminders).values(mockReminders.map((r) => ({ ...r, terkirimPada: new Date(r.terkirimPada) })));
     await sisipkanJadwalBawaan(tx, mockOrganization.id);
+    await tx.insert(schema.tickets).values(
+      mockTiketContoh.map((t) => ({
+        id: t.id,
+        organizationId: mockOrganization.id,
+        tenantId: `tnt_${t.nomorKamar}`,
+        roomId: `room_${t.nomorKamar}`,
+        nomor: Number(t.nomor.replace("TKT-", "")),
+        kategori: t.kategori,
+        deskripsi: t.deskripsi,
+        status: t.status,
+        dibuatPada: new Date(t.dibuatPada),
+        diperbaruiPada: new Date(t.diperbaruiPada),
+      })),
+    );
 
     // Kos lain yang juga dikelola owner contoh (sebagai owner / admin) — untuk pemilih workspace.
     await tx.insert(schema.users).values({ ...mockPemilikLain, nomorWaTerverifikasi: true });
