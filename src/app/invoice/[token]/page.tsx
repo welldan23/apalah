@@ -33,8 +33,7 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
   if (!inv) notFound();
 
   const waktu = keteranganWaktu(inv, hariIniWib());
-  // Selisih uang yang sudah masuk dengan tagihan (positif = masih kurang).
-  const sisa = inv.nominal - inv.sudahDiterima;
+  const lebihBayar = inv.sudahDiterima - inv.nominal;
   const pesanWa = `Halo, saya ${inv.namaPenghuni} (kamar ${inv.nomorKamar}). Saya mau konfirmasi tagihan ${inv.nomorInvoice} sebesar ${formatRupiah(inv.nominal)}.`;
   const linkWa = `https://wa.me/${inv.nomorWaPemilik}?text=${encodeURIComponent(pesanWa)}`;
 
@@ -73,16 +72,16 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
           {inv.status !== "lunas" && inv.sudahDiterima > 0 && (
             <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-sm">
               Sudah dibayar <span className="font-medium tabular-nums">{formatRupiah(inv.sudahDiterima)}</span>
-              {sisa > 0 && (
+              {inv.sisa > 0 && (
                 <>
                   {" "}
-                  · Sisa <span className="font-semibold tabular-nums">{formatRupiah(sisa)}</span>
+                  · Sisa <span className="font-semibold tabular-nums">{formatRupiah(inv.sisa)}</span>
                 </>
               )}
-              {sisa < 0 && (
+              {lebihBayar > 0 && (
                 <>
                   {" "}
-                  · Lebih bayar <span className="font-semibold tabular-nums">{formatRupiah(-sisa)}</span>
+                  · Lebih bayar <span className="font-semibold tabular-nums">{formatRupiah(lebihBayar)}</span>
                 </>
               )}
             </p>
@@ -163,11 +162,11 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
             Pembayaranmu sedang diperiksa pemilik kos karena nominalnya belum cocok dengan
             tagihan.
           </p>
-          {sisa > 0 && (
+          {inv.bisaDibayar && (
             <Button asChild size="lg" className="h-11 text-base">
               <Link href={`/invoice/${token}/bayar`}>
                 <Wallet data-icon="inline-start" />
-                Bayar sisa {formatRupiah(sisa)}
+                Bayar sisa {formatRupiah(inv.sisa)}
               </Link>
             </Button>
           )}
@@ -177,16 +176,25 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
           <h2 id="bayar-judul" className="font-semibold">
             Cara bayar
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Bayar lewat QRIS atau transfer Virtual Account. Status jadi Lunas otomatis begitu
-            pembayaran diterima — tidak perlu kirim bukti transfer.
-          </p>
-          <Button asChild size="lg" className="h-12 text-base">
-            <Link href={`/invoice/${token}/bayar`}>
-              <Wallet data-icon="inline-start" />
-              Bayar sekarang
-            </Link>
-          </Button>
+          {inv.bisaDibayar ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Bayar lewat QRIS atau transfer Virtual Account. Status jadi Lunas otomatis begitu
+                pembayaran diterima — tidak perlu kirim bukti transfer.
+              </p>
+              <Button asChild size="lg" className="h-12 text-base">
+                <Link href={`/invoice/${token}/bayar`}>
+                  <Wallet data-icon="inline-start" />
+                  Bayar sekarang
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Tagihan ini masih draf dan belum dikirim pemilik kos, jadi belum bisa dibayar. Tombol
+              bayar muncul setelah tagihannya dikirim.
+            </p>
+          )}
           <Button asChild variant="outline" size="lg" className="h-11">
             <a href={linkWa} target="_blank" rel="noopener noreferrer">
               <MessageCircle data-icon="inline-start" />

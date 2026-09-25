@@ -8,7 +8,6 @@ import { PembayaranTagihan } from "@/components/invoice/pembayaran-tagihan";
 import { getDb } from "@/db";
 import { getInvoicePublik } from "@/lib/data/invoice-publik";
 import { formatPeriode, formatRupiah } from "@/lib/format";
-import { sisaTagihan } from "@/lib/pembayaran/metode";
 
 // Sama dengan halaman invoice: pribadi, tidak diindeks, token tidak bocor lewat Referer.
 export const metadata: Metadata = {
@@ -22,9 +21,8 @@ export default async function BayarTagihanPage({ params }: PageProps<"/invoice/[
   const { token } = await params;
   const inv = await getInvoicePublik(await getDb(), token);
   if (!inv) notFound();
-  const sisa = sisaTagihan(inv.nominal, inv.sudahDiterima);
-  // Sudah lunas / tidak ada yang perlu dibayar → kembali ke rincian.
-  if (inv.status === "lunas" || sisa === 0) redirect(`/invoice/${token}`);
+  // Sudah lunas, masih draf, atau tidak ada sisa → kembali ke rincian.
+  if (!inv.bisaDibayar) redirect(`/invoice/${token}`);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 py-6 sm:py-10">
@@ -46,7 +44,7 @@ export default async function BayarTagihanPage({ params }: PageProps<"/invoice/[
         </p>
         <p className="text-xs text-muted-foreground tabular-nums">{inv.nomorInvoice}</p>
         <p className="mt-3 text-sm text-muted-foreground">{inv.sudahDiterima > 0 ? "Sisa yang perlu dibayar" : "Total yang perlu dibayar"}</p>
-        <p className="text-2xl font-semibold tracking-tight tabular-nums">{formatRupiah(sisa)}</p>
+        <p className="text-2xl font-semibold tracking-tight tabular-nums">{formatRupiah(inv.sisa)}</p>
         {inv.sudahDiterima > 0 && (
           <p className="text-xs text-muted-foreground">
             Dari tagihan {formatRupiah(inv.nominal)} · sudah dibayar {formatRupiah(inv.sudahDiterima)}
@@ -56,7 +54,7 @@ export default async function BayarTagihanPage({ params }: PageProps<"/invoice/[
 
       <PembayaranTagihan
         token={token}
-        nominal={sisa}
+        nominal={inv.sisa}
         nomorInvoice={inv.nomorInvoice}
         awal={{ sudahDiterima: inv.sudahDiterima, pembayaran: inv.pembayaran.map((p) => ({ status: p.status })) }}
       />

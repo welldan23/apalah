@@ -39,6 +39,8 @@ describe("getInvoicePublik", () => {
       dibayarPada: undefined,
       pembayaran: [],
       sudahDiterima: 0,
+      sisa: 650_000,
+      bisaDibayar: true,
     });
   });
 
@@ -63,6 +65,12 @@ describe("getInvoicePublik", () => {
       { label: "Air", nominal: 25_000 },
       { label: "Listrik", nominal: 75_000 },
     ]);
+    assert.deepEqual([inv?.status, inv?.sisa, inv?.bisaDibayar], ["menunggu", 600_000, true]);
+
+    // Draf dari Kosta belum dikirim ke penyewa dan nominalnya masih bisa dikoreksi → belum bisa dibayar.
+    await db.update(schema.invoices).set({ status: "draft" }).where(eq(schema.invoices.tokenPublik, token));
+    const draf = await getInvoicePublik(db, token);
+    assert.deepEqual([draf?.status, draf?.sisa, draf?.bisaDibayar], ["draft", 600_000, false]);
   });
 
   it("invoice lunas membawa tanggal bayar", async () => {
@@ -79,11 +87,14 @@ describe("getInvoicePublik", () => {
       [[lunas.nominal, "valid"]],
     );
     assert.equal(lunas.sudahDiterima, lunas.nominal);
+    assert.deepEqual([lunas.sisa, lunas.bisaDibayar], [0, false]);
 
     // Grace (C09) membayar Rp750.000 untuk tagihan Rp800.000 → diperiksa pemilik kos.
     const kurang = await getInvoicePublik(db, "demo-c09-2026-09");
     assert.deepEqual(kurang?.pembayaran, [{ waktu: "2026-09-23T12:42:00.000Z", metode: "QRIS", nominal: 750_000, status: "tidak_cocok" }]);
     assert.deepEqual([kurang?.nominal, kurang?.sudahDiterima], [800_000, 750_000]);
+    // Perlu review karena kurang bayar: sisanya tetap bisa dibayar.
+    assert.deepEqual([kurang?.status, kurang?.sisa, kurang?.bisaDibayar], ["perlu_review", 50_000, true]);
 
     await db.insert(schema.payments).values({
       invoiceId: "inv_2026-09_C09",
@@ -96,9 +107,23 @@ describe("getInvoicePublik", () => {
     const denganPending = await getInvoicePublik(db, "demo-c09-2026-09");
     assert.deepEqual(denganPending?.pembayaran.map((p) => p.status), ["tidak_cocok", "pending"]);
     assert.equal(denganPending?.sudahDiterima, 750_000);
+    assert.equal(denganPending?.sisa, 50_000);
 
     const belum = await getInvoicePublik(db, "demo-a05-2026-09");
     assert.deepEqual([belum?.pembayaran, belum?.sudahDiterima], [[], 0]);
+  });
+
+  it("lebih bayar: sisa 0 dan tidak bisa dibayar lagi walau masih diperiksa", async () => {
+    await db.insert(schema.payments).values({
+      invoiceId: "inv_2026-09_C09",
+      nominalDibayar: 100_000,
+      metode: "VA BNI",
+      provider: "midtrans",
+      referensiProvider: "uji-lebih-c09",
+      status: "tidak_cocok",
+    });
+    const inv = await getInvoicePublik(db, "demo-c09-2026-09");
+    assert.deepEqual([inv?.status, inv?.sudahDiterima, inv?.sisa, inv?.bisaDibayar], ["perlu_review", 850_000, 0, false]);
   });
 
   it("token baru acak, unik, dan lolos validasi format", () => {

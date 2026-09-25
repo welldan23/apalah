@@ -4,6 +4,7 @@
 import { asc, eq, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
+import { sisaTagihan } from "../pembayaran/metode.ts";
 import { tanggalWib } from "../waktu.ts";
 import type { InvoiceStatus } from "@/lib/types";
 
@@ -39,6 +40,13 @@ export type InvoicePublik = {
   pembayaran: PembayaranPublik[];
   /** Uang yang sudah masuk (diterima + sedang diperiksa) — sama dengan dasar pencocokan nominal. */
   sudahDiterima: number;
+  /** Yang masih harus dibayar: nominal − sudahDiterima, tidak pernah negatif. */
+  sisa: number;
+  /**
+   * Boleh dibuatkan transaksi bayar: ada sisa dan tagihannya sudah dikirim (bukan draf yang
+   * nominalnya masih bisa dikoreksi, bukan yang sudah Lunas).
+   */
+  bisaDibayar: boolean;
 };
 
 /** Token link invoice: base64url acak (atau token contoh "demo-…"). */
@@ -87,6 +95,8 @@ export async function getInvoicePublik(db: Db, token: string): Promise<InvoicePu
     .where(eq(invoices.tokenPublik, token))
     .orderBy(asc(payments.dibuatPada));
 
+  const sudahDiterima = bayar.filter((b) => b.status !== "pending").reduce((total, b) => total + b.nominal, 0);
+  const sisa = sisaTagihan(inv.nominal, sudahDiterima);
   return {
     ...inv,
     rincian: rincian.length > 0 ? rincian : [{ label: "Sewa kamar", nominal: inv.nominal }],
@@ -94,6 +104,8 @@ export async function getInvoicePublik(db: Db, token: string): Promise<InvoicePu
     diterbitkanPada: tanggalWib(inv.diterbitkanPada),
     dibayarPada: inv.dibayarPada ? tanggalWib(inv.dibayarPada) : undefined,
     pembayaran: bayar.map((b) => ({ ...b, waktu: b.waktu.toISOString() })),
-    sudahDiterima: bayar.filter((b) => b.status !== "pending").reduce((total, b) => total + b.nominal, 0),
+    sudahDiterima,
+    sisa,
+    bisaDibayar: sisa > 0 && inv.status !== "draft" && inv.status !== "lunas",
   };
 }
