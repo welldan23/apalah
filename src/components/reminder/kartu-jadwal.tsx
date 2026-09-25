@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 
-import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { HalamanReminder } from "@/lib/data/halaman-reminder";
@@ -41,7 +40,6 @@ export function KartuJadwal({ jadwal, otomatisAktif }: Pick<HalamanReminder, "ja
         <p className="text-xs text-muted-foreground">
           Tagihan yang sudah lunas tidak diingatkan. Setiap pesan berisi nominal dan link invoice.
         </p>
-        <CatatanSimulasi>Mode contoh: pengiriman otomatis belum berjalan; jadwal masih bawaan.</CatatanSimulasi>
       </CardContent>
     </Card>
   );

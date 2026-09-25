@@ -5,7 +5,6 @@ import { ChevronLeft, Plus } from "lucide-react";
 
 import { KosteraLogo } from "@/components/app-shell/kostera-logo";
 import { DaftarTiket } from "@/components/invoice/daftar-tiket";
-import { CatatanSimulasi } from "@/components/quick-actions/action-sheet";
 import { Button } from "@/components/ui/button";
 import { getHalamanStatusTiket } from "@/lib/data/halaman-tiket";
 
@@ -54,7 +53,6 @@ export default async function StatusTiketPage({ params }: PageProps<"/invoice/[t
         )}
       </div>
       <DaftarTiket token={token} tiket={data.tiket} />
-      <CatatanSimulasi>Mode contoh: tiket di halaman ini masih data contoh.</CatatanSimulasi>
     </main>
   );
 }

@@ -101,6 +101,5 @@ Buka http://localhost:3000 — otomatis diarahkan ke `/dashboard`.
 - `src/app/api/landing/konten` — konten landing publik (read-only, tanpa login).
 - `src/lib/aksi/` — logika aksi yang mengubah data; nominal & status ditentukan server.
 - `src/lib/whatsapp/` — adapter pengiriman WhatsApp (`WHATSAPP_PROVIDER`, default `log`).
-- `src/lib/data/` — kontrak data per halaman. Saat ini membaca data tiruan
-  (`src/lib/mock/`); lapisan backend nanti mengganti isinya dengan query database
-  tanpa mengubah bentuk datanya.
+- `src/lib/data/` — kontrak data per halaman, dibaca dari database untuk kos yang sedang dibuka.
+- `src/lib/mock/` — data contoh Kos Melati yang diisikan `npm run db:seed`.

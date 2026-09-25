@@ -1,5 +1,5 @@
-// Data tiruan (stub) percakapan owner Kos Melati dengan Kosta — tahap frontend.
-// Angka mengikuti data contoh Kos Melati. Diganti riwayat wa_messages saat backend dibangun.
+// Data contoh percakapan owner Kos Melati dengan Kosta dan kos lain milik/dikelola owner —
+// diisikan ke database (wa_messages, organizations) oleh seed. Angka mengikuti data contoh Kos Melati.
 
 import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 
