@@ -13,7 +13,7 @@ export function HowItWorksSection() {
       <SectionHeading
         id="cara-kerja-judul"
         eyebrow="Cara kerja"
-        judul="Tiga langkah, lalu tagihan jalan sendiri"
+        judul="Siapkan sekali, lalu cukup lewat chat"
       />
       <ol className="mt-8 grid md:grid-cols-3 md:gap-6">
         {CARA_KERJA.map(({ icon: Icon, judul, deskripsi, hasil }, i) => {

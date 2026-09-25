@@ -12,7 +12,7 @@ import { urlLanding } from "@/lib/situs";
 
 const JUDUL = "Kostera — Tagihan kos rapi, pembayaran lebih pasti";
 const DESKRIPSI =
-  "Kelola tagihan, pembayaran, dan kamar kos dalam satu tempat. Kosta AI, asisten di WhatsApp, bantu cek tunggakan dan siapkan pengingat.";
+  "Urus kos cukup lewat chat WhatsApp dengan Kosta AI: cek tunggakan, siapkan tagihan dan pengingat, lalu konfirmasi pakai kode. Dashboard Kostera merangkum semuanya.";
 
 export const metadata: Metadata = {
   title: { absolute: JUDUL },

@@ -6,6 +6,7 @@ import {
   CalendarClock,
   ClipboardList,
   FilePlus2,
+  MessageCircleMore,
   Send,
   ShieldCheck,
   UserPlus,
@@ -15,16 +16,16 @@ import {
 import type { InvoiceStatus } from "@/lib/types";
 
 export const HERO = {
-  eyebrow: "Untuk owner & admin kos",
+  eyebrow: "Asisten kos di WhatsApp untuk owner & admin",
   judul: "Tagihan kos rapi, pembayaran lebih pasti",
   deskripsi:
-    "Kostera merapikan tagihan, pembayaran, dan kamar dalam satu tempat. Kosta AI, asisten di WhatsApp, bantu cek tunggakan dan siapkan pengingat. Kamu tinggal konfirmasi.",
+    "Cukup chat Kosta AI di WhatsApp: cek tunggakan, siapkan tagihan, dan kirim pengingat. Setiap aksi baru jalan setelah kamu balas kodenya. Dashboard Kostera merangkum semuanya kalau mau dilihat sekaligus.",
   ctaUtama: "Mulai gratis",
   ctaKedua: "Lihat cara kerja",
   poin: [
-    "Masuk cukup pakai nomor WhatsApp",
+    "Urusan harian cukup lewat chat WhatsApp",
+    "Aksi baru jalan setelah kamu balas kode",
     "Lunas otomatis dari pembayaran terverifikasi",
-    "Kirim massal selalu lewat preview",
   ],
 };
 
@@ -48,6 +49,8 @@ export type PesanChat =
       jenis: "preview";
       judul: string;
       baris: [string, string][];
+      /** Instruksi di bawah preview, sama dengan balasan WhatsApp sungguhan. */
+      catatan: string;
       waktu: string;
     }
   | {
@@ -65,40 +68,46 @@ export type PesanChat =
       waktu: string;
     };
 
-/** Percakapan contoh owner Kos Melati dengan Kosta di WhatsApp. */
+/**
+ * Percakapan contoh owner Kos Melati dengan Kosta AI di WhatsApp. Teksnya mengikuti balasan
+ * sungguhan: aksi baru jalan setelah owner membalas "YA" + kode aksi, dan status bayar dijawab
+ * saat ditanya (notifikasi Lunas dikirim ke penyewa, bukan ke owner).
+ */
 export const CHAT_KOSTA: PesanChat[] = [
   { dari: "owner", teks: "Kosta AI, berapa tunggakan bulan ini?", waktu: "08.02" },
   {
     dari: "kosta",
-    teks: "Ada 3 tagihan jatuh tempo, total Rp1.950.000. Paling lama: kamar A05 (Rizky), jatuh tempo 15 Sep.",
+    teks: "Ada 3 tagihan yang sudah lewat jatuh tempo, total Rp1.950.000: A05 Rizky, B06 Reza, C05 Nadia.",
     waktu: "08.02",
   },
   { dari: "owner", teks: "Siapkan reminder buat mereka", waktu: "08.03" },
   {
     dari: "kosta",
     jenis: "preview",
-    judul: "Preview reminder",
+    judul: "Preview pengingat · Kos Melati",
     baris: [
       ["Penerima", "3 penyewa"],
       ["Periode", "September 2026"],
       ["Total", "Rp1.950.000"],
     ],
+    catatan: "Belum ada yang dikirim. Balas “YA\u00a0482913” untuk mengirim, atau “BATAL\u00a0482913”. Berlaku 24 jam.",
     waktu: "08.03",
   },
-  { dari: "owner", teks: "Kirim", waktu: "08.04" },
+  { dari: "owner", teks: "YA 482913", waktu: "08.04" },
   {
     dari: "kosta",
     jenis: "invoice",
-    teks: "Terkirim ke 3 penyewa, lengkap dengan link invoice masing-masing.",
+    teks: "Pengingat terkirim ke 3 penyewa, lengkap dengan link invoice masing-masing.",
     link: "Invoice B06 · Rp650.000",
     waktu: "08.04",
   },
+  { dari: "owner", teks: "B06 sudah bayar belum?", waktu: "10.20" },
   {
     dari: "kosta",
     jenis: "lunas",
-    teks: "Pembayaran masuk dari Reza (B06). Status tagihan: Lunas.",
+    teks: "Sudah. Tagihan B06 (Reza Kurniawan) September 2026 sebesar Rp650.000 lunas, dibayar 24 Sep 2026.",
     nominal: "Rp650.000",
-    waktu: "10.17",
+    waktu: "10.20",
   },
 ];
 
@@ -116,10 +125,10 @@ export const MASALAH = {
   sesudah: {
     label: "Dengan Kostera",
     poin: [
-      "Tagihan terbit terjadwal, nominal dan jatuh tempo sudah pasti",
+      "Tagihan terbit terjadwal, atau cukup minta Kosta AI lewat chat",
       "Status Lunas berubah sendiri saat dana benar-benar masuk",
-      "Kosta AI menyiapkan pengingat, kamu cukup cek dan konfirmasi",
-      "Kamar terisi dan kosong terlihat dalam satu layar",
+      "Kosta AI di WhatsApp menyiapkan pengingat, kamu cukup balas kodenya",
+      "Tanya “kamar mana yang kosong?” ke Kosta AI, langsung dijawab",
     ],
   },
 };
@@ -136,21 +145,21 @@ export const BENEFIT: Benefit[] = [
     icon: CalendarClock,
     judul: "Tagihan terjadwal",
     deskripsi:
-      "Buat tagihan untuk satu atau banyak kamar sekaligus, lalu biarkan terbit otomatis tiap bulan.",
+      "Chat “buat tagihan bulan depan” ke Kosta AI, atau atur sekali di dashboard supaya terbit otomatis tiap bulan.",
     ilustrasi: "jadwal",
   },
   {
     icon: ShieldCheck,
     judul: "Pantau pembayaran",
     deskripsi:
-      "Lunas hanya saat pembayaran terverifikasi. Nominal yang tidak cocok ditandai Perlu Review.",
+      "Tanya “B06 sudah bayar?” kapan saja. Lunas hanya saat pembayaran terverifikasi; nominal yang tidak cocok ditandai Perlu Review.",
     ilustrasi: "status",
   },
   {
     icon: BedDouble,
     judul: "Kamar rapi",
     deskripsi:
-      "Catat penghuni, pindah kamar, atau keluar dengan beberapa ketukan. Kamar kosong langsung kelihatan.",
+      "Cukup chat “B04 pindah ke B05” atau “A05 keluar hari ini”. Kosta AI siapkan preview, kamu konfirmasi pakai kode.",
     ilustrasi: "kamar",
   },
 ];
@@ -166,22 +175,23 @@ export type Langkah = {
 export const CARA_KERJA: Langkah[] = [
   {
     icon: ClipboardList,
-    judul: "Tambah kos, kamar & penghuni",
-    deskripsi: "Isi nama kos dan jumlah kamar, lalu catat penghuni beserta harga sewanya.",
-    hasil: "Kamar terisi & kosong langsung terpantau",
+    judul: "Daftar & catat kamar",
+    deskripsi:
+      "Daftar pakai nomor WhatsApp, isi nama kos dan kamar, lalu catat penghuni beserta harga sewanya. Cukup sekali di awal.",
+    hasil: "Nomor WA-mu langsung tertaut ke Kosta AI",
   },
   {
-    icon: FilePlus2,
-    judul: "Buat tagihan",
+    icon: MessageCircleMore,
+    judul: "Chat Kosta AI di WhatsApp",
     deskripsi:
-      "Pilih kamar, nominal, dan jatuh tempo. Setiap tagihan punya link invoice untuk penyewa.",
-    hasil: "Link invoice siap dibagikan ke penyewa",
+      "Tanya tunggakan, minta buat tagihan, atau siapkan pengingat. Angkanya diambil langsung dari data kos kamu.",
+    hasil: "Preview jelas: penerima, periode, dan nominal",
   },
   {
     icon: ShieldCheck,
-    judul: "Pantau & ingatkan",
+    judul: "Balas kode untuk menjalankan",
     deskripsi:
-      "Lihat siapa yang sudah bayar, lalu kirim pengingat lewat Kosta AI setelah kamu cek preview-nya.",
+      "Setelah cek preview, balas “YA” beserta kodenya. Baru saat itu pesan terkirim atau data berubah.",
     hasil: "Status Lunas berubah otomatis saat dana masuk",
   },
 ];
@@ -274,9 +284,14 @@ export const FAQ: { tanya: string; jawab: string }[] = [
       "Cukup pakai nomor WhatsApp dan kode OTP. Ruang kerja kos kamu langsung dibuat, dan nomor WA-mu otomatis tertaut ke Kosta AI.",
   },
   {
+    tanya: "Apakah harus buka dashboard setiap hari?",
+    jawab:
+      "Tidak. Urusan harian cukup lewat chat WhatsApp dengan Kosta AI. Dashboard berguna untuk melihat semuanya sekaligus atau mengatur jadwal tagihan dan pengingat.",
+  },
+  {
     tanya: "Apakah Kosta AI bisa mengirim pesan tanpa persetujuan saya?",
     jawab:
-      "Tidak. Setiap aksi yang mengubah data atau mengirim pesan ke banyak penyewa selalu menampilkan preview berisi penerima, periode, dan nominal dulu. Pesan baru terkirim setelah kamu konfirmasi.",
+      "Tidak. Setiap aksi yang mengubah data atau mengirim pesan ke penyewa selalu menampilkan preview berisi penerima, periode, dan nominal dulu. Aksi baru jalan setelah kamu balas “YA” beserta kode aksinya, dan preview hangus setelah 24 jam.",
   },
   {
     tanya: "Dari mana angka tunggakan dan pemasukan berasal?",
@@ -286,7 +301,7 @@ export const FAQ: { tanya: string; jawab: string }[] = [
   {
     tanya: "Kapan status tagihan berubah jadi Lunas?",
     jawab:
-      "Hanya saat pembayaran terverifikasi dari payment gateway. Kalau nominal yang dibayar tidak cocok, tagihan ditandai Perlu Review supaya kamu cek dulu.",
+      "Hanya saat pembayaran terverifikasi dari payment gateway. Kosta AI tidak bisa menandai lunas dari chat atau bukti transfer. Kalau nominal yang dibayar tidak cocok, tagihan ditandai Perlu Review supaya kamu cek dulu.",
   },
   {
     tanya: "Apakah penyewa bisa melihat data penyewa lain?",
@@ -301,12 +316,12 @@ export type Cta = { judul: string; deskripsi: string; tombol: string };
 export const CTA_TENGAH: Cta = {
   judul: "Daftarkan kos kamu, gratis",
   deskripsi:
-    "Isi nama kos, jumlah kamar, dan nomor WhatsApp. Ruang kerja kos langsung siap tanpa langkah teknis.",
+    "Isi nama kos, jumlah kamar, dan nomor WhatsApp. Setelah itu kamu langsung bisa chat Kosta AI.",
   tombol: "Daftarkan kos",
 };
 
 export const CTA_PENUTUP: Cta = {
   judul: "Rapikan tagihan kos mulai bulan ini",
-  deskripsi: "Daftar pakai nomor WhatsApp, tambahkan kamar, dan kirim tagihan pertamamu hari ini.",
+  deskripsi: "Daftar pakai nomor WhatsApp, tambahkan kamar, lalu urus tagihan cukup lewat chat Kosta AI.",
   tombol: "Mulai gratis",
 };

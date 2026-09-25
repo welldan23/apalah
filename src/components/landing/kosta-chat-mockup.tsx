@@ -23,7 +23,7 @@ function IsiPesan({ pesan }: { pesan: PesanChat }) {
             </div>
           ))}
         </dl>
-        <p className="mt-1.5 text-xs text-muted-foreground">Balas “Kirim” untuk mengirim.</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">{pesan.catatan}</p>
       </div>
     );
   }
@@ -43,7 +43,7 @@ function IsiPesan({ pesan }: { pesan: PesanChat }) {
       <>
         <span className="flex items-center gap-1.5 font-medium text-success">
           <CircleCheck className="size-4" aria-hidden="true" />
-          Konfirmasi bayar · {pesan.nominal}
+          Lunas · {pesan.nominal}
         </span>
         <span className="mt-0.5 block">{pesan.teks}</span>
       </>
