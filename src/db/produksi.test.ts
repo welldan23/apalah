@@ -12,6 +12,7 @@ import { buatDbUji } from "./testing.ts";
 const ENV_SEHAT = {
   DATABASE_URL: "postgresql://kostera:uji-db-rahasia@db.contoh.id:6543/postgres",
   APP_URL: "https://app.kostera.id",
+  LANDING_URL: "https://kostera.id",
   BETTER_AUTH_SECRET: "b".repeat(40),
   WHATSAPP_PROVIDER: "meta",
   META_WA_TOKEN: "token-meta-uji-rahasia",
@@ -41,6 +42,9 @@ describe("cek:produksi", () => {
     assert.match(galat({ META_WA_TOKEN: undefined }), /META_WA_TOKEN/);
     assert.match(galat({ WAHA_IZINKAN_SEMUA_NOMOR: "true" }), /WAHA_IZINKAN_SEMUA_NOMOR/);
     assert.match(galat({ APP_URL: "http://app.kostera.id" }), /https/);
+    assert.match(galat({ LANDING_URL: "http://kostera.id" }), /LANDING_URL harus alamat https/);
+    assert.match(galat({ LANDING_URL: "https://app.kostera.id" }), /LANDING_URL harus beda domain/);
+    assert.match(periksaEnvProduksi({ ...ENV_SEHAT, LANDING_URL: undefined }).peringatan.join("\n"), /LANDING_URL kosong/);
     assert.match(galat({ BETTER_AUTH_SECRET: "pendek" }), /BETTER_AUTH_SECRET/);
     assert.match(galat({ BETTER_AUTH_URL: "https://kostera.id" }), /BETTER_AUTH_URL/);
     assert.match(galat({ CRON_SECRET: "pendek" }), /CRON_SECRET/);

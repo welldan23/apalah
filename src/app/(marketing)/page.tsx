@@ -8,6 +8,7 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { CTA_PENUTUP, CTA_TENGAH } from "@/lib/landing/content";
+import { urlLanding } from "@/lib/situs";
 
 const JUDUL = "Kostera — Tagihan kos rapi, pembayaran lebih pasti";
 const DESKRIPSI =
@@ -16,11 +17,12 @@ const DESKRIPSI =
 export const metadata: Metadata = {
   title: { absolute: JUDUL },
   description: DESKRIPSI,
-  alternates: { canonical: "/" },
+  // Landing tinggal di domain landing (kostera.id), bukan domain aplikasi.
+  alternates: { canonical: `${urlLanding()}/` },
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "/",
+    url: `${urlLanding()}/`,
     siteName: "Kostera",
     title: JUDUL,
     description: DESKRIPSI,

@@ -34,6 +34,10 @@ export function periksaEnvProduksi(env: Env): HasilCek {
   }
   const app = originDari(env.APP_URL);
   if (!app?.startsWith("https://")) galat.push("APP_URL harus alamat https, mis. https://app.kostera.id.");
+  const landing = originDari(env.LANDING_URL);
+  if (!env.LANDING_URL) peringatan.push("LANDING_URL kosong: landing & aplikasi di satu domain (APP_URL); kostera.id tidak dilayani deploy ini.");
+  else if (!landing?.startsWith("https://")) galat.push("LANDING_URL harus alamat https, mis. https://kostera.id.");
+  else if (landing === app) galat.push("LANDING_URL harus beda domain dengan APP_URL (mis. kostera.id vs app.kostera.id).");
   if ((env.BETTER_AUTH_SECRET ?? "").length < 32) galat.push("BETTER_AUTH_SECRET wajib diisi, minimal 32 karakter acak.");
   if (env.BETTER_AUTH_URL && originDari(env.BETTER_AUTH_URL) !== app) {
     galat.push("BETTER_AUTH_URL harus sama dengan APP_URL (atau dikosongkan), kalau tidak login ditolak.");
