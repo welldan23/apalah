@@ -25,7 +25,7 @@ describe("prosesPesanKosta (WhatsApp)", () => {
       return { ok: true };
     },
   };
-  const deps = { wa, llm: null, baseUrl: "https://kostera.id", hariIni: "2026-09-24" };
+  const deps = { wa, llm: null, baseUrl: "https://kostera.id", hariIni: "2026-09-24", sekarang: new Date("2026-09-24T09:00:00+07:00") };
   let urutan = 0;
 
   /** Owner mengirim pesan WA → disimpan seperti dari webhook → diproses Kosta. */

@@ -99,6 +99,13 @@
       "when": 1790295897765,
       "tag": "0013_kode_perusahaan_transaksi",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790309561697,
+      "tag": "0014_audit_kosta",
+      "breakpoints": true
     }
   ]
 }

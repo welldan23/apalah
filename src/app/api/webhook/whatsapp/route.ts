@@ -1,7 +1,8 @@
 // Webhook pesan masuk WhatsApp untuk Kosta.
 // POST: payload WAHA atau Meta Cloud API, wajib bertanda tangan HMAC (WHATSAPP_WEBHOOK_SECRET).
-//       Pesan teks disimpan ke percakapan per nomor, langsung dibalas 200 agar provider tidak mengirim
-//       ulang; Kosta memproses & membalas lewat WhatsApp setelah respons terkirim (after).
+//       Pesan teks disimpan ke percakapan per nomor (idempoten per ID pesan provider), langsung dibalas
+//       200 agar provider tidak mengirim ulang; Kosta memproses & membalas lewat WhatsApp setelah
+//       respons terkirim (after). Setiap panggilan dicatat di wa_webhook_events (lihat webhook-masuk).
 // GET:  verifikasi langganan webhook Meta (WHATSAPP_VERIFY_TOKEN).
 
 import { after, type NextRequest } from "next/server";
@@ -9,31 +10,21 @@ import { after, type NextRequest } from "next/server";
 import { getDb } from "@/db";
 import { getDepsKosta } from "@/lib/kosta/deps";
 import { prosesPesanKosta } from "@/lib/kosta/proses-pesan";
-import { simpanPesanMasuk } from "@/lib/kosta/terima-pesan";
-import { bacaPesanMasuk, tandaTanganValid, tantanganMeta } from "@/lib/whatsapp/webhook";
-
-const UKURAN_MAKS = 512 * 1024;
+import { catatEventWebhook, terimaWebhookWhatsApp, UKURAN_MAKS_WEBHOOK } from "@/lib/kosta/webhook-masuk";
+import { tantanganMeta } from "@/lib/whatsapp/webhook";
 
 export async function POST(request: Request) {
-  if (Number(request.headers.get("content-length") ?? 0) > UKURAN_MAKS) {
+  const db = await getDb();
+  // Tolak sebelum membaca body bila ukurannya sudah jelas terlalu besar.
+  if (Number(request.headers.get("content-length") ?? 0) > UKURAN_MAKS_WEBHOOK) {
+    await catatEventWebhook(db, { headers: request.headers, status: "terlalu_besar" });
     return Response.json({ error: "Payload terlalu besar." }, { status: 413 });
   }
-  const isi = Buffer.from(await request.arrayBuffer());
-  if (isi.length > UKURAN_MAKS) return Response.json({ error: "Payload terlalu besar." }, { status: 413 });
-  if (!tandaTanganValid(isi, request.headers, process.env.WHATSAPP_WEBHOOK_SECRET)) {
-    return Response.json({ error: "Tanda tangan tidak valid." }, { status: 401 });
-  }
-
-  let body: unknown;
-  try {
-    body = JSON.parse(isi.toString("utf8"));
-  } catch {
-    return Response.json({ error: "Body harus JSON." }, { status: 400 });
-  }
-
-  const pesan = bacaPesanMasuk(body);
-  const db = await getDb();
-  const baru = await simpanPesanMasuk(db, pesan);
+  const { http, body, baru } = await terimaWebhookWhatsApp(db, {
+    isi: Buffer.from(await request.arrayBuffer()),
+    headers: request.headers,
+    rahasia: process.env.WHATSAPP_WEBHOOK_SECRET,
+  });
   if (baru.length > 0) {
     after(async () => {
       try {
@@ -47,7 +38,7 @@ export async function POST(request: Request) {
       }
     });
   }
-  return Response.json({ diterima: pesan.length, baru: baru.length });
+  return Response.json(body, { status: http });
 }
 
 export function GET(request: NextRequest) {

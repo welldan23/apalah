@@ -641,3 +641,70 @@ export const whatsappLogs = pgTable(
     check("whatsapp_logs_galat_bila_gagal", sql`(${t.status} = 'gagal') = (${t.galat} is not null)`),
   ],
 );
+
+/**
+ * Audit Kosta: satu baris per pesan owner yang diproses (WhatsApp/web) dan per keputusan aksi dari
+ * dashboard — siapa, kos mana, intent (nama kanonik, mis. list_arrears), tool, action ID, hasil.
+ * `payload` hanya parameter intent yang sudah disaring; isi pesan mentah TIDAK disimpan di sini.
+ */
+export const kostaAuditLogs = pgTable(
+  "kosta_audit_logs",
+  {
+    id: id(),
+    organizationId: text().references(() => organizations.id, { onDelete: "cascade" }),
+    actorUserId: text().references(() => users.id, { onDelete: "set null" }),
+    saluran: text().notNull(),
+    /** wa_messages.id pesan masuk yang diproses (kosong untuk keputusan dari dashboard). */
+    idPesanMasuk: text(),
+    /** Hasil pencocokan nomor: tidak_dikenal | tanpa_akses | pilih_workspace | siap. */
+    statusPengirim: text().notNull(),
+    intent: text(),
+    tool: text(),
+    payload: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+    /** action_drafts.id yang dibuat atau diputuskan. */
+    actionId: text(),
+    statusKonfirmasi: text(),
+    hasil: text().notNull(),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    index("kosta_audit_organisasi_waktu").on(t.organizationId, t.dibuatPada),
+    index("kosta_audit_action").on(t.actionId),
+    check("kosta_audit_saluran", sql`${t.saluran} in ('whatsapp', 'web', 'dashboard')`),
+    check(
+      "kosta_audit_status_pengirim",
+      sql`${t.statusPengirim} in ('tidak_dikenal', 'tanpa_akses', 'pilih_workspace', 'siap')`,
+    ),
+    check(
+      "kosta_audit_hasil",
+      sql`${t.hasil} in ('dijawab', 'klarifikasi', 'menunggu_konfirmasi', 'dijalankan', 'dibatalkan', 'ditolak', 'galat')`,
+    ),
+  ],
+);
+
+/**
+ * Jejak setiap panggilan webhook WhatsApp masuk (diterima maupun ditolak) untuk audit & kesehatan
+ * provider. Tanpa isi pesan dan nomor — hanya ID pesan provider dan jumlahnya.
+ */
+export const waWebhookEvents = pgTable(
+  "wa_webhook_events",
+  {
+    id: id(),
+    provider: text().notNull(),
+    status: text().notNull(),
+    jumlahPesan: integer().notNull().default(0),
+    /** Pesan yang baru tersimpan; sisanya kiriman ulang (duplikat). */
+    pesanBaru: integer().notNull().default(0),
+    idPesanProvider: jsonb().$type<string[]>().notNull().default([]),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    index("wa_webhook_events_waktu").on(t.dibuatPada),
+    check("wa_webhook_events_provider", sql`${t.provider} in ('waha', 'meta', 'tidak_diketahui')`),
+    check(
+      "wa_webhook_events_status",
+      sql`${t.status} in ('diterima', 'tanda_tangan_invalid', 'payload_invalid', 'terlalu_besar')`,
+    ),
+    check("wa_webhook_events_jumlah", sql`${t.pesanBaru} between 0 and ${t.jumlahPesan}`),
+  ],
+);

@@ -1,6 +1,7 @@
 // Orkestrator Kosta: pesan owner → cocokkan nomor & kos → pahami intent → jalankan tool → balasan.
 // Balasan disimpan di riwayat (wa_messages) dan, untuk saluran WhatsApp, dikirim lewat adapter WA.
-// Semua angka berasal dari tool (database); LLM hanya memilih intent.
+// Semua angka berasal dari tool (database); LLM hanya memilih intent. Setiap pesan yang diproses
+// dicatat di audit Kosta (kosta_audit_logs), termasuk yang ditolak atau gagal.
 
 import { eq } from "drizzle-orm";
 
@@ -9,6 +10,7 @@ import { GalatAksi } from "../aksi/galat.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import { kirimDanCatat } from "../whatsapp/log.ts";
 import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
+import { catatAuditKosta, INTENT_KANONIK, type EntriAudit } from "./audit.ts";
 import { batalkanDraft, draftMenungguTerakhir, putuskanDraft } from "./draft.ts";
 import { formatWhatsApp, TEKS_BANTUAN } from "./format-balasan.ts";
 import type { ParserLlm } from "./llm.ts";
@@ -25,6 +27,8 @@ export type DepsKosta = {
   llm?: ParserLlm | null;
   baseUrl: string;
   hariIni: string;
+  /** Waktu sekarang untuk batas berlaku preview; kosong = jam server (diisi di uji). */
+  sekarang?: Date;
 };
 
 const daftarKos = (workspaces: WorkspaceRingkas[]) =>
@@ -36,13 +40,20 @@ const daftarKos = (workspaces: WorkspaceRingkas[]) =>
 export const kosDipilih = (w: WorkspaceRingkas) =>
   `Oke, sekarang aku bantu untuk ${w.namaKos} (${w.jumlahKamar} kamar). Data kos lain tidak ikut dibaca.`;
 
+/** Jejak pemrosesan satu pesan untuk audit — diisi bertahap supaya pesan yang gagal pun tercatat. */
+type Jejak = Omit<EntriAudit, "saluran" | "idPesanMasuk">;
+
 /** Susun balasan untuk satu pesan (tanpa menyimpan/mengirim). */
 async function susunBalasan(
   db: Db,
   { conversationId, messageId, teks }: { conversationId: string; messageId?: string; teks: string },
   deps: DepsKosta,
+  jejak: Jejak,
 ): Promise<{ balasan: BalasanKosta; organizationId: string | null }> {
   const konteks = await cocokkanNomorWa(db, conversationId);
+  jejak.statusPengirim = konteks.status;
+  if (konteks.status !== "tidak_dikenal") jejak.actorUserId = konteks.userId;
+  if (konteks.status === "tidak_dikenal" || konteks.status === "tanpa_akses") jejak.hasil = "ditolak";
   if (konteks.status === "tidak_dikenal") {
     return {
       organizationId: null,
@@ -58,6 +69,12 @@ async function susunBalasan(
   if (konteks.status === "pilih_workspace") {
     const pilihan = cariPilihanWorkspace(teks, konteks.workspaces);
     const dipilih = pilihan && (await pilihWorkspace(db, conversationId, pilihan.id));
+    Object.assign(
+      jejak,
+      dipilih
+        ? { organizationId: dipilih.workspace.id, intent: "select_organization", tool: "pilihWorkspace", hasil: "dijawab" }
+        : { hasil: "klarifikasi" },
+    );
     return dipilih
       ? { organizationId: dipilih.workspace.id, balasan: { teks: kosDipilih(dipilih.workspace) } }
       : { organizationId: null, balasan: { teks: daftarKos(konteks.workspaces) } };
@@ -65,8 +82,10 @@ async function susunBalasan(
 
   const { workspace, userId, workspaces } = konteks;
   const organizationId = workspace.id;
+  jejak.organizationId = organizationId;
   const { intent } = await pahamiPesan(teks, { hariIni: deps.hariIni, namaKos: workspace.namaKos, llm: deps.llm });
   if (messageId) await db.update(waMessages).set({ intent: intent.intent }).where(eq(waMessages.id, messageId));
+  Object.assign(jejak, { intent: INTENT_KANONIK[intent.intent], tool: intent.intent, payload: { ...intent } });
 
   const pemilik = { organizationId, userId, conversationId };
   const percakapan = { organizationId, conversationId };
@@ -85,9 +104,11 @@ async function susunBalasan(
       konfirmasi: async ({ setuju }) => {
         const draftId = await draftMenungguTerakhir(db, conversationId, organizationId);
         if (!draftId) return { teks: "Tidak ada preview yang sedang menunggu konfirmasi." };
+        jejak.actionId = draftId;
         const hasil = setuju
           ? await putuskanDraft(db, { draftId, organizationId, keputusan: "setuju" }, deps)
           : await batalkanDraft(db, { draftId, organizationId });
+        Object.assign(jejak, { statusKonfirmasi: hasil.status, hasil: hasil.status === "dijalankan" ? "dijalankan" : "dibatalkan" });
         return { teks: hasil.balasan };
       },
       ganti_kos: async () => {
@@ -101,6 +122,12 @@ async function susunBalasan(
     },
     async () => ({ teks: TEKS_BANTUAN }),
   );
+  // Hasil belum ditentukan handler (hanya konfirmasi yang menentukannya sendiri) → baca dari balasan.
+  if (jejak.hasil === "galat") {
+    const preview = balasan.lampiran?.jenis === "preview_aksi" ? balasan.lampiran : null;
+    if (preview) Object.assign(jejak, { hasil: "menunggu_konfirmasi", actionId: preview.draftId, statusKonfirmasi: preview.status });
+    else jejak.hasil = ["bantuan", "konfirmasi", "ganti_kos"].includes(intent.intent) ? "klarifikasi" : "dijawab";
+  }
   return { balasan, organizationId };
 }
 
@@ -114,8 +141,10 @@ export async function prosesPesanKosta(
   deps: DepsKosta,
 ): Promise<PesanKosta> {
   let hasil: { balasan: BalasanKosta; organizationId: string | null };
+  // "galat" sampai ada hasil — pesan yang gagal diproses tetap tercatat sebagai galat.
+  const jejak: Jejak = { statusPengirim: "tidak_dikenal", hasil: "galat" };
   try {
-    hasil = await susunBalasan(db, pesan, deps);
+    hasil = await susunBalasan(db, pesan, deps, jejak);
   } catch (err) {
     // Galat yang aman ditampilkan (mis. kamar tidak ada di draft) diteruskan; sisanya disamarkan.
     if (!(err instanceof GalatAksi)) console.error("Kosta gagal memproses pesan:", err);
@@ -127,7 +156,9 @@ export async function prosesPesanKosta(
       organizationId: p?.organizationId ?? null,
       balasan: { teks: err instanceof GalatAksi ? err.message : "Maaf, ada kendala di sistem. Coba lagi sebentar lagi, ya." },
     };
+    jejak.hasil = err instanceof GalatAksi ? "ditolak" : "galat";
   }
+  await catatAuditKosta(db, { ...jejak, saluran: pesan.saluran, idPesanMasuk: pesan.messageId });
 
   const tersimpan = await catatPesan(db, {
     conversationId: pesan.conversationId,

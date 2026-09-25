@@ -28,7 +28,8 @@ describe("alur preview → konfirmasi aksi Kosta", () => {
       return { ok: true };
     },
   };
-  const deps = { wa, baseUrl: "https://kostera.id" };
+  // Jam tetap tak lama setelah draft contoh dibuat (24 Sep 08.10 WIB) — uji tidak bergantung jam server.
+  const deps = { wa, baseUrl: "https://kostera.id", sekarang: new Date("2026-09-24T09:00:00+07:00") };
   const statusDraft = async (id: string) =>
     (await db.select({ s: schema.actionDrafts.status }).from(schema.actionDrafts).where(eq(schema.actionDrafts.id, id)))[0].s;
 
