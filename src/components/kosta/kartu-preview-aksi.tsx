@@ -2,20 +2,16 @@ import { CircleCheck, CircleDashed, CircleX, Clock, type LucideIcon } from "luci
 
 import { KonfirmasiAksi } from "@/components/kosta/konfirmasi-aksi";
 import { StatusBadge, type StatusTone } from "@/components/status-badge";
+import { LABEL_AKSI } from "@/lib/draft-aksi";
 import { formatPeriode, formatRupiah } from "@/lib/format";
 import type { PreviewAksi, StatusDraftAksi } from "@/lib/types";
-
-const JUDUL: Record<PreviewAksi["aksi"], string> = {
-  reminder: "Preview reminder",
-  tagihan: "Preview tagihan",
-};
 
 const STATUS: Record<StatusDraftAksi, { label: string; tone: StatusTone; icon: LucideIcon; petunjuk: string }> = {
   menunggu_konfirmasi: {
     label: "Menunggu konfirmasi",
     tone: "warning",
     icon: Clock,
-    petunjuk: "Cek penerima dan nominal. Tidak ada yang dikirim sebelum kamu konfirmasi.",
+    petunjuk: "Cek isinya dulu. Tidak ada yang dikirim atau diubah sebelum kamu konfirmasi.",
   },
   disetujui: {
     label: "Disetujui",
@@ -24,7 +20,7 @@ const STATUS: Record<StatusDraftAksi, { label: string; tone: StatusTone; icon: L
     petunjuk: "Disetujui, sedang diproses.",
   },
   dijalankan: {
-    label: "Terkirim",
+    label: "Dijalankan",
     tone: "success",
     icon: CircleCheck,
     petunjuk: "Sudah dijalankan dan tercatat di riwayat.",
@@ -33,7 +29,7 @@ const STATUS: Record<StatusDraftAksi, { label: string; tone: StatusTone; icon: L
     label: "Dibatalkan",
     tone: "neutral",
     icon: CircleX,
-    petunjuk: "Dibatalkan, tidak ada yang dikirim.",
+    petunjuk: "Dibatalkan, tidak ada yang dikirim atau diubah.",
   },
 };
 
@@ -49,24 +45,26 @@ export function KartuPreviewAksi({
   onPutuskan?: (keputusan: "setuju" | "batal") => void;
 }) {
   const status = STATUS[preview.status];
+  const label = LABEL_AKSI[preview.aksi];
   const tampil = preview.penerima.slice(0, MAKS_DITAMPILKAN);
   const sisa = preview.penerima.length - tampil.length;
 
   return (
     <figure className="mt-2 overflow-hidden rounded-lg border bg-background/70 text-xs">
       <figcaption className="flex items-center justify-between gap-2 border-b px-2.5 py-1.5">
-        <span className="font-medium">{JUDUL[preview.aksi]}</span>
+        <span className="font-medium">Preview {label.judul.toLowerCase()}</span>
         <StatusBadge tone={status.tone} icon={status.icon}>
           {status.label}
         </StatusBadge>
       </figcaption>
 
+      {preview.keterangan && <p className="border-b px-2.5 py-1.5 font-medium">{preview.keterangan}</p>}
       <dl className="divide-y">
         {(
           [
-            ["Penerima", `${preview.penerima.length} penyewa`],
+            [label.satuan === "penyewa" ? "Penerima" : "Penghuni", `${preview.penerima.length} ${label.satuan}`],
             ["Periode", formatPeriode(preview.periode)],
-            ["Total nominal", formatRupiah(preview.total)],
+            [label.labelTotal, formatRupiah(preview.total)],
           ] as const
         ).map(([label, nilai]) => (
           <div key={label} className="flex justify-between gap-3 px-2.5 py-1.5">

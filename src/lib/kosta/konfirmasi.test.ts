@@ -184,7 +184,7 @@ describe("Kosta: konfirmasi aksi dengan kode, kedaluwarsa, dan batas status baya
     it("tidak ada tool Kosta yang bisa mengubah status bayar", () => {
       assert.deepEqual(
         ALAT.map((a) => a.name).sort(),
-        ["cek_kamar", "draft_tagihan", "ganti_kos", "kamar_kosong", "konfirmasi", "koreksi_draft", "lihat_tunggakan", "pindah_penghuni", "rekap_pemasukan", "siapkan_reminder"],
+        ["cek_kamar", "draft_tagihan", "ganti_kos", "kamar_kosong", "keluar_penghuni", "konfirmasi", "koreksi_draft", "lihat_tunggakan", "pindah_penghuni", "rekap_pemasukan", "siapkan_reminder"],
       );
     });
   });

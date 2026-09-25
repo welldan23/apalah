@@ -1,5 +1,6 @@
 import { FilePlus2, MessagesSquare, Send } from "lucide-react";
 
+import { LABEL_AKSI } from "@/lib/draft-aksi";
 import { labelHari, type RingkasanHari } from "@/lib/riwayat-kosta";
 import type { StatusDraftAksi } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -7,7 +8,7 @@ import { cn } from "@/lib/utils";
 const LABEL_STATUS: Record<StatusDraftAksi, string> = {
   menunggu_konfirmasi: "menunggu konfirmasi",
   disetujui: "diproses",
-  dijalankan: "terkirim",
+  dijalankan: "dijalankan",
   dibatalkan: "dibatalkan",
 };
 
@@ -51,7 +52,7 @@ export function PanelRiwayat({
                 ) : (
                   <FilePlus2 className="size-3.5" aria-hidden="true" />
                 )}
-                {a.aksi === "reminder" ? "Reminder" : "Tagihan"} · {LABEL_STATUS[a.status]}
+                {LABEL_AKSI[a.aksi].judul} · {LABEL_STATUS[a.status]}
               </span>
             ))}
           </button>

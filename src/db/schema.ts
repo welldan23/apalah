@@ -52,7 +52,7 @@ export const statusTiketEnum = pgEnum("status_tiket", ["baru", "diproses", "sele
 export const statusKirimWaEnum = pgEnum("status_kirim_wa", ["terkirim", "gagal"]);
 export const aturanJatuhTempoEnum = pgEnum("aturan_jatuh_tempo", ["tanggal_masuk", "tanggal_tetap"]);
 export const arahPesanEnum = pgEnum("arah_pesan", ["masuk", "keluar"]);
-export const jenisAksiEnum = pgEnum("jenis_aksi", ["reminder", "tagihan"]);
+export const jenisAksiEnum = pgEnum("jenis_aksi", ["reminder", "tagihan", "pindah_kamar", "keluar_penghuni"]);
 export const statusDraftAksiEnum = pgEnum("status_draft_aksi", [
   "menunggu_konfirmasi",
   "disetujui",

@@ -14,7 +14,8 @@ import type { LampiranKosta } from "@/lib/types";
 
 const { invoices, payments, rooms, tenants } = schema;
 
-export type BalasanKosta = { teks: string; lampiran?: LampiranKosta };
+/** `klarifikasi` = Kosta bertanya balik (data tidak ditemukan / perintah belum jelas), tidak ada aksi. */
+export type BalasanKosta = { teks: string; lampiran?: LampiranKosta; klarifikasi?: boolean };
 
 /**
  * Tagihan yang sudah lewat jatuh tempo — yang paling lama telat di atas. Tanpa periode = semua periode

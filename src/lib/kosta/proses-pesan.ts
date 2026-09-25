@@ -18,7 +18,7 @@ import { kodeAksi } from "./kode-aksi.ts";
 import type { ParserLlm } from "./llm.ts";
 import { catatPesan } from "./riwayat.ts";
 import { pahamiPesan, ruteTool } from "./router.ts";
-import { toolDraftTagihan, toolKoreksiDraft, toolSiapkanReminder } from "./tool-aksi.ts";
+import { toolDraftTagihan, toolKoreksiDraft, toolSiapkanKeluar, toolSiapkanPindah, toolSiapkanReminder } from "./tool-aksi.ts";
 import { toolCekKamar, toolKamarKosong, toolRekapPemasukan, toolTunggakan, type BalasanKosta } from "./tool-baca.ts";
 import { cariPilihanWorkspace, cocokkanNomorWa, pilihWorkspace } from "./workspace.ts";
 
@@ -141,7 +141,7 @@ async function susunBalasan(
           : await batalkanDraft(db, { draftId, organizationId, sekarang: deps.sekarang });
         Object.assign(jejak, {
           statusKonfirmasi: hasil.kedaluwarsa ? "kedaluwarsa" : hasil.status,
-          hasil: hasil.status === "dijalankan" ? "dijalankan" : "dibatalkan",
+          hasil: hasil.status === "dijalankan" ? "dijalankan" : hasil.gagal ? "ditolak" : "dibatalkan",
         });
         return { teks: hasil.balasan };
       },
@@ -150,9 +150,8 @@ async function susunBalasan(
         await db.update(waConversations).set({ organizationId: null }).where(eq(waConversations.id, conversationId));
         return { teks: daftarKos(workspaces) };
       },
-      pindah_penghuni: async () => ({
-        teks: "Pindah penghuni belum bisa lewat chat. Buka menu Kamar & Penghuni di aplikasi Kostera, ya.",
-      }),
+      pindah_penghuni: (i) => toolSiapkanPindah(db, pemilik, { ...i, hariIni }),
+      keluar_penghuni: (i) => toolSiapkanKeluar(db, pemilik, { ...i, hariIni }),
     },
     async () => ({ teks: TEKS_BANTUAN }),
   );
@@ -160,7 +159,8 @@ async function susunBalasan(
   if (jejak.hasil === "galat") {
     const preview = balasan.lampiran?.jenis === "preview_aksi" ? balasan.lampiran : null;
     if (preview) Object.assign(jejak, { hasil: "menunggu_konfirmasi", actionId: preview.draftId, statusKonfirmasi: preview.status });
-    else jejak.hasil = ["bantuan", "konfirmasi", "ganti_kos"].includes(intent.intent) ? "klarifikasi" : "dijawab";
+    else if (balasan.klarifikasi || ["bantuan", "konfirmasi", "ganti_kos"].includes(intent.intent)) jejak.hasil = "klarifikasi";
+    else jejak.hasil = "dijawab";
   }
   return { balasan, organizationId, namaKos: workspace.namaKos };
 }

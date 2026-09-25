@@ -29,7 +29,7 @@ export async function putuskanDraftDariDashboard(
     await catatAuditKosta(db, {
       ...dasar,
       statusKonfirmasi: hasil.kedaluwarsa ? "kedaluwarsa" : hasil.status,
-      hasil: hasil.status === "dijalankan" ? "dijalankan" : "dibatalkan",
+      hasil: hasil.status === "dijalankan" ? "dijalankan" : hasil.gagal ? "ditolak" : "dibatalkan",
     });
     return hasil;
   } catch (err) {

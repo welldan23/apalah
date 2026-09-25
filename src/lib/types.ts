@@ -214,7 +214,7 @@ export type StatusDraftAksi = "menunggu_konfirmasi" | "disetujui" | "dibatalkan"
 
 /** Preview aksi yang mengubah data / kirim massal — wajib dikonfirmasi owner dulu. */
 export type PreviewAksi = {
-  aksi: "reminder" | "tagihan";
+  aksi: "reminder" | "tagihan" | "pindah_kamar" | "keluar_penghuni";
   /** Periode tagihan, YYYY-MM. */
   periode: string;
   penerima: { nomorKamar: string; nama: string; nominal: number }[];
@@ -222,6 +222,8 @@ export type PreviewAksi = {
   status: StatusDraftAksi;
   /** ID action_drafts — ada bila preview berasal dari server. */
   draftId?: string;
+  /** Ringkasan satu kalimat untuk aksi hunian, mis. "Rizky: B04 → B05 per 24 Sep 2026, sewa tetap Rp650.000". */
+  keterangan?: string;
 };
 
 /** Isi action_drafts.ringkasan_preview: preview untuk owner + target yang dijalankan setelah disetujui. */
@@ -230,6 +232,10 @@ export type DataDraftAksi = Omit<PreviewAksi, "status" | "draftId"> & {
   invoiceIds?: string[];
   /** Aksi tagihan: tagihan yang akan dibuat. */
   tagihan?: { tenantId: string; roomId: string; periode: string; jatuhTempo: string; sewa: number }[];
+  /** Aksi pindah kamar: input pindahKamar. */
+  pindah?: { dariRoomId: string; keRoomId: string; tanggal: string; sewa: "tetap" | "ikut_kamar" };
+  /** Aksi penghuni keluar: input keluarPenghuni. */
+  keluar?: { roomId: string; tanggal: string };
 };
 
 /** Satu pesan di percakapan owner dengan Kosta (WhatsApp). */

@@ -2,6 +2,7 @@
 // Parser hanya menghasilkan intent & parameter; angka dan status selalu diambil tool dari database.
 
 import { periodeBerikutnya, periodeSebelumnya } from "../format.ts";
+import { tanggalValid } from "../aksi/galat.ts";
 import { periodeValid } from "../waktu.ts";
 
 export type Intent =
@@ -13,7 +14,9 @@ export type Intent =
   | { intent: "draft_tagihan"; periode?: string }
   /** `kamar` kosong = semua yang menunggak; berisi = hanya tagihan belum dibayar kamar-kamar itu. */
   | { intent: "siapkan_reminder"; kamar?: string[] }
-  | { intent: "pindah_penghuni"; dariKamar: string; keKamar: string }
+  /** `keKamar` kosong = belum jelas pindah kamar atau keluar → Kosta bertanya. `tanggal` kosong = hari ini. */
+  | { intent: "pindah_penghuni"; dariKamar: string; keKamar?: string; tanggal?: string }
+  | { intent: "keluar_penghuni"; nomorKamar: string; tanggal?: string }
   /** `kode` = kode aksi 6 digit dari preview; wajib untuk menyetujui. */
   | { intent: "konfirmasi"; setuju: boolean; kode?: string }
   | {
@@ -31,6 +34,7 @@ export type NamaIntent = Intent["intent"];
 type Properti = Record<string, { type: string; description: string; items?: Record<string, unknown> }>;
 const periode = { type: "string", description: "Periode tagihan YYYY-MM. Kosongkan untuk bulan berjalan." };
 const kamar = (description: string) => ({ type: "string", description });
+const tanggal = { type: "string", description: "Tanggal YYYY-MM-DD bila disebut (mis. akhir bulan = tanggal terakhir bulan ini); kosongkan untuk hari ini." };
 
 /** Tool yang boleh dipilih LLM (format JSON Schema function calling). */
 export const ALAT: { name: Exclude<NamaIntent, "bantuan">; description: string; properties: Properti; required?: string[] }[] = [
@@ -64,9 +68,19 @@ export const ALAT: { name: Exclude<NamaIntent, "bantuan">; description: string; 
   },
   {
     name: "pindah_penghuni",
-    description: "Pindahkan penghuni dari satu kamar ke kamar lain.",
-    properties: { dariKamar: kamar("Kamar asal, mis. A03."), keKamar: kamar("Kamar tujuan, mis. B05.") },
-    required: ["dariKamar", "keKamar"],
+    description: "Penghuni pindah dari satu kamar ke kamar lain. Bila kamar tujuan tidak disebut, kosongkan keKamar.",
+    properties: {
+      dariKamar: kamar("Kamar asal, mis. B04."),
+      keKamar: kamar("Kamar tujuan, mis. B05. Kosongkan bila tidak disebut."),
+      tanggal,
+    },
+    required: ["dariKamar"],
+  },
+  {
+    name: "keluar_penghuni",
+    description: "Penghuni keluar / berhenti ngekos dari kamarnya.",
+    properties: { nomorKamar: kamar("Kamar penghuni yang keluar, mis. B04."), tanggal },
+    required: ["nomorKamar"],
   },
   {
     name: "konfirmasi",
@@ -106,6 +120,8 @@ export function normalisasiKamar(nilai: unknown) {
   return `${m[1].toUpperCase()}${m[1] ? m[2].padStart(2, "0") : m[2]}`;
 }
 
+const tanggalAtauKosong = (nilai: unknown) => (tanggalValid(nilai) ? { tanggal: nilai } : {});
+
 const periodeAtauKosong = (nilai: unknown) =>
   typeof nilai === "string" && periodeValid(nilai) ? { periode: nilai } : {};
 
@@ -132,9 +148,12 @@ export function validasiIntent(mentah: unknown): Intent {
     case "pindah_penghuni": {
       const dariKamar = normalisasiKamar(x.dariKamar);
       const keKamar = normalisasiKamar(x.keKamar);
-      return dariKamar && keKamar && dariKamar !== keKamar
-        ? { intent: "pindah_penghuni", dariKamar, keKamar }
-        : { intent: "bantuan" };
+      if (!dariKamar || dariKamar === keKamar) return { intent: "bantuan" };
+      return { intent: "pindah_penghuni", dariKamar, ...(keKamar ? { keKamar } : {}), ...tanggalAtauKosong(x.tanggal) };
+    }
+    case "keluar_penghuni": {
+      const nomorKamar = normalisasiKamar(x.nomorKamar);
+      return nomorKamar ? { intent: "keluar_penghuni", nomorKamar, ...tanggalAtauKosong(x.tanggal) } : { intent: "bantuan" };
     }
     case "konfirmasi":
       if (typeof x.setuju !== "boolean") return { intent: "bantuan" };
@@ -190,6 +209,36 @@ export function mintaTandaiLunas(teks: string) {
     /\b(tandai|tandain|jadikan|jadiin|set|ubah|ganti|update|anggap|catat|konfirmasi)\b.{0,40}\b(lunas|sudah bayar|udah bayar|sudah dibayar|paid)\b/.test(t) ||
     /\blunas(kan|in)\b/.test(t)
   );
+}
+
+/**
+ * Tanggal yang disebut owner → YYYY-MM-DD (relatif ke hariIni): "hari ini", "kemarin", "besok",
+ * "akhir bulan", "30 sep", "tgl 30". undefined bila tidak ada tanggal.
+ */
+export function tanggalDariTeks(teks: string, hariIni: string): string | undefined {
+  const t = bersih(teks);
+  const geser = (hari: number) => {
+    const d = new Date(`${hariIni}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + hari);
+    return d.toISOString().slice(0, 10);
+  };
+  const [tahun, bulan] = hariIni.split("-").map(Number);
+  const dari = (y: number, m: number, d: number) => {
+    const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    return tanggalValid(iso) ? iso : undefined;
+  };
+  if (/\bhari ini\b|\bsekarang\b/.test(t)) return hariIni;
+  if (/\bkemarin\b/.test(t)) return geser(-1);
+  if (/\blusa\b/.test(t)) return geser(2);
+  if (/\bbesok\b/.test(t)) return geser(1);
+  if (/akhir bulan/.test(t)) return new Date(Date.UTC(tahun, bulan, 0)).toISOString().slice(0, 10);
+  const denganBulan = /\b(\d{1,2}) (jan|feb|mar|apr|mei|jun|jul|agu|agt|ags|sep|okt|nov|des)[a-z]*\b(?: (\d{4}))?/.exec(t);
+  if (denganBulan) {
+    const indeks = denganBulan[2].startsWith("ag") ? 7 : NAMA_BULAN.indexOf(denganBulan[2]);
+    return dari(Number(denganBulan[3] ?? tahun), indeks + 1, Number(denganBulan[1]));
+  }
+  const tgl = /\b(?:tgl|tanggal) (\d{1,2})\b/.exec(t);
+  return tgl ? dari(tahun, bulan, Number(tgl[1])) : undefined;
 }
 
 const NAMA_BULAN = ["jan", "feb", "mar", "apr", "mei", "jun", "jul", "agu", "sep", "okt", "nov", "des"];
@@ -254,10 +303,20 @@ export function parseKataKunci(teks: string, hariIni: string): Intent {
   if (koreksi) return koreksi;
   const periode = periodeDariTeks(t, hariIni);
   const p = periode ? { periode } : {};
-  const kamarDisebut = [...t.matchAll(new RegExp(`\\b(${KAMAR})\\b`, "g"))].map((m) => normalisasiKamar(m[1])).filter((k): k is string => !!k);
+  // Frasa tanggal ("tgl 30", "30 sep") dibuang dulu supaya tidak terbaca sebagai nomor kamar.
+  const tanpaTanggal = t
+    .replace(/\b(?:tgl|tanggal) \d{1,2}\b/g, " ")
+    .replace(/\b\d{1,2} (?:jan|feb|mar|apr|mei|jun|jul|agu|agt|ags|sep|okt|nov|des)[a-z]*\b(?: \d{4})?/g, " ");
+  const kamarDisebut = [...tanpaTanggal.matchAll(new RegExp(`\\b(${KAMAR})\\b`, "g"))]
+    .map((m) => normalisasiKamar(m[1]))
+    .filter((k): k is string => !!k);
 
-  if (/\bpindah(kan)?\b/.test(t) && kamarDisebut.length >= 2) {
-    return validasiIntent({ intent: "pindah_penghuni", dariKamar: kamarDisebut[0], keKamar: kamarDisebut[1] });
+  const tanggal = tanggalDariTeks(t, hariIni);
+  if (/\bpindah(kan)?\b/.test(t) && kamarDisebut.length >= 1 && !/\bkeluar\b/.test(t)) {
+    return validasiIntent({ intent: "pindah_penghuni", dariKamar: kamarDisebut[0], keKamar: kamarDisebut[1], tanggal });
+  }
+  if (/\b(keluar|berhenti ngekos|check ?out)\b/.test(t) && kamarDisebut.length === 1) {
+    return validasiIntent({ intent: "keluar_penghuni", nomorKamar: kamarDisebut[0], tanggal });
   }
   if (/remind|ingatkan|pengingat|tagih yang/.test(t)) return validasiIntent({ intent: "siapkan_reminder", kamar: kamarDisebut });
   if (/(buat|bikin|siapkan|terbitkan).*tagihan|draft tagihan/.test(t)) return { intent: "draft_tagihan", ...p };

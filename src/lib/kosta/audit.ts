@@ -14,6 +14,7 @@ export const INTENT_KANONIK = {
   draft_tagihan: "prepare_invoice_generation",
   siapkan_reminder: "prepare_reminder",
   pindah_penghuni: "prepare_tenant_move",
+  keluar_penghuni: "prepare_tenant_move",
   koreksi_draft: "revise_action",
   konfirmasi: "confirm_action",
   ganti_kos: "switch_organization",
@@ -59,6 +60,7 @@ const KUNCI_PAYLOAD = new Set([
   "kode",
   "kamar",
   "rentang",
+  "tanggal",
 ]);
 
 const saringNilai = (nilai: unknown): unknown => {

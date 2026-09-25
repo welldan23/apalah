@@ -5,6 +5,7 @@
 import { getDb } from "@/db";
 import { bacaJson, GalatAksi, pastikanPengelola, responGalat } from "@/lib/aksi/galat";
 import { getWorkspaceSessionApi } from "@/lib/data/session";
+import { LABEL_AKSI } from "@/lib/draft-aksi";
 import { putuskanDraftDariDashboard } from "@/lib/kosta/keputusan";
 import { catatPesan } from "@/lib/kosta/riwayat";
 import { getPengirimWhatsApp } from "@/lib/whatsapp";
@@ -33,7 +34,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/kosta/draft
             conversationId: hasil.conversationId,
             organizationId,
             arah: "masuk",
-            isi: keputusan === "batal" ? "Batal" : hasil.aksi === "reminder" ? "Setuju, kirim" : "Setuju, buat",
+            isi: keputusan === "batal" ? "Batal" : `Setuju, ${LABEL_AKSI[hasil.aksi].kerja}`,
           }),
           await catatPesan(db, { conversationId: hasil.conversationId, organizationId, arah: "keluar", isi: hasil.balasan }),
         ]

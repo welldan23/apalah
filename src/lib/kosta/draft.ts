@@ -6,12 +6,14 @@ import { and, desc, eq, inArray, lt, notInArray } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { GalatAksi } from "../aksi/galat.ts";
+import { keluarPenghuni, pindahKamar } from "../aksi/penghuni.ts";
 import { kirimReminder } from "../aksi/reminder.ts";
 import { sisipkanTagihan } from "../aksi/tagihan.ts";
 import { getPengaturanTagihanTerjadwal } from "../aksi/tagihan-terjadwal.ts";
 import { formatPeriode, formatRupiah, formatTanggal, periodeBerikutnya } from "../format.ts";
 import { STATUS_BISA_DIINGATKAN } from "../reminder.ts";
 import { jatuhTempoUntuk } from "../tagihan-terjadwal.ts";
+import { tanggalWib } from "../waktu.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import { kodeAksi } from "./kode-aksi.ts";
 import type { DataDraftAksi, PreviewAksi, StatusDraftAksi } from "@/lib/types";
@@ -26,7 +28,7 @@ type Pemilik = { organizationId: string; userId: string; conversationId?: string
 const urutKamar = <T extends { nomorKamar: string }>(a: T, b: T) =>
   a.nomorKamar.localeCompare(b.nomorKamar, "id", { numeric: true });
 
-async function simpanDraft(db: Db, pemilik: Pemilik, data: DataDraftAksi): Promise<PreviewAksi> {
+export async function simpanDraft(db: Db, pemilik: Pemilik, data: DataDraftAksi): Promise<PreviewAksi> {
   // Preview baru menggantikan preview lama yang belum diputuskan di percakapan yang sama,
   // supaya jawaban "ya" tidak menyetujui preview yang sudah basi.
   if (pemilik.conversationId) {
@@ -50,8 +52,16 @@ async function simpanDraft(db: Db, pemilik: Pemilik, data: DataDraftAksi): Promi
       ringkasanPreview: data,
     })
     .returning({ id: actionDrafts.id });
-  const { aksi, periode, penerima, total } = data;
-  return { aksi, periode, penerima, total, status: "menunggu_konfirmasi", draftId: draft.id };
+  const { aksi, periode, penerima, total, keterangan } = data;
+  return {
+    aksi,
+    periode,
+    penerima,
+    total,
+    status: "menunggu_konfirmasi",
+    draftId: draft.id,
+    ...(keterangan ? { keterangan } : {}),
+  };
 }
 
 /**
@@ -199,6 +209,8 @@ export type HasilKeputusan = {
   balasan: string;
   /** true bila dibatalkan karena preview sudah lewat masa berlakunya. */
   kedaluwarsa?: boolean;
+  /** Alasan bila aksi disetujui tapi ditolak aturan saat dijalankan (mis. kamar tujuan keburu terisi). */
+  gagal?: string;
 };
 
 const SUDAH_DIPUTUSKAN = () => new GalatAksi("Draft ini sudah diputuskan sebelumnya.", 409);
@@ -266,12 +278,49 @@ export async function putuskanDraft(
     throw SUDAH_DIPUTUSKAN();
   }
   const data = draft.ringkasanPreview;
-  const balasan =
-    data.aksi === "reminder"
-      ? await jalankanReminder(db, organizationId, data, deps)
-      : await jalankanTagihan(db, organizationId, data);
+  let balasan: string;
+  try {
+    balasan = await jalankan(db, organizationId, data, { ...deps, sekarang });
+  } catch (err) {
+    // Aturan domain menolak saat dijalankan (data berubah sejak preview) — tidak ada yang diubah.
+    if (!(err instanceof GalatAksi)) throw err;
+    await ubahStatus(db, draftId, "disetujui", "dibatalkan");
+    return {
+      aksi: draft.jenisAksi,
+      conversationId: draft.conversationId,
+      status: "dibatalkan",
+      gagal: err.message,
+      balasan: `Tidak jadi dijalankan: ${err.message} Tidak ada data yang diubah.`,
+    };
+  }
   await ubahStatus(db, draftId, "disetujui", "dijalankan");
   return { aksi: draft.jenisAksi, conversationId: draft.conversationId, status: "dijalankan", balasan };
+}
+
+async function jalankan(
+  db: Db,
+  organizationId: string,
+  data: DataDraftAksi,
+  deps: { wa: PengirimWhatsApp; baseUrl: string; sekarang: Date },
+) {
+  if (data.aksi === "reminder") return jalankanReminder(db, organizationId, data, deps);
+  if (data.aksi === "tagihan") return jalankanTagihan(db, organizationId, data);
+  if (data.aksi === "pindah_kamar" && data.pindah) {
+    const h = await pindahKamar(db, organizationId, data.pindah);
+    return `${h.nama} sudah dipindah dari ${h.dari} ke ${h.ke} per ${formatTanggal(data.pindah.tanggal)}. Sewa ${formatRupiah(h.hargaSewa)}/bulan; tagihan yang sudah terbit tidak berubah.`;
+  }
+  if (data.aksi === "keluar_penghuni" && data.keluar) {
+    const h = await keluarPenghuni(db, organizationId, data.keluar, tanggalWib(deps.sekarang));
+    return [
+      `${h.nama} tercatat keluar dari ${h.nomorKamar} per ${formatTanggal(data.keluar.tanggal)}. Kamar ${h.nomorKamar} sekarang kosong.`,
+      h.tagihanTerbuka.jumlah
+        ? `${h.tagihanTerbuka.jumlah} tagihan belum lunas (${formatRupiah(h.tagihanTerbuka.nominal)}) tetap tercatat.`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+  throw new GalatAksi("Jenis aksi ini tidak dikenali.", 409);
 }
 
 async function jalankanReminder(

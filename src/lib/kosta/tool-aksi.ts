@@ -1,10 +1,10 @@
 // Tool aksi Kosta: menyiapkan draft yang MENUNGGU KONFIRMASI owner — belum ada data yang diubah
 // atau pesan yang dikirim sampai owner menyetujui preview (lihat putuskanDraft).
 
-import { and, eq, gte, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import { formatPeriode, formatRupiah, periodeBerikutnya } from "../format.ts";
+import { formatPeriode, formatRupiah, formatTanggal, periodeBerikutnya } from "../format.ts";
 import { pesanPengingat, pesanReminder } from "../pesan.ts";
 import { STATUS_BISA_DIINGATKAN } from "../reminder.ts";
 import {
@@ -13,6 +13,7 @@ import {
   koreksiDraftTagihan,
   siapkanDraftReminder,
   siapkanDraftTagihan,
+  simpanDraft,
   type KoreksiDraft,
 } from "./draft.ts";
 import type { BalasanKosta } from "./tool-baca.ts";
@@ -166,6 +167,106 @@ export async function toolSiapkanReminder(
       `Ini preview pengingat untuk ${untuk}, total ${formatRupiah(preview.total)}. ` +
       `Belum ada pesan yang dikirim sampai kamu konfirmasi.${catatan}\n\n` +
       `Contoh pesan ke ${contoh.namaPenghuni} (${contoh.nomorKamar}):\n${isiContoh}`,
+    lampiran: { jenis: "preview_aksi", ...preview },
+  };
+}
+
+/** Penghuni aktif di satu kamar kos ini; null bila kamar tidak ada / kosong. */
+async function penghuniAktif(db: Db, organizationId: string, nomorKamar: string) {
+  const [baris] = await db
+    .select({ roomId: rooms.id, tenantId: tenants.id, nama: tenants.nama, sewa: tenants.hargaSewa })
+    .from(rooms)
+    .innerJoin(tenants, and(eq(tenants.roomId, rooms.id), eq(tenants.status, "aktif")))
+    .where(and(eq(rooms.organizationId, organizationId), eq(rooms.nomorKamar, nomorKamar)));
+  return baris ?? null;
+}
+
+const nantiDiHariH = (tanggal: string) =>
+  `Pindah & keluar penghuni dicatat saat hari-H (${formatTanggal(tanggal)}), tidak bisa dijadwalkan dulu. Kirim lagi perintahnya di tanggal itu, ya.`;
+
+/**
+ * prepare_tenant_move (pindah kamar): preview "B04 → B05" yang menunggu konfirmasi. Tanpa kamar tujuan
+ * atau untuk tanggal yang belum tiba, Kosta bertanya/menjelaskan dulu — tidak ada draft.
+ */
+export async function toolSiapkanPindah(
+  db: Db,
+  pemilik: Pemilik,
+  { dariKamar, keKamar, tanggal, hariIni }: { dariKamar: string; keKamar?: string; tanggal?: string; hariIni: string },
+): Promise<BalasanKosta> {
+  const tgl = tanggal ?? hariIni;
+  if (!keKamar) {
+    return {
+      klarifikasi: true,
+      teks:
+        `Maksudnya penghuni ${dariKamar} pindah ke kamar lain, atau keluar dari kos? ` +
+        `Balas misalnya "${dariKamar} pindah ke B05" atau "${dariKamar} keluar".` +
+        (tgl > hariIni ? ` ${nantiDiHariH(tgl)}` : ""),
+    };
+  }
+  if (tgl > hariIni) return { klarifikasi: true, teks: nantiDiHariH(tgl) };
+
+  const penghuni = await penghuniAktif(db, pemilik.organizationId, dariKamar);
+  if (!penghuni) return { klarifikasi: true, teks: `Tidak ada penghuni aktif di kamar ${dariKamar}. Cek lagi nomor kamarnya, ya.` };
+  const [tujuan] = await db
+    .select({ id: rooms.id, status: rooms.status, aktif: rooms.aktif, hargaSewa: rooms.hargaSewa })
+    .from(rooms)
+    .where(and(eq(rooms.organizationId, pemilik.organizationId), eq(rooms.nomorKamar, keKamar)));
+  if (!tujuan) return { klarifikasi: true, teks: `Kamar ${keKamar} tidak ada di kos ini. Cek lagi nomor kamarnya, ya.` };
+  if (!tujuan.aktif || tujuan.status !== "kosong") {
+    return { klarifikasi: true, teks: `Kamar ${keKamar} ${tujuan.aktif ? "sudah terisi" : "sedang nonaktif"}. Pilih kamar kosong lain.` };
+  }
+
+  const keterangan = `${penghuni.nama}: ${dariKamar} → ${keKamar} per ${formatTanggal(tgl)}, sewa tetap ${formatRupiah(penghuni.sewa)}`;
+  const preview = await simpanDraft(db, pemilik, {
+    aksi: "pindah_kamar",
+    periode: tgl.slice(0, 7),
+    penerima: [{ nomorKamar: dariKamar, nama: penghuni.nama, nominal: penghuni.sewa }],
+    total: penghuni.sewa,
+    keterangan,
+    pindah: { dariRoomId: penghuni.roomId, keRoomId: tujuan.id, tanggal: tgl, sewa: "tetap" },
+  });
+  return {
+    teks:
+      `Ini preview pindah kamar untuk ${penghuni.nama}: ${dariKamar} → ${keKamar} per ${formatTanggal(tgl)}. ` +
+      `Sewa tetap ${formatRupiah(penghuni.sewa)} (harga kamar ${keKamar} ${formatRupiah(tujuan.hargaSewa)}; ubah lewat dashboard bila sewa mau ikut kamar baru). ` +
+      "Belum ada data yang diubah sampai kamu konfirmasi.",
+    lampiran: { jenis: "preview_aksi", ...preview },
+  };
+}
+
+/** prepare_tenant_move (keluar): preview penghuni keluar + tagihan belum lunas yang tetap tercatat. */
+export async function toolSiapkanKeluar(
+  db: Db,
+  pemilik: Pemilik,
+  { nomorKamar, tanggal, hariIni }: { nomorKamar: string; tanggal?: string; hariIni: string },
+): Promise<BalasanKosta> {
+  const tgl = tanggal ?? hariIni;
+  if (tgl > hariIni) return { klarifikasi: true, teks: nantiDiHariH(tgl) };
+  const penghuni = await penghuniAktif(db, pemilik.organizationId, nomorKamar);
+  if (!penghuni) return { klarifikasi: true, teks: `Tidak ada penghuni aktif di kamar ${nomorKamar}. Cek lagi nomor kamarnya, ya.` };
+
+  const [terbuka] = await db
+    .select({
+      jumlah: sql<number>`count(*)`.mapWith(Number),
+      nominal: sql<number>`coalesce(sum(${invoices.nominal}), 0)`.mapWith(Number),
+    })
+    .from(invoices)
+    .where(and(eq(invoices.tenantId, penghuni.tenantId), inArray(invoices.status, ["draft", "terkirim", "menunggu", "jatuh_tempo", "perlu_review"])));
+  const preview = await simpanDraft(db, pemilik, {
+    aksi: "keluar_penghuni",
+    periode: tgl.slice(0, 7),
+    penerima: [{ nomorKamar, nama: penghuni.nama, nominal: terbuka.nominal }],
+    total: terbuka.nominal,
+    keterangan: `${penghuni.nama} keluar dari ${nomorKamar} per ${formatTanggal(tgl)}`,
+    keluar: { roomId: penghuni.roomId, tanggal: tgl },
+  });
+  return {
+    teks:
+      `Ini preview penghuni keluar: ${penghuni.nama} dari ${nomorKamar} per ${formatTanggal(tgl)}. ` +
+      (terbuka.jumlah
+        ? `${terbuka.jumlah} tagihan belum lunas (${formatRupiah(terbuka.nominal)}) tetap tercatat dan bisa ditagih. `
+        : "Tidak ada tagihan yang belum lunas. ") +
+      "Belum ada data yang diubah sampai kamu konfirmasi.",
     lampiran: { jenis: "preview_aksi", ...preview },
   };
 }
