@@ -92,6 +92,13 @@
       "when": 1790294751481,
       "tag": "0012_log_whatsapp",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790295897765,
+      "tag": "0013_kode_perusahaan_transaksi",
+      "breakpoints": true
     }
   ]
 }

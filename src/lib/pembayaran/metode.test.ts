@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { cariMetode, formatNomorVa, formatSisaWaktu, langkahBayar, METODE_BAYAR, sisaTagihan } from "./metode.ts";
+import { cariMetode, formatNomorVa, formatSisaWaktu, langkahBayar, METODE_BAYAR, sisaTagihan, tagihanBisaDibayar } from "./metode.ts";
 
 describe("metode bayar via tautan", () => {
   it("QRIS dulu (15 menit), lalu Virtual Account bank (24 jam)", () => {
@@ -29,5 +29,18 @@ describe("metode bayar via tautan", () => {
   it("langkah bayar sesuai metode", () => {
     assert.match(langkahBayar(cariMetode("qris")!, "Rp50.000").join(" "), /Scan kode QR[\s\S]*Rp50\.000/);
     assert.match(langkahBayar(cariMetode("va_mandiri")!, "Rp800.000")[0], /m-banking\/ATM Mandiri/);
+    // Mandiri lewat Midtrans dibayar di menu Multipayment dengan kode perusahaan.
+    const mandiri = langkahBayar(cariMetode("va_mandiri")!, "Rp800.000", "70012");
+    assert.match(mandiri[0], /Bayar → Multipayment/);
+    assert.match(mandiri[1], /kode perusahaan 70012/);
+  });
+
+  it("bisa dibayar hanya bila ada sisa dan tagihannya bukan draf / lunas", () => {
+    assert.equal(tagihanBisaDibayar("menunggu", 500_000), true);
+    assert.equal(tagihanBisaDibayar("jatuh_tempo", 1), true);
+    assert.equal(tagihanBisaDibayar("perlu_review", 50_000), true);
+    assert.equal(tagihanBisaDibayar("perlu_review", 0), false);
+    assert.equal(tagihanBisaDibayar("draft", 500_000), false);
+    assert.equal(tagihanBisaDibayar("lunas", 500_000), false);
   });
 });

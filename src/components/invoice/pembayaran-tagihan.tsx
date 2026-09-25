@@ -23,17 +23,8 @@ import { cn } from "@/lib/utils";
 /** Keadaan tagihan saat halaman bayar dibuka — acuan mendeteksi pembayaran baru. */
 type KeadaanAwal = { sudahDiterima: number; pembayaran: Pick<PembayaranPublik, "status">[] };
 
-/**
- * Tahap frontend: instruksi contoh (nomor VA/QR belum asli). Tahap backend: POST
- * /api/invoice/[token]/bayar { metode } → InstruksiBayar dari payment gateway.
- */
-function instruksiContoh(metode: IdMetodeBayar, nominal: number): InstruksiBayar {
-  const m = cariMetode(metode)!;
-  const kedaluwarsaPada = new Date(Date.now() + m.masaBerlakuMenit * 60_000).toISOString();
-  return m.jenis === "qris"
-    ? { metode, nominal, kedaluwarsaPada, qrString: "CONTOH" }
-    : { metode, nominal, kedaluwarsaPada, nomorVa: "8808000012345678" };
-}
+/** Balasan POST /api/invoice/[token]/bayar. */
+type InstruksiTransaksi = InstruksiBayar & { simulasi: boolean };
 
 /**
  * Bayar tagihan lewat tautan: pilih metode → instruksi QRIS / Virtual Account dengan batas waktu →
@@ -51,7 +42,29 @@ export function PembayaranTagihan({
   awal: KeadaanAwal;
 }) {
   const [pilihan, setPilihan] = useState<IdMetodeBayar>("qris");
-  const [instruksi, setInstruksi] = useState<InstruksiBayar | null>(null);
+  const [instruksi, setInstruksi] = useState<InstruksiTransaksi | null>(null);
+  const [memuat, setMemuat] = useState(false);
+  const [galat, setGalat] = useState<string | null>(null);
+
+  // Transaksi dibuat di payment gateway; memilih metode yang sama lagi memakai transaksi yang masih berlaku.
+  async function bayar() {
+    setMemuat(true);
+    setGalat(null);
+    try {
+      const res = await fetch(`/api/invoice/${token}/bayar`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ metode: pilihan }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) setInstruksi(data);
+      else setGalat(data?.galat ?? "Instruksi bayar belum bisa dibuat. Coba lagi.");
+    } catch {
+      setGalat("Koneksi terputus. Periksa internet kamu, lalu coba lagi.");
+    } finally {
+      setMemuat(false);
+    }
+  }
 
   if (instruksi) {
     return (
@@ -106,8 +119,13 @@ export function PembayaranTagihan({
           );
         })}
       </div>
-      <Button size="lg" className="h-12 text-base" onClick={() => setInstruksi(instruksiContoh(pilihan, nominal))}>
-        Bayar {formatRupiah(nominal)}
+      {galat && (
+        <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
+          {galat}
+        </p>
+      )}
+      <Button size="lg" className="h-12 text-base" disabled={memuat} onClick={bayar}>
+        {memuat ? "Menyiapkan instruksi…" : `Bayar ${formatRupiah(nominal)}`}
       </Button>
     </section>
   );
@@ -123,7 +141,7 @@ function InstruksiPembayaran({
   token: string;
   nomorInvoice: string;
   awal: KeadaanAwal;
-  instruksi: InstruksiBayar;
+  instruksi: InstruksiTransaksi;
   onGantiMetode: () => void;
 }) {
   const metode = cariMetode(instruksi.metode)!;
@@ -194,18 +212,18 @@ function InstruksiPembayaran({
       {!kedaluwarsa &&
         (metode.jenis === "qris" ? (
           <div className="flex flex-col items-center gap-2 rounded-xl border bg-white p-4">
-            <div
-              role="img"
-              aria-label="Kode QR pembayaran"
-              className="grid size-52 place-items-center rounded-lg border-2 border-dashed text-muted-foreground"
-            >
-              <QrCode className="size-24" aria-hidden="true" />
-            </div>
+            <KodeQr isi={instruksi.qrString ?? ""} />
             <p className="text-xs text-muted-foreground">Scan dengan aplikasi apa pun yang mendukung QRIS</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3 rounded-xl border bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
+              {instruksi.kodePerusahaan && (
+                <p className="mb-1 text-sm">
+                  <span className="text-muted-foreground">Kode perusahaan </span>
+                  <span className="font-semibold tabular-nums">{instruksi.kodePerusahaan}</span>
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">Nomor Virtual Account</p>
               <p className="text-xl font-semibold whitespace-nowrap tabular-nums select-all">
                 {formatNomorVa(instruksi.nomorVa ?? "")}
@@ -220,7 +238,7 @@ function InstruksiPembayaran({
 
       {!kedaluwarsa && (
         <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-sm">
-          {langkahBayar(metode, formatRupiah(instruksi.nominal)).map((langkah) => (
+          {langkahBayar(metode, formatRupiah(instruksi.nominal), instruksi.kodePerusahaan).map((langkah) => (
             <li key={langkah}>{langkah}</li>
           ))}
         </ol>
@@ -246,8 +264,36 @@ function InstruksiPembayaran({
           Ganti cara bayar
         </Button>
       </div>
-      <CatatanSimulasi>Mode contoh: nomor Virtual Account dan kode QR ini belum asli — jangan dibayar.</CatatanSimulasi>
+      {instruksi.simulasi && (
+        <CatatanSimulasi>Mode contoh: nomor Virtual Account dan kode QR ini belum asli — jangan dibayar.</CatatanSimulasi>
+      )}
     </section>
+  );
+}
+
+/** Gambar kode QR dari isi QRIS (dibuat di browser; pustaka QR baru dimuat saat dibutuhkan). */
+function KodeQr({ isi }: { isi: string }) {
+  const [svg, setSvg] = useState<string | null>(null);
+
+  useEffect(() => {
+    let batal = false;
+    import("qrcode")
+      .then((qr) => qr.toString(isi, { type: "svg", margin: 1, errorCorrectionLevel: "M" }))
+      .then((hasil) => !batal && setSvg(hasil))
+      .catch(() => !batal && setSvg(null));
+    return () => {
+      batal = true;
+    };
+  }, [isi]);
+
+  return (
+    <div role="img" aria-label="Kode QR pembayaran" className="grid size-56 place-items-center">
+      {svg ? (
+        <span className="block size-full [&>svg]:size-full" dangerouslySetInnerHTML={{ __html: svg }} />
+      ) : (
+        <QrCode className="size-24 text-muted-foreground" aria-hidden="true" />
+      )}
+    </div>
   );
 }
 

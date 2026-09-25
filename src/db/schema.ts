@@ -388,6 +388,8 @@ export const paymentAttempts = pgTable(
     nominal: integer().notNull(),
     status: statusTransaksiBayarEnum().notNull().default("menunggu"),
     nomorVa: text(),
+    /** Kode perusahaan/biller untuk VA yang dibayar lewat menu Multipayment (mis. Mandiri Bill). */
+    kodePerusahaan: text(),
     qrString: text(),
     /** ID transaksi di gateway. */
     referensiProvider: text().unique("payment_attempts_referensi_unik"),

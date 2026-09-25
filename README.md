@@ -56,7 +56,21 @@ paling banyak sekali per penyewa per 24 jam, dan jadwal yang terlewat disusulkan
   5 * * * *  curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://domain-kamu/api/cron/pengingat > /dev/null
   ```
 
-### Template WhatsApp resmi (produksi)
+## Pembayaran online (Midtrans)
+
+Penyewa membayar dari link invoice lewat QRIS atau Virtual Account (BCA, BNI, BRI, Mandiri,
+Permata). Tanpa `MIDTRANS_SERVER_KEY`, halaman bayar memakai **mode contoh** (nomor VA/QR tidak
+bisa dibayar). Untuk mengaktifkan:
+
+1. Isi `MIDTRANS_SERVER_KEY` dengan server key dari dashboard Midtrans (sandbox dulu), dan
+   `MIDTRANS_PRODUCTION=true` hanya untuk kunci produksi.
+2. Di dashboard Midtrans → Settings → Payment → Notification URL, isi
+   `https://domain-kamu/api/webhook/pembayaran/midtrans`.
+
+Status Lunas hanya berubah lewat notifikasi Midtrans yang tanda tangannya valid; notifikasi yang
+dikirim ulang tidak diproses dua kali.
+
+## Template WhatsApp resmi (produksi)
 
 Dengan `WHATSAPP_PROVIDER=meta`, pesan yang dimulai Kostera ke penyewa wajib memakai template
 yang sudah disetujui. Daftarkan di WhatsApp Manager (bahasa Indonesia `id`), isi persisnya ada di

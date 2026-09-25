@@ -54,6 +54,7 @@ describe("notifikasi Midtrans", () => {
         provider: "midtrans",
         eventId: "trx-2:settlement",
         referensi: "trx-2",
+        orderId: "inv_2026-09_A03~2",
         invoiceId: "inv_2026-09_A03",
         status: "berhasil",
         statusGateway: "settlement",

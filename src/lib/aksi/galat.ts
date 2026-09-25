@@ -1,9 +1,9 @@
 // Galat aksi yang aman ditampilkan ke owner, lengkap dengan status HTTP-nya.
 
 export class GalatAksi extends Error {
-  readonly status: 400 | 401 | 403 | 404 | 409;
+  readonly status: 400 | 401 | 403 | 404 | 409 | 502;
 
-  constructor(message: string, status: 400 | 401 | 403 | 404 | 409 = 400) {
+  constructor(message: string, status: 400 | 401 | 403 | 404 | 409 | 502 = 400) {
     super(message);
     this.status = status;
   }

@@ -1,7 +1,8 @@
 // Pemrosesan notifikasi payment gateway — SATU-SATUNYA jalur yang boleh membuat invoice Lunas.
 // Idempoten: setiap event dicatat di webhook_events; event yang sama tidak diproses dua kali.
 // Nominal dicocokkan lewat cocokkanNominal (total uang diterima vs tagihan): cocok → Lunas;
-// kurang/lebih/bayar ganda → Perlu review.
+// kurang/lebih/bayar ganda → Perlu review. Status transaksi dari halaman bayar (payment_attempts)
+// ikut diperbarui: berhasil, kedaluwarsa, atau gagal.
 
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
@@ -9,7 +10,7 @@ import { schema, type Db } from "../../db/index.ts";
 import type { NotifikasiPembayaran } from "./midtrans.ts";
 import { cocokkanNominal, ringkasKeputusan } from "./pencocokan.ts";
 
-const { invoices, payments, webhookEvents } = schema;
+const { invoices, paymentAttempts, payments, webhookEvents } = schema;
 
 export type HasilNotifikasi =
   | { duplikat: true }
@@ -39,17 +40,33 @@ export async function prosesNotifikasiPembayaran(db: Db, n: NotifikasiPembayaran
       .for("update");
     if (!inv) return selesai("diabaikan: invoice tidak ditemukan");
 
+    // Transaksi yang dibuat lewat halaman bayar, bila order ini berasal dari sana.
+    const [transaksi] = await tx
+      .select({ id: paymentAttempts.id, status: paymentAttempts.status })
+      .from(paymentAttempts)
+      .where(eq(paymentAttempts.orderId, n.orderId));
+    const tandaiTransaksi = async (status: "berhasil" | "kedaluwarsa" | "gagal") => {
+      // Yang sudah berhasil tidak ditimpa notifikasi yang datang terlambat.
+      if (transaksi && transaksi.status !== "berhasil") {
+        await tx.update(paymentAttempts).set({ status }).where(eq(paymentAttempts.id, transaksi.id));
+      }
+    };
+
     const [lama] = await tx
       .select({ id: payments.id, status: payments.status })
       .from(payments)
       .where(and(eq(payments.provider, n.provider), eq(payments.referensiProvider, n.referensi)));
 
     if (n.status === "gagal") {
+      await tandaiTransaksi(n.statusGateway === "expire" ? "kedaluwarsa" : "gagal");
       if (lama?.status === "pending") await tx.delete(payments).where(eq(payments.id, lama.id));
       return selesai(`gagal: ${n.statusGateway}`, { invoiceId: inv.id, statusInvoice: inv.status });
     }
 
     if (n.status === "pending") {
+      // QRIS/VA dari halaman bayar berstatus pending sejak dibuat: artinya MENUNGGU dibayar,
+      // belum ada uang masuk — jangan dicatat sebagai pembayaran yang sedang diproses.
+      if (transaksi) return selesai("menunggu pembayaran", { invoiceId: inv.id, statusInvoice: inv.status });
       if (!lama) {
         await tx.insert(payments).values({
           invoiceId: inv.id,
@@ -65,6 +82,7 @@ export async function prosesNotifikasiPembayaran(db: Db, n: NotifikasiPembayaran
     }
 
     // Berhasil: bandingkan total uang diterima (termasuk pembayaran sebelumnya) dengan tagihan.
+    await tandaiTransaksi("berhasil");
     if (lama && lama.status !== "pending") return selesai("diabaikan: transaksi sudah tercatat", { invoiceId: inv.id });
     const [{ diterima }] = await tx
       .select({ diterima: sql<number>`coalesce(sum(${payments.nominalDibayar}), 0)`.mapWith(Number) })

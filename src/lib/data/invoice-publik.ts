@@ -4,7 +4,7 @@
 import { asc, eq, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import { sisaTagihan } from "../pembayaran/metode.ts";
+import { sisaTagihan, tagihanBisaDibayar } from "../pembayaran/metode.ts";
 import { tanggalWib } from "../waktu.ts";
 import type { InvoiceStatus } from "@/lib/types";
 
@@ -47,6 +47,13 @@ export type InvoicePublik = {
    * nominalnya masih bisa dikoreksi, bukan yang sudah Lunas).
    */
   bisaDibayar: boolean;
+};
+
+/** Header respons API link invoice: pribadi, tidak di-cache/diindeks, token tidak bocor lewat Referer. */
+export const HEADER_INVOICE_PUBLIK = {
+  "Cache-Control": "private, no-store",
+  "X-Robots-Tag": "noindex, nofollow",
+  "Referrer-Policy": "no-referrer",
 };
 
 /** Token link invoice: base64url acak (atau token contoh "demo-…"). */
@@ -106,6 +113,6 @@ export async function getInvoicePublik(db: Db, token: string): Promise<InvoicePu
     pembayaran: bayar.map((b) => ({ ...b, waktu: b.waktu.toISOString() })),
     sudahDiterima,
     sisa,
-    bisaDibayar: sisa > 0 && inv.status !== "draft" && inv.status !== "lunas",
+    bisaDibayar: tagihanBisaDibayar(inv.status, sisa),
   };
 }

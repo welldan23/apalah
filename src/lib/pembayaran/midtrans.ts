@@ -1,7 +1,11 @@
-// Notifikasi HTTP Midtrans → NotifikasiPembayaran. Tanda tangan: SHA-512(order_id + status_code +
-// gross_amount + ServerKey) di field signature_key. order_id = "<invoiceId>" atau "<invoiceId>~<percobaan>".
+// Midtrans Core API:
+// - buat transaksi QRIS / Virtual Account (POST /v2/charge) untuk halaman bayar penyewa;
+// - notifikasi HTTP → NotifikasiPembayaran. Tanda tangan: SHA-512(order_id + status_code +
+//   gross_amount + ServerKey) di field signature_key. order_id = "<invoiceId>" atau "<invoiceId>~<percobaan>".
 
 import { createHash, timingSafeEqual } from "node:crypto";
+
+import type { GatewayPembayaran, PermintaanTransaksi, TransaksiGateway } from "./gateway.ts";
 
 export type NotifikasiPembayaran = {
   provider: string;
@@ -9,6 +13,8 @@ export type NotifikasiPembayaran = {
   eventId: string;
   /** ID transaksi di gateway (payments.referensi_provider). */
   referensi: string;
+  /** order_id asli — cocok dengan payment_attempts.order_id bila transaksinya dibuat Kostera. */
+  orderId: string;
   invoiceId: string;
   status: "berhasil" | "pending" | "gagal" | "abaikan";
   /** Status asli dari gateway, untuk catatan. */
@@ -70,6 +76,7 @@ export function bacaNotifikasiMidtrans(body: Record<string, unknown>): Notifikas
     provider: "midtrans",
     eventId: `${transaction_id}:${transaction_status}`,
     referensi: transaction_id,
+    orderId: order_id,
     invoiceId: invoiceIdDariOrder(order_id),
     status: statusDari(body),
     statusGateway: transaction_status,
@@ -77,5 +84,75 @@ export function bacaNotifikasiMidtrans(body: Record<string, unknown>): Notifikas
     metode: metodeBayar(body),
     waktu: waktuMidtrans(body.settlement_time ?? body.transaction_time),
     payload: body,
+  };
+}
+
+const BANK_VA = { va_bca: "bca", va_bni: "bni", va_bri: "bri", va_permata: "permata" } as const;
+
+function bodyCharge({ orderId, nominal, metode, masaBerlakuMenit }: PermintaanTransaksi) {
+  const dasar = {
+    transaction_details: { order_id: orderId, gross_amount: nominal },
+    custom_expiry: { expiry_duration: masaBerlakuMenit, unit: "minute" },
+  };
+  if (metode === "qris") return { ...dasar, payment_type: "qris", qris: { acquirer: "gopay" } };
+  // VA Mandiri di Midtrans = Mandiri Bill Payment: kode perusahaan (biller) + kode bayar (bill key).
+  if (metode === "va_mandiri") {
+    return { ...dasar, payment_type: "echannel", echannel: { bill_info1: "Pembayaran:", bill_info2: "Sewa kos" } };
+  }
+  return { ...dasar, payment_type: "bank_transfer", bank_transfer: { bank: BANK_VA[metode] } };
+}
+
+const teks = (nilai: unknown) => (typeof nilai === "string" && nilai ? nilai : undefined);
+
+/** Respons charge → instruksi; null bila field wajib metodenya tidak ada. */
+function bacaCharge(data: Record<string, unknown>, p: PermintaanTransaksi): TransaksiGateway | null {
+  const referensi = teks(data.transaction_id);
+  if (!referensi) return null;
+  const kedaluwarsaPada = teks(data.expiry_time)
+    ? waktuMidtrans(data.expiry_time)
+    : new Date(Date.now() + p.masaBerlakuMenit * 60_000);
+  if (p.metode === "qris") {
+    const qrString = teks(data.qr_string);
+    return qrString ? { referensi, kedaluwarsaPada, qrString } : null;
+  }
+  if (p.metode === "va_mandiri") {
+    const nomorVa = teks(data.bill_key);
+    const kodePerusahaan = teks(data.biller_code);
+    return nomorVa && kodePerusahaan ? { referensi, kedaluwarsaPada, nomorVa, kodePerusahaan } : null;
+  }
+  const va = Array.isArray(data.va_numbers) ? (data.va_numbers[0] as { va_number?: unknown } | undefined) : undefined;
+  const nomorVa = teks(va?.va_number) ?? teks(data.permata_va_number);
+  return nomorVa ? { referensi, kedaluwarsaPada, nomorVa } : null;
+}
+
+export function buatGatewayMidtrans({
+  serverKey,
+  produksi = false,
+  fetch: f = fetch,
+}: {
+  serverKey: string;
+  produksi?: boolean;
+  fetch?: typeof fetch;
+}): GatewayPembayaran {
+  const url = `https://api${produksi ? "" : ".sandbox"}.midtrans.com/v2/charge`;
+  const otorisasi = `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`;
+  return {
+    provider: "midtrans",
+    simulasi: false,
+    async buatTransaksi(permintaan) {
+      const res = await f(url, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: otorisasi },
+        body: JSON.stringify(bodyCharge(permintaan)),
+        signal: AbortSignal.timeout(15_000),
+      });
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      // Transaksi QRIS/VA yang berhasil dibuat berstatus pending (status_code "201").
+      const hasil = String(data.status_code) === "201" ? bacaCharge(data, permintaan) : null;
+      if (!hasil) {
+        throw new Error(`Midtrans ${String(data.status_code ?? res.status)}: ${teks(data.status_message) ?? "respons tidak lengkap"}`);
+      }
+      return hasil;
+    },
   };
 }
