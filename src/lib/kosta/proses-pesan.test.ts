@@ -8,6 +8,7 @@ import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
 import type { PengirimWhatsApp, PesanWhatsApp } from "../whatsapp/index.ts";
+import { kodeAksi } from "./kode-aksi.ts";
 import { prosesPesanKosta } from "./proses-pesan.ts";
 import { simpanPesanMasuk } from "./terima-pesan.ts";
 
@@ -53,9 +54,9 @@ describe("prosesPesanKosta (WhatsApp)", () => {
     assert.equal(masuk.intent, "lihat_tunggakan");
   });
 
-  it("\"ya\" menyetujui preview pengingat yang menunggu; \"ya\" lagi tidak menjalankan apa pun", async () => {
+  it("\"YA <kode>\" menyetujui preview pengingat yang menunggu; \"ya\" lagi tidak menjalankan apa pun", async () => {
     const sebelum = terkirim.length;
-    const { balasan } = await chat("ya");
+    const { balasan } = await chat(`ya ${kodeAksi("draft_reminder_2026-09")}`);
     assert.equal(balasan.teks, "Pengingat terkirim ke 3 penyewa.");
     assert.equal(terkirim.length - sebelum, 4); // 3 pengingat ke penyewa + 1 balasan ke owner
     assert.equal((await chat("ya")).balasan.teks, "Tidak ada preview yang sedang menunggu konfirmasi.");
@@ -64,7 +65,8 @@ describe("prosesPesanKosta (WhatsApp)", () => {
   it("draft tagihan → koreksi → batal, semua lewat chat", async () => {
     const draft = await chat("buat tagihan bulan depan");
     assert.equal(draft.balasan.lampiran?.jenis, "preview_aksi");
-    assert.match(draft.wa.teks, /Balas \*YA\* untuk buat, \*BATAL\* untuk membatalkan, atau koreksi/);
+    const kode = kodeAksi(draft.balasan.lampiran?.jenis === "preview_aksi" ? draft.balasan.lampiran.draftId! : "");
+    assert.match(draft.wa.teks, new RegExp(`Balas \\*YA ${kode}\\* untuk buat, \\*BATAL ${kode}\\* untuk membatalkan, atau koreksi`));
 
     const koreksi = await chat("kecualikan A05");
     assert.match(koreksi.balasan.teks, /^Draft diperbarui \(A05 dikecualikan\)\. Sekarang 33 penghuni/);

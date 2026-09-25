@@ -1,10 +1,11 @@
 // POST /api/kosta/draft/[id] — owner/admin menyetujui atau membatalkan preview aksi Kosta dari web.
-// Body: { keputusan: "setuju" | "batal" }. Keputusan & balasan Kosta dicatat di percakapan.
+// Body: { keputusan: "setuju" | "batal" }. Keputusan & balasan Kosta dicatat di percakapan, dan
+// setiap keputusan (termasuk yang ditolak) tercatat di audit Kosta.
 
 import { getDb } from "@/db";
 import { bacaJson, GalatAksi, pastikanPengelola, responGalat } from "@/lib/aksi/galat";
 import { getWorkspaceSessionApi } from "@/lib/data/session";
-import { putuskanDraft } from "@/lib/kosta/draft";
+import { putuskanDraftDariDashboard } from "@/lib/kosta/keputusan";
 import { catatPesan } from "@/lib/kosta/riwayat";
 import { getPengirimWhatsApp } from "@/lib/whatsapp";
 
@@ -20,9 +21,9 @@ export async function POST(request: Request, ctx: RouteContext<"/api/kosta/draft
 
     const db = await getDb();
     const organizationId = session.organization.id;
-    const hasil = await putuskanDraft(
+    const hasil = await putuskanDraftDariDashboard(
       db,
-      { draftId: id, organizationId, keputusan },
+      { draftId: id, organizationId, userId: session.user.id, keputusan },
       { wa: getPengirimWhatsApp(), baseUrl: process.env.APP_URL ?? new URL(request.url).origin },
     );
 

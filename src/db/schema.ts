@@ -670,7 +670,8 @@ export const kostaAuditLogs = pgTable(
   (t) => [
     index("kosta_audit_organisasi_waktu").on(t.organizationId, t.dibuatPada),
     index("kosta_audit_action").on(t.actionId),
-    check("kosta_audit_saluran", sql`${t.saluran} in ('whatsapp', 'web', 'dashboard')`),
+    // "sistem" = tindakan otomatis, mis. preview yang kedaluwarsa dibatalkan cron.
+    check("kosta_audit_saluran", sql`${t.saluran} in ('whatsapp', 'web', 'dashboard', 'sistem')`),
     check(
       "kosta_audit_status_pengirim",
       sql`${t.statusPengirim} in ('tidak_dikenal', 'tanpa_akses', 'pilih_workspace', 'siap')`,

@@ -12,6 +12,7 @@ import { getPengaturanTagihanTerjadwal } from "../aksi/tagihan-terjadwal.ts";
 import { formatPeriode, formatRupiah, formatTanggal, periodeBerikutnya } from "../format.ts";
 import { jatuhTempoUntuk } from "../tagihan-terjadwal.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kodeAksi } from "./kode-aksi.ts";
 import type { DataDraftAksi, PreviewAksi, StatusDraftAksi } from "@/lib/types";
 
 const { actionDrafts, invoices, rooms, tenants } = schema;
@@ -154,12 +155,45 @@ export async function draftMenungguTerakhir(db: Db, conversationId: string, orga
   return draft?.id ?? null;
 }
 
+/**
+ * Draft di percakapan & kos ini yang kode aksinya cocok (status apa pun) — untuk "YA 482913".
+ * null bila tidak ada; kode dari percakapan atau kos lain tidak pernah cocok.
+ */
+export async function cariDraftDenganKode(db: Db, conversationId: string, organizationId: string, kode: string) {
+  const daftar = await db
+    .select({ id: actionDrafts.id, status: actionDrafts.status })
+    .from(actionDrafts)
+    .where(and(eq(actionDrafts.conversationId, conversationId), eq(actionDrafts.organizationId, organizationId)))
+    .orderBy(desc(actionDrafts.dibuatPada))
+    .limit(100);
+  return daftar.find((d) => kodeAksi(d.id) === kode) ?? null;
+}
+
+/**
+ * Batalkan otomatis draft yang menunggu lebih dari MASA_BERLAKU_DRAFT_MS (dijalankan cron harian),
+ * supaya tidak ada preview basi yang tertinggal. Mengembalikan draft yang dikedaluwarsakan.
+ */
+export async function kedaluwarsakanDraft(db: Db, sekarang = new Date()) {
+  return db
+    .update(actionDrafts)
+    .set({ status: "dibatalkan", dikonfirmasiPada: sekarang })
+    .where(
+      and(
+        eq(actionDrafts.status, "menunggu_konfirmasi"),
+        lt(actionDrafts.dibuatPada, new Date(sekarang.getTime() - MASA_BERLAKU_DRAFT_MS)),
+      ),
+    )
+    .returning({ id: actionDrafts.id, organizationId: actionDrafts.organizationId, userId: actionDrafts.userId });
+}
+
 export type HasilKeputusan = {
   aksi: DataDraftAksi["aksi"];
   conversationId: string | null;
   status: StatusDraftAksi;
   /** Balasan singkat Kosta untuk owner. */
   balasan: string;
+  /** true bila dibatalkan karena preview sudah lewat masa berlakunya. */
+  kedaluwarsa?: boolean;
 };
 
 const SUDAH_DIPUTUSKAN = () => new GalatAksi("Draft ini sudah diputuskan sebelumnya.", 409);
@@ -216,7 +250,11 @@ export async function putuskanDraft(
   const draft = await ambilDraftMenunggu(db, draftId, organizationId);
   if (kedaluwarsa(draft, sekarang)) {
     const hasil = await batalkanDraft(db, { draftId, organizationId, sekarang });
-    return { ...hasil, balasan: "Preview ini sudah lebih dari 24 jam, jadi aku batalkan. Minta ulang supaya datanya terbaru." };
+    return {
+      ...hasil,
+      kedaluwarsa: true,
+      balasan: "Preview ini sudah lebih dari 24 jam, jadi aku batalkan. Minta ulang supaya datanya terbaru.",
+    };
   }
 
   if (!(await ubahStatus(db, draftId, "menunggu_konfirmasi", "disetujui", sekarang))) {

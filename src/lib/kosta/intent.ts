@@ -12,7 +12,8 @@ export type Intent =
   | { intent: "draft_tagihan"; periode?: string }
   | { intent: "siapkan_reminder" }
   | { intent: "pindah_penghuni"; dariKamar: string; keKamar: string }
-  | { intent: "konfirmasi"; setuju: boolean }
+  /** `kode` = kode aksi 6 digit dari preview; wajib untuk menyetujui. */
+  | { intent: "konfirmasi"; setuju: boolean; kode?: string }
   | {
       intent: "koreksi_draft";
       kecualikan?: string[];
@@ -50,8 +51,11 @@ export const ALAT: { name: Exclude<NamaIntent, "bantuan">; description: string; 
   },
   {
     name: "konfirmasi",
-    description: "Jawaban owner atas preview aksi: setuju (ya/kirim) atau batal.",
-    properties: { setuju: { type: "boolean", description: "true bila setuju, false bila batal." } },
+    description: "Jawaban owner atas preview aksi: setuju (ya/kirim) atau batal, biasanya dengan kode aksi 6 digit.",
+    properties: {
+      setuju: { type: "boolean", description: "true bila setuju, false bila batal." },
+      kode: { type: "string", description: "Kode aksi 6 digit yang ditulis owner, mis. 482913. Kosongkan bila tidak disebut." },
+    },
     required: ["setuju"],
   },
   {
@@ -110,7 +114,10 @@ export function validasiIntent(mentah: unknown): Intent {
         : { intent: "bantuan" };
     }
     case "konfirmasi":
-      return typeof x.setuju === "boolean" ? { intent: "konfirmasi", setuju: x.setuju } : { intent: "bantuan" };
+      if (typeof x.setuju !== "boolean") return { intent: "bantuan" };
+      return typeof x.kode === "string" && /^\d{6}$/.test(x.kode)
+        ? { intent: "konfirmasi", setuju: x.setuju, kode: x.kode }
+        : { intent: "konfirmasi", setuju: x.setuju };
     case "koreksi_draft": {
       const kecualikan = (Array.isArray(x.kecualikan) ? x.kecualikan : [])
         .map(normalisasiKamar)
@@ -142,10 +149,24 @@ const bersih = (teks: string) => teks.trim().toLowerCase().replace(/[.!?,]+$/g, 
 /** Perintah pendek yang pasti maknanya — tidak perlu LLM. */
 export function parseCepat(teks: string): Intent | null {
   const t = bersih(teks);
+  const kode = /^(?:(ya|iya|y|ok|oke|setuju|lanjut|kirim|gas|yes)|(batal|batalkan|tidak|cancel|no)) #?(\d{6})$/.exec(t);
+  if (kode) return { intent: "konfirmasi", setuju: !!kode[1], kode: kode[3] };
   if (/^(ya|iya|y|ok|oke|setuju|lanjut|kirim|gas|yes)( (kirim|dong|aja|saja))?$/.test(t)) return { intent: "konfirmasi", setuju: true };
   if (/^(batal|batalkan|tidak|nggak|gak|ga|jangan|no|cancel)( (dulu|aja|saja|kirim))?$/.test(t)) return { intent: "konfirmasi", setuju: false };
   if (/^(ganti|pilih|pindah) (kos|workspace)$/.test(t)) return { intent: "ganti_kos" };
   return null;
+}
+
+/**
+ * Permintaan mengubah status bayar lewat chat ("tandai A05 lunas", "anggap sudah bayar", "lunasin").
+ * Kosta selalu menolaknya: Lunas hanya dari pembayaran yang terverifikasi payment gateway.
+ */
+export function mintaTandaiLunas(teks: string) {
+  const t = bersih(teks);
+  return (
+    /\b(tandai|tandain|jadikan|jadiin|set|ubah|ganti|update|anggap|catat|konfirmasi)\b.{0,40}\b(lunas|sudah bayar|udah bayar|sudah dibayar|paid)\b/.test(t) ||
+    /\blunas(kan|in)\b/.test(t)
+  );
 }
 
 const NAMA_BULAN = ["jan", "feb", "mar", "apr", "mei", "jun", "jul", "agu", "sep", "okt", "nov", "des"];

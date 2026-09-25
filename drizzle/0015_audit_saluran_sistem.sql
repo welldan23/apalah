@@ -1,0 +1,2 @@
+ALTER TABLE "kosta_audit_logs" DROP CONSTRAINT "kosta_audit_saluran";--> statement-breakpoint
+ALTER TABLE "kosta_audit_logs" ADD CONSTRAINT "kosta_audit_saluran" CHECK ("kosta_audit_logs"."saluran" in ('whatsapp', 'web', 'dashboard', 'sistem'));

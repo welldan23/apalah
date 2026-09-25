@@ -11,8 +11,10 @@ import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import { kirimDanCatat } from "../whatsapp/log.ts";
 import type { PesanKosta, WorkspaceRingkas } from "@/lib/types";
 import { catatAuditKosta, INTENT_KANONIK, type EntriAudit } from "./audit.ts";
-import { batalkanDraft, draftMenungguTerakhir, putuskanDraft } from "./draft.ts";
+import { batalkanDraft, cariDraftDenganKode, draftMenungguTerakhir, putuskanDraft } from "./draft.ts";
 import { formatWhatsApp, TEKS_BANTUAN } from "./format-balasan.ts";
+import { mintaTandaiLunas } from "./intent.ts";
+import { kodeAksi } from "./kode-aksi.ts";
 import type { ParserLlm } from "./llm.ts";
 import { catatPesan } from "./riwayat.ts";
 import { pahamiPesan, ruteTool } from "./router.ts";
@@ -36,6 +38,9 @@ const daftarKos = (workspaces: WorkspaceRingkas[]) =>
     "Kamu mengelola beberapa kos. Balas nomor atau nama kos yang mau dibahas:",
     ...workspaces.map((w, i) => `${i + 1}. ${w.namaKos} (${w.jumlahKamar} kamar)`),
   ].join("\n");
+
+export const TOLAK_TANDAI_LUNAS =
+  "Kosta tidak bisa menandai tagihan lunas dari chat, bukti transfer, atau pengakuan penyewa. Status Lunas hanya berubah otomatis saat pembayaran terverifikasi oleh payment gateway.";
 
 export const kosDipilih = (w: WorkspaceRingkas) =>
   `Oke, sekarang aku bantu untuk ${w.namaKos} (${w.jumlahKamar} kamar). Data kos lain tidak ikut dibaca.`;
@@ -83,6 +88,10 @@ async function susunBalasan(
   const { workspace, userId, workspaces } = konteks;
   const organizationId = workspace.id;
   jejak.organizationId = organizationId;
+  if (mintaTandaiLunas(teks)) {
+    Object.assign(jejak, { intent: "mark_invoice_paid", hasil: "ditolak" });
+    return { organizationId, balasan: { teks: TOLAK_TANDAI_LUNAS } };
+  }
   const { intent } = await pahamiPesan(teks, { hariIni: deps.hariIni, namaKos: workspace.namaKos, llm: deps.llm });
   if (messageId) await db.update(waMessages).set({ intent: intent.intent }).where(eq(waMessages.id, messageId));
   Object.assign(jejak, { intent: INTENT_KANONIK[intent.intent], tool: intent.intent, payload: { ...intent } });
@@ -101,14 +110,39 @@ async function susunBalasan(
       siapkan_reminder: () => toolSiapkanReminder(db, pemilik),
       koreksi_draft: (i) =>
         toolKoreksiDraft(db, percakapan, { kecualikan: i.kecualikan, nominal: i.nominal, tanggalJatuhTempo: i.tanggalJatuhTempo }),
-      konfirmasi: async ({ setuju }) => {
-        const draftId = await draftMenungguTerakhir(db, conversationId, organizationId);
-        if (!draftId) return { teks: "Tidak ada preview yang sedang menunggu konfirmasi." };
+      konfirmasi: async ({ setuju, kode }) => {
+        let draftId: string;
+        if (kode) {
+          const draft = await cariDraftDenganKode(db, conversationId, organizationId, kode);
+          if (!draft || draft.status !== "menunggu_konfirmasi") {
+            jejak.hasil = "ditolak";
+            if (draft) Object.assign(jejak, { actionId: draft.id, statusKonfirmasi: draft.status });
+            return {
+              teks: draft
+                ? `Aksi ${kode} sudah ${draft.status} sebelumnya, jadi tidak dijalankan lagi.`
+                : `Kode aksi ${kode} tidak ditemukan. Cek lagi kodenya di preview terakhir.`,
+            };
+          }
+          draftId = draft.id;
+        } else {
+          const menunggu = await draftMenungguTerakhir(db, conversationId, organizationId);
+          if (!menunggu) return { teks: "Tidak ada preview yang sedang menunggu konfirmasi." };
+          // Menyetujui wajib dengan kode aksi; membatalkan tanpa kode aman (tidak ada yang diubah).
+          if (setuju) {
+            Object.assign(jejak, { actionId: menunggu, statusKonfirmasi: "menunggu_konfirmasi" });
+            const k = kodeAksi(menunggu);
+            return { teks: `Supaya tidak salah aksi, balas dengan kodenya: *YA ${k}* untuk menjalankan, atau *BATAL ${k}*.` };
+          }
+          draftId = menunggu;
+        }
         jejak.actionId = draftId;
         const hasil = setuju
           ? await putuskanDraft(db, { draftId, organizationId, keputusan: "setuju" }, deps)
-          : await batalkanDraft(db, { draftId, organizationId });
-        Object.assign(jejak, { statusKonfirmasi: hasil.status, hasil: hasil.status === "dijalankan" ? "dijalankan" : "dibatalkan" });
+          : await batalkanDraft(db, { draftId, organizationId, sekarang: deps.sekarang });
+        Object.assign(jejak, {
+          statusKonfirmasi: hasil.kedaluwarsa ? "kedaluwarsa" : hasil.status,
+          hasil: hasil.status === "dijalankan" ? "dijalankan" : "dibatalkan",
+        });
         return { teks: hasil.balasan };
       },
       ganti_kos: async () => {

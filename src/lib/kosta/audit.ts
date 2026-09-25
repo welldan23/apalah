@@ -20,7 +20,7 @@ export const INTENT_KANONIK = {
   bantuan: "help",
 } as const satisfies Record<NamaIntent, string>;
 
-export type SaluranAudit = "whatsapp" | "web" | "dashboard";
+export type SaluranAudit = "whatsapp" | "web" | "dashboard" | "sistem";
 export type StatusPengirim = "tidak_dikenal" | "tanpa_akses" | "pilih_workspace" | "siap";
 export type HasilAudit =
   | "dijawab"
@@ -47,7 +47,17 @@ export type EntriAudit = {
 };
 
 /** Parameter intent yang boleh masuk audit; nilai lain dibuang. */
-const KUNCI_PAYLOAD = new Set(["periode", "nomorKamar", "dariKamar", "keKamar", "kecualikan", "nominal", "tanggalJatuhTempo", "setuju"]);
+const KUNCI_PAYLOAD = new Set([
+  "periode",
+  "nomorKamar",
+  "dariKamar",
+  "keKamar",
+  "kecualikan",
+  "nominal",
+  "tanggalJatuhTempo",
+  "setuju",
+  "kode",
+]);
 
 const saringNilai = (nilai: unknown): unknown => {
   if (typeof nilai === "string") return nilai.slice(0, 40);
