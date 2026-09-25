@@ -42,9 +42,14 @@ export async function prosesNotifikasiPembayaran(db: Db, n: NotifikasiPembayaran
 
     // Transaksi yang dibuat lewat halaman bayar, bila order ini berasal dari sana.
     const [transaksi] = await tx
-      .select({ id: paymentAttempts.id, status: paymentAttempts.status })
+      .select({ id: paymentAttempts.id, status: paymentAttempts.status, referensi: paymentAttempts.referensiProvider })
       .from(paymentAttempts)
       .where(eq(paymentAttempts.orderId, n.orderId));
+    // transaction_id tidak ikut ditandatangani: notifikasi sah yang transaction_id-nya diganti akan
+    // lolos sebagai event baru. Order yang dibuat Kostera hanya punya satu transaksi di gateway.
+    if (transaksi?.referensi && transaksi.referensi !== n.referensi) {
+      return selesai("diabaikan: transaction_id bukan milik order ini", { invoiceId: inv.id });
+    }
     const tandaiTransaksi = async (status: "berhasil" | "kedaluwarsa" | "gagal") => {
       // Yang sudah berhasil tidak ditimpa notifikasi yang datang terlambat.
       if (transaksi && transaksi.status !== "berhasil") {

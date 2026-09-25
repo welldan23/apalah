@@ -69,6 +69,18 @@ describe("notifikasi Midtrans", () => {
     assert.equal(bacaNotifikasiMidtrans(notif("x", "t", "refund", 1))?.status, "abaikan");
     assert.equal(bacaNotifikasiMidtrans({ order_id: "x" }), null);
   });
+
+  it("transaction_status tidak ikut ditandatangani: uang masuk hanya bila status_code 200", () => {
+    // Notifikasi pending (201) yang sah, lalu transaction_status-nya diganti — tanda tangan tetap valid.
+    const palsu = { ...notif("inv_1", "trx-p", "pending", 500_000), transaction_status: "settlement" };
+    assert.equal(tandaTanganMidtransValid(palsu, KUNCI), true);
+    assert.equal(bacaNotifikasiMidtrans(palsu)?.status, "abaikan");
+    const captureTanpa200 = notif("inv_1", "trx-c", "capture", 500_000, { fraud_status: "accept" });
+    assert.equal(captureTanpa200.status_code, "201");
+    assert.equal(bacaNotifikasiMidtrans(captureTanpa200)?.status, "abaikan");
+    const capture = notif("inv_1", "trx-c", "capture", 500_000, { fraud_status: "accept", status_code: "200" });
+    assert.equal(bacaNotifikasiMidtrans(capture)?.status, "berhasil");
+  });
 });
 
 describe("prosesNotifikasiPembayaran", () => {
@@ -146,6 +158,40 @@ describe("prosesNotifikasiPembayaran", () => {
     assert.deepEqual(await proses(notif("inv_tidak_ada", "trx-x", "settlement", 1)), { duplikat: false, hasil: "diabaikan: invoice tidak ditemukan" });
     assert.deepEqual(await proses(notif("inv_2026-09_A01", "trx-y", "refund", 500_000)), { duplikat: false, hasil: "diabaikan: status refund" });
     assert.equal((await invoice("inv_2026-09_A01")).status, "lunas");
+  });
+
+  it("pending bertanda tangan sah yang transaction_status-nya diganti 'settlement' → tidak Lunas, tanpa pembayaran", async () => {
+    const palsu = { ...notif("inv_2026-09_B14", "trx-B14", "pending", 650_000), transaction_status: "settlement" };
+    assert.deepEqual(await proses(palsu), { duplikat: false, hasil: "diabaikan: status settlement" });
+    assert.equal((await invoice("inv_2026-09_B14")).status, "menunggu");
+    assert.equal((await bayar("trx-B14")).length, 0);
+  });
+
+  it("transaction_id berbeda dari transaksi yang dibuat untuk order itu → diabaikan; yang asli tetap diproses", async () => {
+    const [inv] = await db.select().from(schema.invoices).where(eq(schema.invoices.id, "inv_2026-09_B16"));
+    await db.insert(schema.paymentAttempts).values({
+      organizationId: inv.organizationId,
+      invoiceId: inv.id,
+      percobaan: 1,
+      orderId: "inv_2026-09_B16~1",
+      metode: "qris",
+      nominal: inv.nominal,
+      qrString: "QR-UJI",
+      referensiProvider: "trx-B16-asli",
+      kedaluwarsaPada: new Date("2026-09-24T04:00:00Z"),
+    });
+    // Notifikasi sah yang transaction_id-nya (tidak ditandatangani) diganti → event baru, tapi bukan transaksi order ini.
+    const tiruan = notif("inv_2026-09_B16~1", "trx-B16-tiruan", "settlement", 650_000);
+    assert.deepEqual(await proses(tiruan), {
+      duplikat: false,
+      hasil: "diabaikan: transaction_id bukan milik order ini",
+      invoiceId: "inv_2026-09_B16",
+    });
+    assert.equal((await invoice("inv_2026-09_B16")).status, "menunggu");
+    assert.equal((await bayar("trx-B16-tiruan")).length, 0);
+
+    assert.equal((await proses(notif("inv_2026-09_B16~1", "trx-B16-asli", "settlement", 650_000))).duplikat, false);
+    assert.equal((await invoice("inv_2026-09_B16")).status, "lunas");
   });
 });
 

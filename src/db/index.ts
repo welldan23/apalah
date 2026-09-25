@@ -13,7 +13,15 @@ export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 /** Folder data PGlite lokal (diabaikan git). */
 export const PGLITE_DIR = process.env.PGLITE_DIR ?? ".data/pglite";
 
+/** Produksi wajib PostgreSQL persisten — PGlite hanya untuk pengembangan lokal. */
+export function pastikanBukanPgliteDiProduksi(env: Partial<Record<string, string>> = process.env) {
+  if (!env.DATABASE_URL && env.NODE_ENV === "production") {
+    throw new Error("DATABASE_URL wajib diisi di produksi (PostgreSQL persisten); PGlite hanya untuk pengembangan lokal.");
+  }
+}
+
 async function buatDb(): Promise<Db> {
+  pastikanBukanPgliteDiProduksi();
   const url = process.env.DATABASE_URL;
   if (url) {
     const { drizzle } = await import("drizzle-orm/postgres-js");

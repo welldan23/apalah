@@ -41,7 +41,12 @@ const pengirimLog: PengirimWhatsApp = {
   provider: "log",
   simulasi: true,
   async kirim({ ke, teks }) {
-    console.info(`[whatsapp:log] → ${ke}: ${teks.slice(0, 80)}…`);
+    // Di produksi isi pesan (bisa berisi kode OTP) dan nomor lengkap tidak boleh masuk log server.
+    if (process.env.NODE_ENV === "production") {
+      console.info(`[whatsapp:log] → ${ke.slice(0, 5)}… (${teks.length} karakter, isi tidak dicatat)`);
+    } else {
+      console.info(`[whatsapp:log] → ${ke}: ${teks.slice(0, 80)}…`);
+    }
     return { ok: true };
   },
 };

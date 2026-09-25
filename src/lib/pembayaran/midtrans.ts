@@ -53,8 +53,12 @@ function metodeBayar(body: Record<string, unknown>) {
 
 function statusDari(body: Record<string, unknown>): NotifikasiPembayaran["status"] {
   const status = String(body.transaction_status ?? "");
-  if (status === "settlement") return "berhasil";
-  if (status === "capture") return body.fraud_status === "accept" ? "berhasil" : "pending";
+  // transaction_status TIDAK ikut ditandatangani, status_code ikut. Uang dianggap masuk hanya bila
+  // status_code "200", supaya notifikasi pending (201) yang statusnya diganti tidak membuat Lunas.
+  if (status === "settlement" || (status === "capture" && body.fraud_status === "accept")) {
+    return body.status_code === "200" ? "berhasil" : "abaikan";
+  }
+  if (status === "capture") return "pending";
   if (status === "pending") return "pending";
   if (["deny", "cancel", "expire", "failure"].includes(status)) return "gagal";
   return "abaikan"; // refund, chargeback, dll. — ditangani manual

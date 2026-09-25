@@ -4,11 +4,12 @@
 import { mkdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
-import { PGLITE_DIR } from "./index.ts";
+import { PGLITE_DIR, pastikanBukanPgliteDiProduksi } from "./index.ts";
 
 const MIGRATIONS = { migrationsFolder: "drizzle" };
 
 export async function jalankanMigrasi() {
+  pastikanBukanPgliteDiProduksi();
   const url = process.env.DATABASE_URL;
   if (url) {
     const { default: postgres } = await import("postgres");

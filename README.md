@@ -14,6 +14,9 @@ npm run dev
 
 `npm run dev` otomatis menjalankan migrasi database lalu mengisi data contoh Kos Melati.
 
+Deploy produksi (app.kostera.id): ikuti [docs/deploy-produksi.md](docs/deploy-produksi.md) dan jalankan
+`npm run cek:produksi` dengan environment produksi sebelum deploy.
+
 ## Database
 
 - **Lokal (default):** tanpa pengaturan apa pun, Kostera memakai PGlite — PostgreSQL yang

@@ -42,6 +42,8 @@ const notif = (orderId: string, status: string, nominal: number) =>
     order_id: orderId,
     transaction_id: `trx-${orderId}`,
     transaction_status: status,
+    // Selalu dikirim Midtrans dan ikut ditandatangani: 200 berhasil, 201 pending, 202 ditolak/batal.
+    status_code: status === "settlement" ? "200" : status === "pending" ? "201" : "202",
     gross_amount: `${nominal}.00`,
     payment_type: "bank_transfer",
     va_numbers: [{ bank: "bca", va_number: "8808000012345678" }],

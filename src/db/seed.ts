@@ -152,6 +152,11 @@ export async function isiDataContoh(db: Db) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  // Data contoh berisi nomor WA & token invoice "demo-…" yang bisa ditebak — jangan pernah ke produksi.
+  if (process.env.NODE_ENV === "production") {
+    console.error("✗ Data contoh tidak boleh diisikan di produksi (NODE_ENV=production).");
+    process.exit(1);
+  }
   try {
     const baru = await isiDataContoh(await getDb());
     console.log(baru ? "✓ Data contoh Kos Melati ditambahkan" : "• Data contoh Kos Melati sudah ada, dilewati");
