@@ -71,6 +71,13 @@
       "when": 1790281401696,
       "tag": "0009_hapus_verifikasi_wa",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790294343196,
+      "tag": "0010_transaksi_bayar",
+      "breakpoints": true
     }
   ]
 }

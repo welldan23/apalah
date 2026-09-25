@@ -47,6 +47,7 @@ export const statusPembayaranEnum = pgEnum("status_pembayaran", [
   "tidak_cocok",
 ]);
 export const statusReminderEnum = pgEnum("status_reminder", ["terkirim", "gagal"]);
+export const statusTransaksiBayarEnum = pgEnum("status_transaksi_bayar", ["menunggu", "berhasil", "kedaluwarsa", "gagal"]);
 export const aturanJatuhTempoEnum = pgEnum("aturan_jatuh_tempo", ["tanggal_masuk", "tanggal_tetap"]);
 export const arahPesanEnum = pgEnum("arah_pesan", ["masuk", "keluar"]);
 export const jenisAksiEnum = pgEnum("jenis_aksi", ["reminder", "tagihan"]);
@@ -360,6 +361,49 @@ export const webhookEvents = pgTable(
     hasil: text(),
   },
   (t) => [uniqueIndex("webhook_events_provider_event_unik").on(t.provider, t.eventId)],
+);
+
+/**
+ * Transaksi bayar lewat tautan invoice (payment gateway): satu baris per instruksi yang dibuat saat
+ * penyewa memilih QRIS / Virtual Account. order_id ke gateway = "<invoiceId>~<percobaan>" sehingga
+ * notifikasi webhook tetap menunjuk tagihannya. Status Lunas tagihan tetap hanya dari webhook
+ * (tabel payments); tabel ini menyimpan instruksi agar bisa dipakai ulang selama masih berlaku.
+ */
+export const paymentAttempts = pgTable(
+  "payment_attempts",
+  {
+    id: id(),
+    organizationId: text()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    invoiceId: text()
+      .notNull()
+      .references(() => invoices.id, { onDelete: "cascade" }),
+    percobaan: integer().notNull(),
+    orderId: text().notNull().unique("payment_attempts_order_unik"),
+    /** IdMetodeBayar: qris | va_bca | va_bni | va_bri | va_mandiri | va_permata. */
+    metode: text().notNull(),
+    nominal: integer().notNull(),
+    status: statusTransaksiBayarEnum().notNull().default("menunggu"),
+    nomorVa: text(),
+    qrString: text(),
+    /** ID transaksi di gateway. */
+    referensiProvider: text().unique("payment_attempts_referensi_unik"),
+    kedaluwarsaPada: waktu().notNull(),
+    dibuatPada: waktu().notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("payment_attempts_invoice_percobaan_unik").on(t.invoiceId, t.percobaan),
+    index("payment_attempts_invoice_status").on(t.invoiceId, t.status),
+    check("payment_attempts_nominal_positif", sql`${t.nominal} > 0`),
+    check("payment_attempts_percobaan_positif", sql`${t.percobaan} >= 1`),
+    check("payment_attempts_order_id", sql`${t.orderId} = ${t.invoiceId} || '~' || ${t.percobaan}`),
+    // QRIS membawa isi QR, Virtual Account membawa nomor VA.
+    check(
+      "payment_attempts_instruksi",
+      sql`(${t.metode} = 'qris' and ${t.qrString} is not null) or (left(${t.metode}, 3) = 'va_' and ${t.nomorVa} is not null)`,
+    ),
+  ],
 );
 
 export const payments = pgTable(
