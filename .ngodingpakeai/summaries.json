@@ -1,0 +1,1125 @@
+{
+  ".claude/skills/karpathy-guidelines/SKILL.md": {
+    "summary": "Skill Claude Code berisi pedoman perilaku coding ala Andrej Karpathy: berpikir dulu sebelum menulis kode, utamakan solusi paling sederhana, lakukan perubahan seminimal mungkin (surgical), dan kerja berbasis tujuan yang bisa diverifikasi lewat tes."
+  },
+  ".claude/skills/ngodingpakeai/SKILL.md": {
+    "summary": "Skill agen untuk menghubungkan repo ke NgodingPakeAI: alur doctor → connect → sync --plan → tulis summaries.json → sync → status, format summaries.json, aturan keamanan (tanpa kode mentah/rahasia), serta loop pengerjaan task satu per satu lewat task next/start/complete/fail."
+  },
+  ".gitignore": {
+    "summary": "Daftar file yang tidak ikut git: node_modules, hasil build Next.js (.next, out), file env lokal, data PGlite lokal di folder .data, log debug, dan file TypeScript hasil generate."
+  },
+  ".ngodingpakeaiignore": {
+    "summary": "Daftar path tambahan (sintaks .gitignore) yang dikecualikan dari sync NgodingPakeAI; rahasia, node_modules, output build, dan file .env selalu diblokir CLI apa pun isinya."
+  },
+  "AGENTS.md": {
+    "summary": "Instruksi untuk agen AI di repo ini: peringatan bahwa Next.js versi ini punya perubahan besar (baca dokumentasi di node_modules/next/dist/docs sebelum menulis kode) dan panduan lengkap sinkronisasi NgodingPakeAI termasuk loop task next, checkpoint per layer/phase, serta aturan keras keamanan."
+  },
+  "CLAUDE.md": {
+    "summary": "File instruksi Claude Code yang hanya mereferensikan AGENTS.md, sehingga seluruh aturan agen (Next.js versi baru dan alur NgodingPakeAI) dibaca dari sana."
+  },
+  "README.md": {
+    "summary": "Dokumentasi utama Kostera (platform manajemen kos dengan asisten AI Kosta di WhatsApp): cara menjalankan (npm run dev dengan PGlite lokal atau Supabase via DATABASE_URL), perintah db:generate/db:migrate/db:seed, penjadwal cron /api/cron/harian dan /api/cron/pengingat beserta crontab VPS dan CRON_SECRET, aktivasi pembayaran Midtrans dan URL notifikasi, daftar template WhatsApp resmi yang wajib didaftarkan, serta struktur folder."
+  },
+  "components.json": {
+    "summary": "Konfigurasi shadcn/ui: gaya radix-nova, React Server Components aktif, TSX, Tailwind CSS v4 dengan globals.css, warna dasar neutral, ikon lucide, dan alias impor @/components, @/lib, @/hooks."
+  },
+  "drizzle/0000_skema_dashboard.sql": {
+    "summary": "Migrasi awal skema PostgreSQL dashboard: enum peran, status_invoice, status_kamar, status_member, status_pembayaran, status_penghuni, serta tabel users, organizations, members, rooms, tenants, invoices, payments dengan foreign key dan index dasarnya."
+  },
+  "drizzle/0001_aksi_cepat.sql": {
+    "summary": "Migrasi aksi cepat: enum status_reminder dan tabel reminders (riwayat pesan tagihan/pengingat ke penyewa) dengan FK ke organizations, invoices, tenants, plus unique index invoices_penghuni_periode_unik agar satu penghuni hanya punya satu tagihan per periode."
+  },
+  "drizzle/0002_tagihan_terjadwal.sql": {
+    "summary": "Migrasi tagihan terjadwal: enum aturan_jatuh_tempo, tabel invoice_items (rincian biaya per tagihan: sewa kamar + biaya tambahan) dan invoice_schedules (pengaturan terbit tagihan otomatis per kos)."
+  },
+  "drizzle/0003_kosta_percakapan.sql": {
+    "summary": "Migrasi asisten Kosta: enum arah_pesan, jenis_aksi, status_draft_aksi, tabel wa_conversations, wa_messages (riwayat chat), action_drafts (draft aksi yang menunggu konfirmasi owner), dan verifikasi_wa, dengan FK komposit ke keanggotaan workspace."
+  },
+  "drizzle/0004_webhook_pembayaran.sql": {
+    "summary": "Migrasi webhook pembayaran: tabel webhook_events dengan unique (provider, event_id) untuk idempotensi, serta kolom webhook_event_id dan dibuat_pada di payments."
+  },
+  "drizzle/0005_riwayat_hunian.sql": {
+    "summary": "Migrasi riwayat hunian: tabel riwayat_hunian (siapa menghuni kamar mana dan kapan, satu periode berjalan per kamar), kolom alasan_keluar di tenants, dan constraint tanggal keluar penghuni."
+  },
+  "drizzle/0006_kamar_aktif.sql": {
+    "summary": "Migrasi kamar nonaktif: kolom aktif di rooms dengan constraint kamar nonaktif harus kosong, serta jumlah kamar organisasi boleh nol (tidak negatif)."
+  },
+  "drizzle/0007_jadwal_pengingat.sql": {
+    "summary": "Migrasi jadwal pengingat otomatis: tabel reminder_schedules (offset hari H-/H+ dan jam kirim per kos), saklar pengingat_otomatis di organizations, kolom galat di reminders, index reminders_organisasi_waktu, dan unique index reminders_otomatis_unik agar satu slot H per tagihan hanya tercatat sekali; jadwal bawaan H-3/H/H+3 diisi ulang."
+  },
+  "drizzle/0008_akun_sesi.sql": {
+    "summary": "Migrasi akun & sesi Better Auth: tabel accounts, sessions (dengan workspace aktif lewat FK komposit ke members yang di-null-kan saat keanggotaan hilang), verifications (kode OTP), rate_limits, serta kolom email_terverifikasi, foto, dibuat_pada, diperbarui_pada di users."
+  },
+  "drizzle/0009_hapus_verifikasi_wa.sql": {
+    "summary": "Migrasi yang menghapus tabel lama verifikasi_wa karena verifikasi nomor WhatsApp kini ditangani tabel verifications milik Better Auth."
+  },
+  "drizzle/0010_transaksi_bayar.sql": {
+    "summary": "Migrasi transaksi bayar lewat link invoice: enum status_transaksi_bayar dan tabel payment_attempts (order_id unik = invoice~percobaan, metode, nominal, nomor VA atau isi QR, referensi gateway, batas waktu) dengan constraint instruksi sesuai metode."
+  },
+  "drizzle/0011_tiket.sql": {
+    "summary": "Migrasi tiket keluhan penyewa: enum status_tiket (baru/diproses/selesai) dan tabel tickets dengan nomor urut unik per kos, kategori terbatas, panjang deskripsi 10–1000 karakter, serta index per status dan per penyewa."
+  },
+  "drizzle/0012_log_whatsapp.sql": {
+    "summary": "Migrasi log WhatsApp: enum status_kirim_wa dan tabel whatsapp_logs (tujuan, jenis pesan, referensi, provider, template, status, galat, ID pesan provider) tanpa isi pesan, dengan index per kos-waktu dan per jenis-referensi."
+  },
+  "drizzle/0013_kode_perusahaan_transaksi.sql": {
+    "summary": "Migrasi kecil yang menambah kolom kode_perusahaan di payment_attempts untuk VA Mandiri Bill Payment (kode perusahaan/biller + kode bayar)."
+  },
+  "drizzle/meta/0000_snapshot.json": {
+    "summary": "Snapshot skema Drizzle hasil generate setelah migrasi 0000 (skema dashboard awal); dipakai drizzle-kit untuk menghitung selisih migrasi berikutnya."
+  },
+  "drizzle/meta/0001_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0001 (tabel reminders dan unique tagihan per penghuni per periode)."
+  },
+  "drizzle/meta/0002_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0002 (invoice_items dan invoice_schedules untuk tagihan terjadwal)."
+  },
+  "drizzle/meta/0003_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0003 (percakapan Kosta, draft aksi, verifikasi WA)."
+  },
+  "drizzle/meta/0004_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0004 (webhook_events dan kolom webhook di payments)."
+  },
+  "drizzle/meta/0005_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0005 (riwayat_hunian dan alasan keluar penghuni)."
+  },
+  "drizzle/meta/0006_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0006 (kolom aktif kamar)."
+  },
+  "drizzle/meta/0007_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0007 (reminder_schedules, saklar pengingat otomatis, galat reminder)."
+  },
+  "drizzle/meta/0008_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0008 (tabel Better Auth: accounts, sessions, verifications, rate_limits)."
+  },
+  "drizzle/meta/0009_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0009 (tabel verifikasi_wa dihapus)."
+  },
+  "drizzle/meta/0010_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0010 (payment_attempts untuk transaksi bayar)."
+  },
+  "drizzle/meta/0011_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0011 (tabel tickets untuk tiket keluhan)."
+  },
+  "drizzle/meta/0012_snapshot.json": {
+    "summary": "Snapshot skema Drizzle setelah migrasi 0012 (tabel whatsapp_logs)."
+  },
+  "drizzle/meta/0013_snapshot.json": {
+    "summary": "Snapshot skema Drizzle terbaru setelah migrasi 0013 (kolom kode_perusahaan di payment_attempts)."
+  },
+  "drizzle/meta/_journal.json": {
+    "summary": "Jurnal migrasi Drizzle: urutan dan tag semua migrasi 0000 sampai 0013 yang dibaca migrator untuk menentukan migrasi mana yang belum dijalankan."
+  },
+  "drizzle.config.ts": {
+    "summary": "Konfigurasi drizzle-kit: dialek PostgreSQL, skema dari src/db/schema.ts, output migrasi ke folder drizzle, penamaan kolom snake_case, dan koneksi dari variabel DATABASE_URL."
+  },
+  "eslint.config.mjs": {
+    "summary": "Konfigurasi ESLint flat config memakai aturan eslint-config-next (core web vitals + TypeScript) dan mengabaikan folder build .next, out, build serta next-env.d.ts."
+  },
+  "next.config.ts": {
+    "summary": "Konfigurasi Next.js: paket @electric-sql/pglite dijadikan serverExternalPackages supaya file WASM-nya tidak dibundel Next."
+  },
+  "package-lock.json": {
+    "summary": "Lockfile npm yang mengunci versi semua dependensi Kostera (Next.js, React, Drizzle ORM, PGlite, postgres, Better Auth, Tailwind, shadcn/radix, qrcode, dan dev tools) agar instalasi konsisten."
+  },
+  "package.json": {
+    "summary": "Manifest proyek kostera: script dev (predev menjalankan migrasi + seed), build, start, lint, test (node test runner untuk src/**/*.test.ts), db:generate, db:migrate, db:seed; dependensi Next.js 16, React, Drizzle ORM, PGlite, postgres, Better Auth, radix-ui, lucide-react, qrcode."
+  },
+  "postcss.config.mjs": {
+    "summary": "Konfigurasi PostCSS yang hanya memakai plugin @tailwindcss/postcss untuk Tailwind CSS v4."
+  },
+  "src/app/(app)/dashboard/page.tsx": {
+    "summary": "Halaman /dashboard (Dashboard Kos) untuk owner/admin: sapaan, ringkasan kos, banner Perlu review dan tiket keluhan, aksi cepat, ringkasan kamar, pemasukan bulan ini, dan tabel status invoice, semua dari getDashboardData."
+  },
+  "src/app/(app)/kamar/kosong/page.tsx": {
+    "summary": "Halaman /kamar/kosong: daftar kamar kosong yang siap diisi dan kamar nonaktif, dari getHalamanKamarKosong."
+  },
+  "src/app/(app)/kamar/page.tsx": {
+    "summary": "Halaman /kamar (Kamar & Penghuni): daftar kamar beserta penghuni dan status, daftar kamar nonaktif, serta tombol tambah penghuni, dari getHalamanKamar."
+  },
+  "src/app/(app)/kamar/tambah/page.tsx": {
+    "summary": "Halaman /kamar/tambah: wizard tambah kos & kamar (WizardTambahKamar) dengan data awal dari getHalamanTambahKamar."
+  },
+  "src/app/(app)/kosta/page.tsx": {
+    "summary": "Halaman /kosta (Chat Kosta): antarmuka chat owner dengan asisten Kosta di dashboard, riwayat dan pemilih workspace dari getHalamanKosta."
+  },
+  "src/app/(app)/layout.tsx": {
+    "summary": "Layout grup (app) yang memastikan sesi workspace lewat getWorkspaceSession lalu membungkus halaman aplikasi dengan AppShell (sidebar desktop, navigasi bawah mobile)."
+  },
+  "src/app/(app)/pembayaran/page.tsx": {
+    "summary": "Halaman /pembayaran: pemantauan pembayaran per periode dengan navigasi bulan, banner tagihan Perlu review, dan daftar pembayaran dari getHalamanPembayaran."
+  },
+  "src/app/(app)/reminder/jadwal/page.tsx": {
+    "summary": "Halaman /reminder/jadwal (Jadwal pengingat): pengaturan saklar pengingat otomatis dan daftar jadwal H-/H+ jam kirim per kos, dari getHalamanJadwalPengingat."
+  },
+  "src/app/(app)/reminder/kirim/page.tsx": {
+    "summary": "Halaman /reminder/kirim (Kirim reminder massal): memilih penerima tagihan yang perlu diingatkan lalu preview dan konfirmasi kirim, dari getHalamanKirimReminder."
+  },
+  "src/app/(app)/reminder/page.tsx": {
+    "summary": "Halaman /reminder (Reminder Otomatis): ringkasan pengingat, antrian terjadwal, kartu jadwal, daftar tagihan yang perlu diingatkan, dan riwayat terbaru dari getHalamanReminder."
+  },
+  "src/app/(app)/reminder/riwayat/page.tsx": {
+    "summary": "Halaman /reminder/riwayat: tabel riwayat pengingat per bulan dengan navigasi periode yang mempertahankan filter status/jenis/tagihan/pencarian, dari getHalamanRiwayatReminder."
+  },
+  "src/app/(app)/tagihan/page.tsx": {
+    "summary": "Halaman /tagihan (Tagihan & Invoice): daftar invoice per periode dengan total, navigasi bulan, dan tombol buat tagihan, dari getHalamanTagihan."
+  },
+  "src/app/(app)/tagihan/terjadwal/page.tsx": {
+    "summary": "Halaman /tagihan/terjadwal: form pengaturan tagihan terjadwal (tanggal terbit dan aturan jatuh tempo) dari getHalamanTagihanTerjadwal."
+  },
+  "src/app/(app)/tiket/page.tsx": {
+    "summary": "Halaman /tiket (Tiket keluhan) untuk owner/admin: judul dengan jumlah tiket baru dan diproses, serta DaftarTiketOwner dari getHalamanTiketOwner yang membaca tabel tickets."
+  },
+  "src/app/(auth)/daftar/page.tsx": {
+    "summary": "Halaman /daftar (Daftarkan kos kamu): form nomor WhatsApp untuk mengirim kode OTP, dengan nomor awal opsional dari query dan tautan ke /masuk."
+  },
+  "src/app/(auth)/daftar/verifikasi/page.tsx": {
+    "summary": "Halaman /daftar/verifikasi: form kode OTP 6 digit untuk nomor WhatsApp dari query; nomor tidak valid dialihkan kembali ke /daftar."
+  },
+  "src/app/(auth)/daftar/workspace/page.tsx": {
+    "summary": "Halaman /daftar/workspace (Siapkan kos pertamamu): setelah login OTP, pengguna tanpa kos membuat workspace pertama; tanpa sesi dialihkan ke /daftar, yang sudah punya kos ke /dashboard."
+  },
+  "src/app/(auth)/layout.tsx": {
+    "summary": "Layout grup (auth) untuk halaman daftar, masuk, dan pilih kos: tanpa sidebar aplikasi, satu kolom sempit yang nyaman di HP dengan logo Kostera di atas."
+  },
+  "src/app/(auth)/masuk/page.tsx": {
+    "summary": "Halaman /masuk (Masuk ke Kostera): memakai alur yang sama dengan daftar, yaitu form nomor WhatsApp lalu kode OTP, dengan tautan ke /daftar untuk pengguna baru."
+  },
+  "src/app/(auth)/pilih-kos/page.tsx": {
+    "summary": "Halaman /pilih-kos: menyapa pengguna dan menampilkan daftar kos yang bisa dikelola (PilihWorkspace) dari getHalamanPilihKos, plus tombol keluar."
+  },
+  "src/app/(marketing)/layout.tsx": {
+    "summary": "Layout landing publik dengan header dan footer situs; dipaksa statis (dynamic = error) sehingga build gagal bila ada komponen yang membaca cookies/sesi, jadi landing tidak mungkin menampilkan data kos mana pun."
+  },
+  "src/app/(marketing)/page.tsx": {
+    "summary": "Landing page Kostera di /: hero, masalah yang diselesaikan, manfaat, preview dashboard, cara kerja, FAQ, dan CTA tengah/penutup dari konten landing."
+  },
+  "src/app/api/akun/workspace/route.ts": {
+    "summary": "API /api/akun/workspace (butuh sesi): GET mengembalikan daftar kos yang bisa dibuka beserta peran dan kos aktif; POST membuat kos pertama saat daftar (nama pemilik, nama kos, jumlah kamar 1–500) sekaligus keanggotaan owner, jadwal pengingat bawaan, dan kos aktif di sesi."
+  },
+  "src/app/api/akun/workspace-aktif/route.ts": {
+    "summary": "API POST /api/akun/workspace-aktif { organizationId }: mengganti kos yang sedang dibuka di sesi login; hanya kos dengan keanggotaan aktif, selain itu 403."
+  },
+  "src/app/api/auth/[...all]/route.ts": {
+    "summary": "Route catch-all Better Auth /api/auth/*: kirim OTP WhatsApp (phone-number/send-otp, dibatasi per IP), verifikasi kode (phone-number/verify, akun dibuat otomatis untuk nomor baru dan cookie sesi dipasang), get-session, dan sign-out; semua diteruskan ke auth.handler."
+  },
+  "src/app/api/cron/harian/route.ts": {
+    "summary": "Endpoint cron GET /api/cron/harian (header Bearer CRON_SECRET): sekali sehari 00.05 WIB menerbitkan tagihan terjadwal lalu menandai tagihan yang lewat jatuh tempo; aman dipanggil berulang."
+  },
+  "src/app/api/cron/pengingat/route.ts": {
+    "summary": "Endpoint cron GET /api/cron/pengingat (header Bearer CRON_SECRET): menjalankan kirimPengingatOtomatis untuk semua kos; idealnya tiap jam di VPS, di Vercel Hobby sekali sehari 09.05 WIB; aman dipanggil bersamaan."
+  },
+  "src/app/api/dashboard/aksi/keluar-penghuni/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/keluar-penghuni: owner/admin mencatat penghuni keluar dari kamar (roomId, tanggal, alasan) setelah konfirmasi preview; tagihan yang belum lunas tetap tercatat."
+  },
+  "src/app/api/dashboard/aksi/kirim-tagihan/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/kirim-tagihan { invoiceIds }: mengirim link invoice ke WhatsApp penyewa lewat kirimTagihan setelah konfirmasi owner, dengan base URL dari APP_URL atau origin permintaan."
+  },
+  "src/app/api/dashboard/aksi/penghuni/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/penghuni: mencatat penghuni baru di kamar kosong (nama, nomor WA, kamar, tanggal masuk, harga sewa) setelah owner mengonfirmasi preview."
+  },
+  "src/app/api/dashboard/aksi/pindah-kamar/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/pindah-kamar: memindahkan penghuni ke kamar kosong dengan pilihan sewa tetap atau ikut harga kamar baru, setelah konfirmasi owner."
+  },
+  "src/app/api/dashboard/aksi/reminder/preview/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/reminder/preview { invoiceIds }: preview reminder massal tanpa mengirim apa pun — penerima, isi pesan persis, total, dan penyewa yang dilewati karena sudah dihubungi kurang dari 24 jam."
+  },
+  "src/app/api/dashboard/aksi/reminder/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/reminder { invoiceIds }: mengirim pengingat WhatsApp untuk tagihan belum dibayar yang dipilih owner setelah preview, lewat kirimReminder."
+  },
+  "src/app/api/dashboard/aksi/status-tagihan/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/status-tagihan: owner mengaktifkan tagihan Draft atau menandai tagihan Perlu review sudah diperiksa (status menunggu); status Lunas, Perlu review, dan Jatuh tempo tidak bisa diubah manual."
+  },
+  "src/app/api/dashboard/aksi/tagihan/route.ts": {
+    "summary": "API POST /api/dashboard/aksi/tagihan: membuat tagihan massal untuk kamar terpilih (periode, jatuh tempo, nominal khusus, biaya tambahan) setelah konfirmasi preview."
+  },
+  "src/app/api/dashboard/invoices/route.ts": {
+    "summary": "API GET /api/dashboard/invoices: daftar invoice workspace yang sedang masuk dengan filter periode (bawaan bulan berjalan WIB atau semua), status, pencarian nama/kamar, dan urutan (prioritas, jatuh tempo, nominal, nama, kamar)."
+  },
+  "src/app/api/dashboard/jadwal-pengingat/route.ts": {
+    "summary": "API /api/dashboard/jadwal-pengingat: GET saklar pengingat otomatis dan jadwal kos; PUT (owner/admin) menyimpan satu set lengkap jadwal (offset -14…14 hari, jam 06:00–21:00, maksimal 5) dan menghapus yang tidak disebut."
+  },
+  "src/app/api/dashboard/kamar/[id]/route.ts": {
+    "summary": "API PATCH /api/dashboard/kamar/[id]: mengubah tipe, harga sewa, catatan, atau mengaktifkan/menonaktifkan kamar; kamar terisi tidak bisa dinonaktifkan."
+  },
+  "src/app/api/dashboard/kamar/kosong/route.ts": {
+    "summary": "API GET /api/dashboard/kamar/kosong: kamar kosong aktif dengan lama kosong dan penghuni terakhir, bisa disaring per tipe dan harga maksimal serta diurutkan (nomor, terlama, termurah, termahal)."
+  },
+  "src/app/api/dashboard/kamar/route.ts": {
+    "summary": "API POST /api/dashboard/kamar: menambah kamar massal dari rencana wizard (tipe, kode, jumlah, harga sewa) dan opsional kos baru; nomor kamar dibuat server melanjutkan nomor yang ada tanpa bentrok."
+  },
+  "src/app/api/dashboard/pemasukan/route.ts": {
+    "summary": "API GET /api/dashboard/pemasukan: rekap tagihan per status dan uang masuk dari pembayaran valid workspace untuk satu periode (bawaan bulan berjalan WIB)."
+  },
+  "src/app/api/dashboard/reminder/riwayat/route.ts": {
+    "summary": "API GET /api/dashboard/reminder/riwayat: riwayat pengingat bayar kos (tanpa pesan kirim tagihan dan konfirmasi lunas) terbaru di atas beserta alasan gagal, dengan filter periode kirim, status, jenis, periode tagihan, pencarian, batas, dan kursor halaman lanjut."
+  },
+  "src/app/api/dashboard/ringkasan/route.ts": {
+    "summary": "API GET /api/dashboard/ringkasan: ringkasan kos dan kamar milik workspace yang sedang masuk."
+  },
+  "src/app/api/dashboard/tagihan-terjadwal/route.ts": {
+    "summary": "API /api/dashboard/tagihan-terjadwal: GET pengaturan tagihan terjadwal; PUT (owner/admin) menyimpan aktif, tanggal terbit 1–28, dan aturan jatuh tempo (tanggal masuk penghuni atau tanggal tetap)."
+  },
+  "src/app/api/dashboard/tiket/[id]/route.ts": {
+    "summary": "API PATCH /api/dashboard/tiket/[id] { status }: owner/admin memajukan status tiket keluhan satu langkah (Baru → Diproses → Selesai) lewat ubahStatusTiket; setelah respons, penyewa dikabari lewat WhatsApp (kirimKabarTiket) dengan tautan status tiket."
+  },
+  "src/app/api/dashboard/tiket/route.ts": {
+    "summary": "API GET /api/dashboard/tiket: semua tiket keluhan kos yang sedang masuk untuk owner/admin, lengkap dengan kamar dan penghuni pelapor, yang masih berjalan di atas (getTiketKos)."
+  },
+  "src/app/api/invoice/[token]/bayar/route.ts": {
+    "summary": "API publik POST /api/invoice/[token]/bayar { metode }: membuat atau memakai ulang transaksi QRIS/Virtual Account untuk sisa tagihan lewat gateway pembayaran (buatTransaksiBayar) dan membalas InstruksiBayar plus penanda simulasi; token link invoice adalah aksesnya."
+  },
+  "src/app/api/invoice/[token]/route.ts": {
+    "summary": "API publik GET /api/invoice/[token]: data satu invoice untuk penyewa tanpa login (getInvoicePublik), token salah atau tidak ada sama-sama 404; header pribadi tanpa cache, noindex, dan no-referrer."
+  },
+  "src/app/api/invoice/[token]/tiket/route.ts": {
+    "summary": "API publik tiket penyewa lewat token invoice: GET daftar tiket milik penyewa invoice itu; POST membuat tiket baru berstatus Baru (kategori, deskripsi) dengan respons 201."
+  },
+  "src/app/api/kosta/draft/[id]/route.ts": {
+    "summary": "API POST /api/kosta/draft/[id]: owner/admin menyetujui atau membatalkan preview aksi Kosta dari web; keputusan dan balasan Kosta dicatat di percakapan."
+  },
+  "src/app/api/kosta/pesan/route.ts": {
+    "summary": "API POST /api/kosta/pesan { teks }: owner/admin chat dengan Kosta dari web; percakapannya sama dengan di WhatsApp (per nomor WA pengguna) tetapi balasan tidak dikirim ke WA."
+  },
+  "src/app/api/kosta/workspace/route.ts": {
+    "summary": "API POST /api/kosta/workspace { organizationId }: mengganti kos yang sedang dibahas Kosta dari web, hanya untuk kos tempat pengguna menjadi owner/admin aktif."
+  },
+  "src/app/api/landing/konten/route.ts": {
+    "summary": "API GET /api/landing/konten: konten landing publik read-only tanpa login, dirender statis saat build."
+  },
+  "src/app/api/webhook/pembayaran/midtrans/route.ts": {
+    "summary": "Webhook POST /api/webhook/pembayaran/midtrans: memverifikasi signature_key dengan MIDTRANS_SERVER_KEY, menormalkan notifikasi, memprosesnya secara idempoten (prosesNotifikasiPembayaran), lalu setelah respons mengirim konfirmasi Lunas ke penyewa atau notifikasi Perlu review ke owner/admin; galat server dibalas 500 agar Midtrans mencoba lagi."
+  },
+  "src/app/api/webhook/whatsapp/route.ts": {
+    "summary": "Webhook WhatsApp untuk Kosta: POST menerima payload WAHA atau Meta Cloud API bertanda tangan HMAC, menyimpan pesan teks ke percakapan per nomor, membalas 200 segera, lalu Kosta memproses dan membalas lewat WhatsApp setelah respons; GET memverifikasi langganan webhook Meta dengan verify token."
+  },
+  "src/app/globals.css": {
+    "summary": "Stylesheet global Tailwind CSS v4 + tw-animate + shadcn: token warna tema Kostera (hijau pinus, mint, putih hangat) termasuk success/warning/danger dan versi soft-nya, font Plus Jakarta Sans, radius, serta varian dark."
+  },
+  "src/app/invoice/[token]/bayar/page.tsx": {
+    "summary": "Halaman publik /invoice/[token]/bayar: menampilkan sisa yang perlu dibayar lalu komponen PembayaranTagihan; tagihan yang tidak bisa dibayar (lunas, draf, atau tanpa sisa) dialihkan kembali ke rincian; tidak diindeks dan tanpa Referer."
+  },
+  "src/app/invoice/[token]/page.tsx": {
+    "summary": "Halaman invoice publik /invoice/[token] untuk penyewa tanpa login: nama kos, status, total, jatuh tempo, sudah dibayar dan sisa/lebih bayar, rincian biaya, riwayat pembayaran, tombol Bayar sekarang atau Bayar sisa bila bisa dibayar, keterangan tagihan draf, tombol hubungi pemilik lewat WhatsApp, dan tautan buat tiket keluhan."
+  },
+  "src/app/invoice/[token]/tiket/page.tsx": {
+    "summary": "Halaman publik /invoice/[token]/tiket (Laporkan masalah): penyewa mengirim keluhan atau permintaan perbaikan lewat FormTiket tanpa login, dengan tautan ke status tiket sebelumnya."
+  },
+  "src/app/invoice/[token]/tiket/status/page.tsx": {
+    "summary": "Halaman publik /invoice/[token]/tiket/status: daftar tiket milik penyewa beserta tahapan status Baru → Diproses → Selesai dari getHalamanStatusTiket, jumlah yang masih ditangani, dan tombol tiket baru."
+  },
+  "src/app/layout.tsx": {
+    "summary": "Root layout Next.js: font Plus Jakarta Sans, bahasa id, metadata situs (judul default dan template, deskripsi, metadataBase dari urlSitus), warna tema viewport, dan globals.css."
+  },
+  "src/app/robots.ts": {
+    "summary": "robots.txt dinamis: landing boleh diindeks, rute privat (aplikasi, API, invoice) dilarang, dan menunjuk sitemap.xml."
+  },
+  "src/app/sitemap.ts": {
+    "summary": "sitemap.xml yang hanya berisi halaman publik tanpa login: beranda dan /daftar."
+  },
+  "src/components/app-shell/app-nav.tsx": {
+    "summary": "Navigasi aplikasi: SidebarNav (desktop) dan MobileNav (bottom nav HP) yang menampilkan hanya menu sesuai peran pengguna lewat navUntukPeran, dengan penanda menu aktif dan label Segera untuk halaman yang belum siap."
+  },
+  "src/components/app-shell/app-shell.tsx": {
+    "summary": "Kerangka AppShell halaman aplikasi: sidebar desktop berisi logo, badge kos aktif, navigasi, avatar pengguna, dan tombol keluar; header dan bottom nav di mobile."
+  },
+  "src/components/app-shell/kostera-logo.tsx": {
+    "summary": "Komponen KosteraLogo: ikon rumah dan tulisan Kostera yang dipakai di header aplikasi, halaman auth, dan invoice publik."
+  },
+  "src/components/app-shell/nav-items.test.ts": {
+    "summary": "Uji menu navigasi per peran: owner melihat semua menu pengelola termasuk Pengaturan, admin tanpa Pengaturan, penyewa hanya tagihan dan tiketnya sendiri, dan bottom nav HP maksimal 5 menu."
+  },
+  "src/components/app-shell/nav-items.ts": {
+    "summary": "Definisi NAV_ITEMS aplikasi (Dashboard, Tagihan, Kamar, Pembayaran, Reminder, Chat Kosta, Tiket keluhan, Pengaturan, serta menu penyewa) dengan label ringkas mobile, ikon, status siap, tampil di mobile, dan peran yang boleh melihat; navUntukPeran menyaring menu per peran owner/admin/penyewa."
+  },
+  "src/components/app-shell/user-avatar.tsx": {
+    "summary": "Komponen UserAvatar: lingkaran inisial nama pengguna untuk sidebar dan header."
+  },
+  "src/components/app-shell/workspace-badge.tsx": {
+    "summary": "Komponen WorkspaceBadge: nama kos yang sedang dikelola beserta jumlah kamar, berupa tautan ke /pilih-kos untuk pindah kos."
+  },
+  "src/components/auth/form-nomor-wa.tsx": {
+    "summary": "Komponen FormNomorWa (langkah pertama daftar/masuk): merapikan nomor WhatsApp ke format 62…, meminta kode OTP lewat Better Auth phone-number/send-otp, lalu pindah ke halaman verifikasi."
+  },
+  "src/components/auth/form-otp.tsx": {
+    "summary": "Komponen FormOtp: isian kode OTP 6 digit yang dicek ke server begitu lengkap (phone-number/verify → cookie sesi), menghitung percobaan salah, mengunci saat kode hangus, dan kirim ulang setelah jeda hitung mundur; berhasil lanjut ke /daftar/workspace."
+  },
+  "src/components/auth/form-workspace.tsx": {
+    "summary": "Komponen FormWorkspace (langkah terakhir daftar): nama pemilik, nama kos, dan jumlah kamar divalidasi lalu dikirim ke POST /api/akun/workspace untuk membuat organisasi, keanggotaan owner, dan jadwal pengingat; nomor WhatsApp terverifikasi ditampilkan sebagai nomor tertaut."
+  },
+  "src/components/auth/pilih-workspace.tsx": {
+    "summary": "Komponen PilihWorkspace: daftar kos yang bisa dikelola beserta peran; memilih satu menyimpannya di sesi lewat POST /api/akun/workspace-aktif lalu membuka dashboard kos itu."
+  },
+  "src/components/auth/tombol-keluar.tsx": {
+    "summary": "Komponen TombolKeluar: menghapus sesi login lewat Better Auth sign-out lalu kembali ke halaman /masuk."
+  },
+  "src/components/dashboard/income-summary.tsx": {
+    "summary": "Komponen IncomeSummary (Pemasukan Bulan Ini): uang masuk periode berjalan, rekap tagihan per status dengan tautan filter tabel, dan pembayaran terbaru tanpa hitung manual."
+  },
+  "src/components/dashboard/invoice-status-table.tsx": {
+    "summary": "Komponen InvoiceStatusTable (Status Bayar): invoice periode berjalan yang bisa disaring per status lewat chip (disimpan di URL), dengan tampilan kartu di HP dan tabel di desktop beserta keterangan waktu jatuh tempo."
+  },
+  "src/components/dashboard/kos-overview.tsx": {
+    "summary": "Komponen KosOverview: kartu utama dashboard yang merangkum kondisi kos sekilas — kamar terisi, tagihan yang perlu ditagih, dan pemasukan bulan ini dengan tautan ke detailnya."
+  },
+  "src/components/dashboard/quick-actions.tsx": {
+    "summary": "Komponen QuickActions: tombol aksi cepat dashboard (Buat tagihan, Tambah penghuni, Kirim reminder) yang membuka ActionSheet berisi alur preview + konfirmasi owner."
+  },
+  "src/components/dashboard/room-summary.tsx": {
+    "summary": "Komponen RoomSummary (Ringkasan Kos & Kamar): tingkat hunian total dan peta kamar per tipe dengan jumlah terisi, kosong, dan kisaran harga."
+  },
+  "src/components/dashboard/status-filter.ts": {
+    "summary": "Filter status tabel invoice dashboard yang disimpan di URL (?status=): daftar STATUS_FILTER, parseStatusFilter (nilai tak dikenal jadi semua), dan hrefStatusFilter untuk tautan dari kartu lain."
+  },
+  "src/components/invoice/daftar-tiket.tsx": {
+    "summary": "Komponen DaftarTiket untuk penyewa: kartu tiket dengan nomor, jenis masalah, deskripsi, waktu, badge status, dan langkah progres Baru → Diproses → Selesai; kosong menampilkan ajakan buat tiket."
+  },
+  "src/components/invoice/form-tiket.tsx": {
+    "summary": "Komponen FormTiket untuk penyewa tanpa login: memilih jenis masalah (KATEGORI_TIKET) dan menceritakan masalahnya dengan validasi periksaTiket, lalu mengirim ke POST /api/invoice/[token]/tiket; berhasil menampilkan nomor tiket dan tautan status, galat server ditampilkan di atas tombol."
+  },
+  "src/components/invoice/pembayaran-tagihan.tsx": {
+    "summary": "Komponen PembayaranTagihan di halaman bayar penyewa: pilih metode (QRIS atau Virtual Account BCA/BNI/BRI/Mandiri/Permata), minta instruksi ke POST /api/invoice/[token]/bayar, tampilkan kode QR (digambar dengan pustaka qrcode yang dimuat saat perlu) atau nomor VA plus kode perusahaan Mandiri dengan tombol salin, hitung mundur batas bayar, langkah bayar, cek status otomatis tiap 5 detik ke GET /api/invoice/[token], dan layar akhir Lunas atau sedang diperiksa; catatan mode contoh hanya saat gateway simulasi.",
+    "sections": [
+      {
+        "symbol": "PembayaranTagihan",
+        "startLine": 33,
+        "endLine": 132,
+        "summary": "Pemilih metode bayar dan pemanggilan endpoint pembuat transaksi, dengan status memuat dan pesan galat dari server."
+      },
+      {
+        "symbol": "InstruksiPembayaran",
+        "startLine": 134,
+        "endLine": 273,
+        "summary": "Instruksi QRIS/VA, hitung mundur kedaluwarsa, salin nomor VA, langkah bayar, dan polling status konfirmasi sampai lunas atau diperiksa."
+      },
+      {
+        "symbol": "KodeQr",
+        "startLine": 275,
+        "endLine": 299,
+        "summary": "Menggambar kode QR SVG dari isi QRIS lewat pustaka qrcode yang di-import dinamis, dengan ikon cadangan saat belum siap."
+      },
+      {
+        "symbol": "KonfirmasiPembayaran",
+        "startLine": 301,
+        "endLine": 334,
+        "summary": "Layar akhir pembayaran: diterima (Lunas) atau masuk tapi nominalnya diperiksa pemilik kos, dengan tautan ke rincian tagihan."
+      }
+    ]
+  },
+  "src/components/kamar/daftar-kamar-kosong.tsx": {
+    "summary": "Komponen DaftarKamarKosong dan DaftarKamarNonaktif di /kamar/kosong: kartu kamar kosong siap ditawarkan dengan lama kosong (penanda kosong ≥ 30 hari), saring per tipe dan urutan tersimpan di URL, isi penghuni lewat sheet, serta nonaktifkan/aktifkan kamar lewat PATCH /api/dashboard/kamar/[id]."
+  },
+  "src/components/kamar/daftar-kamar.tsx": {
+    "summary": "Komponen DaftarKamar di /kamar: kartu kamar dikelompokkan per tipe beserta harga dan tingkat hunian tiap tipe, dengan aksi isi kamar, pindah kamar, dan catat penghuni keluar lewat sheet preview + konfirmasi."
+  },
+  "src/components/kamar/daftar-nonaktif.tsx": {
+    "summary": "Komponen DaftarNonaktif: daftar penghuni yang sudah keluar (tanggal masuk/keluar dan lama tinggal) yang bisa dibuka-tutup."
+  },
+  "src/components/kamar/kartu-kamar.tsx": {
+    "summary": "Komponen KartuKamar: kartu satu kamar berisi nomor, status terisi/kosong, penghuni aktif atau keterangan siap ditawarkan, dan harga sewa."
+  },
+  "src/components/kamar/keluar-penghuni.tsx": {
+    "summary": "Komponen KeluarPenghuniFlow: alur catat penghuni keluar — isi tanggal dan alasan, preview dengan peringatan tagihan belum lunas, lalu konfirmasi ke POST /api/dashboard/aksi/keluar-penghuni."
+  },
+  "src/components/kamar/pindah-kamar.tsx": {
+    "summary": "Komponen PindahKamarFlow: alur pindah kamar — pilih kamar kosong tujuan, tanggal pindah, dan aturan sewa (tetap atau ikut kamar baru), preview, lalu konfirmasi ke POST /api/dashboard/aksi/pindah-kamar."
+  },
+  "src/components/kamar/tambah-penghuni.tsx": {
+    "summary": "Komponen SheetTambahPenghuni (sheet berisi TenantFlow, bisa langsung memilih kamar tertentu) dan TombolTambahPenghuni untuk header halaman Kamar."
+  },
+  "src/components/kamar/wizard-tambah-kamar.tsx": {
+    "summary": "Komponen WizardTambahKamar: wizard tambah kos dan kamar — rencana per tipe (kode, jumlah, harga sewa) dengan validasi periksaRencana, preview rentang nomor kamar yang akan dibuat, lalu konfirmasi ke POST /api/dashboard/kamar."
+  },
+  "src/components/kosta/bubble-pesan.tsx": {
+    "summary": "Komponen BubblePesan: bubble satu pesan owner atau Kosta dengan jam kirim; lampiran data ditampilkan sebagai daftar berformat Rupiah dan kartu preview aksi."
+  },
+  "src/components/kosta/chat-kosta.tsx": {
+    "summary": "Komponen ChatKosta: panel chat owner dengan Kosta di web (isi sama dengan percakapan WhatsApp) — kirim pesan ke POST /api/kosta/pesan, setujui/batalkan draft aksi lewat /api/kosta/draft/[id], ganti kos lewat /api/kosta/workspace, riwayat per hari, dan saran perintah."
+  },
+  "src/components/kosta/kartu-preview-aksi.tsx": {
+    "summary": "Komponen KartuPreviewAksi: kartu preview aksi Kosta (draft tagihan atau reminder) berisi penerima, periode, nominal, dan status draft sebelum owner mengonfirmasi."
+  },
+  "src/components/kosta/konfirmasi-aksi.tsx": {
+    "summary": "Komponen KonfirmasiAksi: tombol Setuju dan Batal di kartu preview Kosta, hanya tampil saat draft masih menunggu konfirmasi."
+  },
+  "src/components/kosta/panel-riwayat.tsx": {
+    "summary": "Komponen PanelRiwayat: daftar ringkasan percakapan Kosta per hari; memilih satu hari melompat ke percakapan hari itu."
+  },
+  "src/components/kosta/pemilih-workspace.tsx": {
+    "summary": "Komponen PemilihWorkspace: pilihan kos yang sedang dibahas Kosta, untuk owner/admin yang mengelola lebih dari satu kos."
+  },
+  "src/components/landing/benefits-section.tsx": {
+    "summary": "Bagian landing Manfaat: kartu benefit (tagihan terjadwal, pantau pembayaran, kamar rapi) dengan cuplikan UI Kostera dekoratif berisi data contoh."
+  },
+  "src/components/landing/cta-section.tsx": {
+    "summary": "Komponen CtaSection: ajakan daftar di beberapa bagian landing yang selalu menuju alur Daftar Kos (HREF_MULAI)."
+  },
+  "src/components/landing/dashboard-preview-section.tsx": {
+    "summary": "Bagian landing preview Dashboard Kos: cuplikan statis berisi data contoh (kamar, tagihan, pemasukan, tabel status invoice) yang tidak bisa diklik."
+  },
+  "src/components/landing/faq-section.tsx": {
+    "summary": "Bagian landing FAQ: daftar pertanyaan umum yang bisa dibuka-tutup dari konten FAQ."
+  },
+  "src/components/landing/hero-section.tsx": {
+    "summary": "Bagian hero landing: judul Tagihan kos rapi, pembayaran lebih pasti, CTA Mulai gratis, mockup chat Kosta, dan kartu kecil cuplikan dashboard di layar lebar."
+  },
+  "src/components/landing/how-it-works-section.tsx": {
+    "summary": "Bagian landing Cara kerja: langkah tambah kos/kamar/penghuni, buat tagihan, lalu pantau dan ingatkan."
+  },
+  "src/components/landing/kosta-chat-mockup.tsx": {
+    "summary": "Komponen KostaChatMockup: mockup percakapan owner dengan Kosta di WhatsApp berisi data contoh (nominal, jatuh tempo, link invoice, konfirmasi bayar) yang diputar bertahap dan bisa diulang."
+  },
+  "src/components/landing/links.ts": {
+    "summary": "Tujuan tautan landing: HREF_MULAI ke /daftar untuk semua ajakan daftar, HREF_MASUK ke /masuk, dan NAV_LANDING untuk menu bagian landing."
+  },
+  "src/components/landing/mobile-menu.tsx": {
+    "summary": "Komponen MobileMenu: menu navigasi landing untuk layar kecil berisi tautan bagian, Masuk, dan Mulai gratis."
+  },
+  "src/components/landing/problem-section.tsx": {
+    "summary": "Bagian landing Masalah: kondisi sebelum Kostera (chat berantakan, cek mutasi manual) dan hasil setelahnya yang lebih rapi."
+  },
+  "src/components/landing/section-heading.tsx": {
+    "summary": "Komponen SectionHeading: judul bagian landing dengan eyebrow dan deskripsi, rata tengah atau kiri."
+  },
+  "src/components/landing/site-footer.tsx": {
+    "summary": "Komponen SiteFooter: footer landing berisi logo, tautan bagian, dan hak cipta."
+  },
+  "src/components/landing/site-header.tsx": {
+    "summary": "Komponen SiteHeader: header landing yang lengket berisi logo, navigasi bagian, tombol Masuk dan Mulai gratis, serta menu mobile."
+  },
+  "src/components/pembayaran/banner-perlu-review.tsx": {
+    "summary": "Komponen BannerPerluReview: banner yang memberi tahu owner ada pembayaran dengan nominal tidak cocok yang perlu diperiksa, dengan tautan ke daftar Perlu review."
+  },
+  "src/components/pembayaran/daftar-pembayaran.tsx": {
+    "summary": "Komponen DaftarPembayaran di /pembayaran: tagihan satu periode dengan status bayar, uang diterima, selisih kurang/lebih, filter status di URL, dan detail tagihan dalam sheet."
+  },
+  "src/components/pembayaran/detail-tagihan.tsx": {
+    "summary": "Komponen DetailTagihan: rincian satu tagihan (status, pembayaran, link invoice) dengan aksi owner yang selalu lewat konfirmasi — kirim tagihan ke penyewa atau tandai Perlu review sudah diperiksa."
+  },
+  "src/components/quick-actions/action-sheet.tsx": {
+    "summary": "Kumpulan komponen sheet aksi cepat: ActionSheet (dari bawah di HP, dari kanan di desktop), SheetBody, SheetActions, PreviewRows, CatatanSimulasi, GalatServer, SelesaiState, FieldError, dan helper kirimAksi untuk memanggil API JSON dan membaca galat server."
+  },
+  "src/components/quick-actions/invoice-flow.tsx": {
+    "summary": "Komponen InvoiceFlow (Buat Tagihan): pilih satu atau banyak kamar, periode, nominal, biaya tambahan, dan jatuh tempo, lalu preview penerima dan total sebelum konfirmasi ke POST /api/dashboard/aksi/tagihan."
+  },
+  "src/components/quick-actions/reminder-flow.tsx": {
+    "summary": "Komponen ReminderFlow (Kirim Reminder): meminta preview ke /api/dashboard/aksi/reminder/preview (penerima, isi pesan, penyewa yang dilewati), konfirmasi owner, lalu kirim lewat /api/dashboard/aksi/reminder dan tampilkan hasil kirim."
+  },
+  "src/components/quick-actions/rupiah-input.tsx": {
+    "summary": "Komponen RupiahInput: input nominal rupiah yang hanya menerima angka dan menampilkan pemisah ribuan."
+  },
+  "src/components/quick-actions/tenant-flow.tsx": {
+    "summary": "Komponen TenantFlow (Tambah Penghuni): isi nama, nomor WhatsApp, kamar kosong, tanggal masuk, dan harga sewa, lalu preview dan konfirmasi ke POST /api/dashboard/aksi/penghuni."
+  },
+  "src/components/reminder/antrian-reminder.tsx": {
+    "summary": "Komponen AntrianReminder: antrian pengingat terjadwal per hari berisi jumlah dan total nominal serta rincian per jenis H-3/H/H+3."
+  },
+  "src/components/reminder/daftar-jadwal.tsx": {
+    "summary": "Komponen DaftarJadwal di /reminder/jadwal: saklar utama pengingat otomatis, saklar per jadwal, tambah/ubah/hapus jadwal lewat FormJadwal, dan simpan ke PUT /api/dashboard/jadwal-pengingat."
+  },
+  "src/components/reminder/form-jadwal.tsx": {
+    "summary": "Komponen FormJadwal: form tambah/ubah satu jadwal pengingat — kapan relatif jatuh tempo (H-/H/H+), jam kirim, dan aktif — dengan validasi periksaJadwal."
+  },
+  "src/components/reminder/hasil-kirim.tsx": {
+    "summary": "Komponen HasilKirim: ringkasan setelah reminder massal dikirim — jumlah terkirim, kamar gagal dengan opsi kirim ulang, penyewa yang dilewati karena sudah dihubungi, dan catatan simulasi bila provider WhatsApp masih mode log."
+  },
+  "src/components/reminder/kartu-jadwal.tsx": {
+    "summary": "Komponen KartuJadwal di halaman Reminder: status pengingat otomatis (aktif/nonaktif) dan daftar jadwal H-/H/H+ dengan jam kirim WIB, plus tautan Atur ke /reminder/jadwal."
+  },
+  "src/components/reminder/perlu-diingatkan.tsx": {
+    "summary": "Komponen PerluDiingatkan: tagihan jatuh tempo yang bisa diingatkan sekarang, dengan tombol yang membuka ReminderFlow (preview + konfirmasi)."
+  },
+  "src/components/reminder/pilih-penerima.tsx": {
+    "summary": "Komponen PilihPenerima di /reminder/kirim: memilih tagihan penerima reminder massal; penyewa yang sudah dihubungi dalam 24 jam dikunci dengan keterangan kapan terakhir diingatkan."
+  },
+  "src/components/reminder/ringkasan-reminder.tsx": {
+    "summary": "Komponen RingkasanReminder: angka pengingat bulan ini (terkirim/gagal) dan total tagihan yang masih menunggak."
+  },
+  "src/components/reminder/riwayat-reminder.tsx": {
+    "summary": "Komponen RiwayatReminderTerbaru (pengingat terbaru: siapa, kapan, jenis, hasil kirim) dan StatusKirim (badge terkirim/gagal)."
+  },
+  "src/components/reminder/tabel-riwayat-reminder.tsx": {
+    "summary": "Komponen TabelRiwayatReminder di /reminder/riwayat: riwayat pengingat satu bulan dengan pencarian nama/kamar, filter status, jenis, dan bulan tagihan yang disimpan di URL, jumlah per status, alasan gagal, serta tampilan kartu di HP dan tabel di desktop."
+  },
+  "src/components/saklar.tsx": {
+    "summary": "Komponen Saklar: toggle nyala/mati dengan role switch dan area sentuh minimal 44px."
+  },
+  "src/components/status-badge.tsx": {
+    "summary": "Komponen badge status: StatusBadge generik dengan tone, label dan tone status invoice (labelStatusInvoice, toneStatusInvoice), InvoiceStatusBadge, PaymentStatusBadge, dan warna penanda TONE_DOT."
+  },
+  "src/components/status-filter-chips.tsx": {
+    "summary": "Komponen StatusFilterChips: chip saring status invoice lengkap dengan jumlah per status."
+  },
+  "src/components/tagihan/buat-tagihan.tsx": {
+    "summary": "Komponen BuatTagihan: tombol dan sheet Buat Tagihan (InvoiceFlow) di halaman Tagihan & Invoice, periode bawaan bulan berikutnya."
+  },
+  "src/components/tagihan/daftar-invoice.tsx": {
+    "summary": "Komponen DaftarInvoice di /tagihan: invoice satu periode dengan pencarian nama/kamar, chip status, dan urutan yang disimpan di URL."
+  },
+  "src/components/tagihan/form-tagihan-terjadwal.tsx": {
+    "summary": "Komponen FormTagihanTerjadwal: pengaturan tagihan terjadwal bulanan (aktif, tanggal terbit, aturan jatuh tempo) dengan ringkasan penerbitan berikutnya dan peringatan, disimpan ke PUT /api/dashboard/tagihan-terjadwal."
+  },
+  "src/components/tagihan/periode-nav.tsx": {
+    "summary": "Komponen PeriodeNav: pindah periode ke bulan sebelumnya/berikutnya dan kembali ke bulan ini, opsional mempertahankan filter di URL."
+  },
+  "src/components/tiket/banner-tiket.tsx": {
+    "summary": "Komponen BannerTiket di dashboard: memberi tahu ada tiket keluhan baru dari penyewa yang belum ditangani, dengan tautan ke /tiket."
+  },
+  "src/components/tiket/daftar-tiket-owner.tsx": {
+    "summary": "Komponen DaftarTiketOwner di /tiket: saring tiket per status di URL, maju status Baru → Diproses → Selesai lewat PATCH /api/dashboard/tiket/[id] (lalu router.refresh agar jumlah di judul ikut), kabar berhasil/galat, dan tombol hubungi penyewa lewat WhatsApp."
+  },
+  "src/components/ui/avatar.tsx": {
+    "summary": "Komponen UI shadcn Avatar (radix): Avatar, AvatarImage, AvatarFallback, serta grup dan badge avatar."
+  },
+  "src/components/ui/badge.tsx": {
+    "summary": "Komponen UI shadcn Badge dengan varian gaya (default, secondary, destructive, outline, dll.) memakai class-variance-authority."
+  },
+  "src/components/ui/button.tsx": {
+    "summary": "Komponen UI shadcn Button dengan varian dan ukuran (cva) serta dukungan asChild lewat Slot radix."
+  },
+  "src/components/ui/card.tsx": {
+    "summary": "Komponen UI shadcn Card: Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter."
+  },
+  "src/components/ui/checkbox.tsx": {
+    "summary": "Komponen UI shadcn Checkbox berbasis radix dengan ikon centang."
+  },
+  "src/components/ui/input.tsx": {
+    "summary": "Komponen UI shadcn Input: input teks bergaya standar dengan state fokus dan invalid."
+  },
+  "src/components/ui/label.tsx": {
+    "summary": "Komponen UI shadcn Label berbasis radix untuk label form."
+  },
+  "src/components/ui/progress.tsx": {
+    "summary": "Komponen UI shadcn Progress berbasis radix untuk bilah kemajuan."
+  },
+  "src/components/ui/separator.tsx": {
+    "summary": "Komponen UI shadcn Separator berbasis radix untuk garis pemisah horizontal/vertikal."
+  },
+  "src/components/ui/sheet.tsx": {
+    "summary": "Komponen UI shadcn Sheet berbasis radix Dialog: panel geser dari sisi layar dengan overlay, header, footer, judul, deskripsi, dan tombol tutup; dipakai ActionSheet aksi cepat."
+  },
+  "src/components/ui/table.tsx": {
+    "summary": "Komponen UI shadcn Table: Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption dengan wadah yang bisa digulir horizontal."
+  },
+  "src/db/index.ts": {
+    "summary": "Koneksi database Kostera: getDb memakai PostgreSQL sungguhan (Supabase) lewat postgres.js bila DATABASE_URL diisi, atau PGlite embedded di folder lokal (PGLITE_DIR) bila kosong, dengan skema dan casing snake_case yang sama; tutupDb untuk skrip CLI; tipe Db dipakai seluruh lapisan data."
+  },
+  "src/db/migrate.ts": {
+    "summary": "Skrip npm run db:migrate: menjalankan migrasi SQL di folder drizzle ke database aktif (Supabase atau PGlite lokal) lewat jalankanMigrasi; aman diulang karena migrasi yang sudah jalan dilewati."
+  },
+  "src/db/schema-akun.test.ts": {
+    "summary": "Uji skema akun Better Auth: OTP tersimpan di verifications, nomor baru membuat akun dan sesi aktif, nomor terdaftar masuk ke akun yang sama, format nomor selain 628… ditolak, dan workspace aktif sesi hanya kos yang dikelola (dikosongkan saat keluar dari kos)."
+  },
+  "src/db/schema-hunian.test.ts": {
+    "summary": "Uji skema riwayat_hunian: data contoh satu hunian per penghuni (34 berjalan, 2 selesai), penghuni keluar wajib bertanggal dan tidak sebelum tanggal masuk, satu hunian berjalan per penghuni, dan tambah penghuni ikut mencatat hunian."
+  },
+  "src/db/schema-kosta.test.ts": {
+    "summary": "Uji skema percakapan Kosta: data contoh percakapan dan draft pengingat, workspace aktif harus kos keanggotaan pengguna, satu percakapan per nomor WA dan pesan provider tidak dobel, pengosongan workspace saat dikeluarkan, serta aturan draft aksi."
+  },
+  "src/db/schema-reminder.test.ts": {
+    "summary": "Uji skema jadwal dan log reminder: jadwal bawaan H-3/H/H+3 09.00 untuk kos contoh dan kos baru, satu jadwal per offset (±14 hari, jam 06.00–21.00), pengingat otomatis sekali per tagihan per jadwal sementara manual dan kirim tagihan boleh berulang, serta alasan gagal kirim tercatat."
+  },
+  "src/db/schema-tiket.test.ts": {
+    "summary": "Uji skema tabel tickets: 5 tiket contoh Kos Melati, status awal baru, nomor unik per kos, kategori harus dari daftar, dan cerita 10–1000 karakter tanpa menghitung spasi di tepi."
+  },
+  "src/db/schema-transaksi-bayar.test.ts": {
+    "summary": "Uji skema payment_attempts: QRIS dan Virtual Account tersimpan dengan status awal menunggu, order_id harus invoiceId~percobaan dan unik, QRIS wajib isi QR, VA wajib nomor VA, nominal positif."
+  },
+  "src/db/schema.test.ts": {
+    "summary": "Uji skema dan migrasi utama: data contoh Kos Melati sesuai angka PRD, rincian invoice sama dengan nominal, seed aman diulang, serta constraint nominal positif, format periode, token publik unik, satu penghuni aktif per kamar, aturan tagihan terjadwal, dan webhook event unik."
+  },
+  "src/db/schema.ts": {
+    "summary": "Skema database Kostera (Drizzle, PostgreSQL) mengikuti PRD: enum status dan peran, tabel users, organizations, members, sessions, accounts, verifications, rate_limits (Better Auth), rooms, tenants, riwayat_hunian, invoices, invoice_items, invoice_schedules, payments, payment_attempts, webhook_events, reminders, reminder_schedules, wa_conversations, wa_messages, action_drafts, tickets, whatsapp_logs; nominal integer rupiah, constraint dan index untuk menjaga data tetap deterministik."
+  },
+  "src/db/seed.ts": {
+    "summary": "Seed npm run db:seed: isiDataContoh mengisi data contoh Kos Melati (owner, 40 kamar, penghuni, tagihan, rincian, pembayaran, reminder, jadwal pengingat bawaan, percakapan Kosta, kos lain, dan tiket contoh) ke database; dilewati bila Kos Melati sudah ada."
+  },
+  "src/db/testing.ts": {
+    "summary": "Helper uji buatDbUji: PGlite di memori yang sudah dimigrasi, dipakai file *.test.ts, beserta fungsi tutup."
+  },
+  "src/hooks/use-media-query.ts": {
+    "summary": "Hook useMediaQuery: true bila media query cocok, selalu false saat render server; dipakai untuk memilih arah sheet (bawah di HP, kanan di desktop)."
+  },
+  "src/lib/aksi/aksi.test.ts": {
+    "summary": "Uji aksi cepat dashboard: buat tagihan (harga sewa penghuni, token acak, biaya tambahan, kamar yang sudah bertagihan dilewati, validasi), tambah penghuni (kamar jadi terisi, tolak kamar terisi/kos lain, normalisasi nomor WA), dan kirim reminder (pesan berisi nominal dan link, riwayat tercatat, aturan 24 jam)."
+  },
+  "src/lib/aksi/galat.ts": {
+    "summary": "Utilitas galat aksi: kelas GalatAksi dengan status HTTP (400/401/403/404/409/502), responGalat mengubah galat jadi Response JSON tanpa membocorkan detail galat tak terduga, bacaJson, tanggalValid, nominalValid, dan pastikanPengelola (aksi hanya untuk owner/admin)."
+  },
+  "src/lib/aksi/jadwal-pengingat.test.ts": {
+    "summary": "Uji jadwal pengingat per kos: baca saklar dan jadwal bawaan terurut, validasi input sesuai form, simpan mengganti seluruh set (ubah, hapus, tambah, matikan saklar), dan set kosong menghapus semua jadwal tanpa menyentuh kos lain."
+  },
+  "src/lib/aksi/jadwal-pengingat.ts": {
+    "summary": "Jadwal pengingat bayar otomatis per kos (tabel reminder_schedules + organizations.pengingat_otomatis): sisipkanJadwalBawaan (H-3/H/H+3 09.00), getPengaturanPengingat, bacaInputPengaturanPengingat (offset ±14, jam 06–21, maksimal 5), dan simpanPengaturanPengingat dalam satu transaksi berkunci kos."
+  },
+  "src/lib/aksi/kamar.test.ts": {
+    "summary": "Uji kelola kamar: tambah kamar melanjutkan nomor yang ada, tambah ke kos baru membuat kos dan owner, nonaktif/aktifkan kamar kosong, kamar terisi tidak bisa dinonaktifkan, ubah tipe dan harga tanpa mengubah sewa penghuni, serta validasi input."
+  },
+  "src/lib/aksi/kamar.ts": {
+    "summary": "Aksi kelola kamar: bacaInputTambahKamar dan tambahKamar (tambah massal dari rencana wizard ke kos ini atau kos baru, nomor dibuat server), bacaPerubahanKamar dan ubahKamar (tipe, harga, catatan, aktif); kamar tidak pernah dihapus agar riwayat tagihan tetap ada."
+  },
+  "src/lib/aksi/keluar-penghuni.test.ts": {
+    "summary": "Uji keluarPenghuni: kamar jadi kosong dan riwayat hunian ditutup, tagihan belum lunas tetap tercatat, muncul di daftar nonaktif dan kamar kosong, tidak lagi dapat tagihan terjadwal, serta penolakan tanggal tidak valid."
+  },
+  "src/lib/aksi/konfirmasi-reminder.test.ts": {
+    "summary": "Uji konfirmasi kirim reminder massal: penyewa yang dihubungi kurang dari 24 jam dilewati, konfirmasi ganda berurutan atau bersamaan hanya mengirim sekali per penyewa, kiriman gagal boleh diulang, dan klaim terputus tetap dihitung sudah dihubungi."
+  },
+  "src/lib/aksi/penghuni.ts": {
+    "summary": "Aksi penghuni dengan pencatatan riwayat_hunian: tambahPenghuni di kamar kosong (nomor WA dinormalisasi), pindahKamar ke kamar kosong dengan sewa tetap atau ikut kamar, dan keluarPenghuni (status keluar, kamar kosong, riwayat ditutup; tagihan belum lunas tetap bisa ditagih), masing-masing dengan pembaca input tervalidasi."
+  },
+  "src/lib/aksi/pesan-reminder.test.ts": {
+    "summary": "Uji service susunPesanReminder: template mengikuti waktu (sebelum, di hari, setelah jatuh tempo), data penerima dari database urut nomor kamar, tagihan lunas/perlu review ditolak 409, dan tagihan kos lain 404."
+  },
+  "src/lib/aksi/pesan-reminder.ts": {
+    "summary": "Service susunPesanReminder: satu sumber isi pesan pengingat bayar untuk kirim manual, draft Kosta, dan pengingat otomatis — data tagihan dari database, teks untuk provider teks dan template resmi WhatsApp Cloud API yang dipilih sesuai waktu jatuh tempo, lengkap dengan link invoice."
+  },
+  "src/lib/aksi/pindah-kamar.test.ts": {
+    "summary": "Uji pindahKamar: sewa tetap atau ikut kamar tujuan, riwayat hunian ditutup dan dibuka, kamar asal muncul sebagai kamar kosong, tagihan yang sudah terbit tidak berubah, dan penolakan tujuan terisi/nonaktif/tanggal tidak valid."
+  },
+  "src/lib/aksi/preview-reminder.test.ts": {
+    "summary": "Uji previewReminder: penerima urut kamar dengan isi pesan persis, total, dan periode; penyewa yang dihubungi < 24 jam dilewati (konfirmasi lunas dan kiriman gagal tidak dihitung); tagihan terlarang atau kos lain ditolak tanpa mengirim."
+  },
+  "src/lib/aksi/preview-reminder.ts": {
+    "summary": "previewReminder untuk reminder massal: penerima, isi pesan persis seperti yang akan dikirim, total nominal, dan penyewa yang dilewati karena sudah dihubungi dalam 24 jam terakhir, sebelum owner mengonfirmasi."
+  },
+  "src/lib/aksi/reminder.ts": {
+    "summary": "kirimReminder (konfirmasi kirim reminder massal): klaim penerima dalam transaksi berkunci kos dengan aturan 24 jam per penyewa, kirim pengingat WhatsApp satu per satu lewat kirimDanCatat (log whatsapp_logs), lalu perbarui riwayat reminders; mengembalikan terkirim, gagal, dilewati, dan penanda simulasi."
+  },
+  "src/lib/aksi/status-tagihan.test.ts": {
+    "summary": "Uji kirimTagihan (link invoice terkirim dengan template kostera_tagihan_baru, riwayat tercatat, draft diaktifkan, status terlarang ditolak), ubahStatusTagihan (draft/perlu review kembali menunggu atau jatuh tempo), validasi input, dan tandaiJatuhTempo yang aman diulang."
+  },
+  "src/lib/aksi/status-tagihan.ts": {
+    "summary": "Kirim tagihan dan ubah status oleh owner: kirimTagihan mengirim link invoice ke WhatsApp penyewa (teks + template resmi, dicatat di whatsapp_logs dan reminders) dan mengaktifkan draft yang terkirim; ubahStatusTagihan hanya mengaktifkan Draft atau menandai Perlu review sudah diperiksa, sedangkan Lunas dan Perlu review hanya dari webhook."
+  },
+  "src/lib/aksi/tagihan-terjadwal.test.ts": {
+    "summary": "Uji pengaturan tagihan terjadwal: pengaturan bawaan nonaktif, simpan dan timpa tetap satu baris per kos, tidak memengaruhi kos lain, dan validasi input."
+  },
+  "src/lib/aksi/tagihan-terjadwal.ts": {
+    "summary": "Pengaturan tagihan terjadwal bulanan per kos (tabel invoice_schedules): getPengaturanTagihanTerjadwal (bawaan nonaktif), bacaInputPengaturan, simpanPengaturanTagihanTerjadwal, dan aturanJatuhTempoDari."
+  },
+  "src/lib/aksi/tagihan.ts": {
+    "summary": "Aksi Buat tagihan: bacaInputBuatTagihan, buatTagihan untuk kamar terpilih satu periode dengan nominal dari harga sewa penghuni atau nominal khusus plus biaya tambahan sebagai rincian, buatTokenPublik (token link acak), dan sisipkanTagihan yang melewati kamar yang sudah bertagihan di periode itu."
+  },
+  "src/lib/aksi/tiket.test.ts": {
+    "summary": "Uji tiket keluhan: penyewa hanya melihat tiketnya sendiri, tiket baru bernomor urut per kos (aman bersamaan), validasi input, penolakan token tak dikenal/penyewa keluar/terlalu banyak tiket Baru; owner melihat daftar dan ringkasan, status maju satu langkah, perubahan bersamaan hanya satu tersimpan, dan kabar WhatsApp ke penyewa tercatat di log."
+  },
+  "src/lib/aksi/tiket.ts": {
+    "summary": "Aksi tiket keluhan: bacaInputTiket dan buatTiket (penyewa lewat token invoice, kos dikunci untuk nomor urut, maksimal 5 tiket Baru per penyewa, penyewa yang sudah keluar ditolak), bacaInputStatusTiket dan ubahStatusTiket (Baru → Diproses → Selesai dengan update bersyarat), serta kirimKabarTiket yang mengirim template kostera_tiket_diperbarui ke penyewa dengan tautan status tiket."
+  },
+  "src/lib/aksi/workspace.test.ts": {
+    "summary": "Uji otomatisasi workspace saat daftar: satu langkah membuat nama pemilik, kos, owner, jadwal pengingat bawaan, dan kos aktif sesi; kirim ganda hanya membuat satu kos; pengguna yang sudah mengelola kos ditolak; validasi mengikuti form."
+  },
+  "src/lib/aksi/workspace.ts": {
+    "summary": "Otomatisasi workspace saat daftar: bacaInputWorkspace dan buatWorkspacePertama dalam satu transaksi — perbarui nama pemilik, buat organisasi, jadikan owner, pasang jadwal pengingat bawaan, dan set kos aktif di sesi login."
+  },
+  "src/lib/auth/index.ts": {
+    "summary": "Konfigurasi Better Auth Kostera (buatAuth): login nomor WhatsApp + OTP lewat plugin phone-number dengan akun otomatis, pemetaan tabel ke users/sessions/accounts/verifications/rate_limits, field sesi organizationId, cookie berawalan kostera, ID uuid, batas permintaan tersimpan di database (ATURAN_BATAS untuk kirim dan verifikasi OTP), dan emailSementara untuk akun dari nomor WA."
+  },
+  "src/lib/auth/klien.ts": {
+    "summary": "Pemanggil endpoint Better Auth dari browser: panggilAuth, kelas GalatAuth (kode dan status), pesanGalatAuth yang menerjemahkan galat ke bahasa Indonesia, dan KODE_OTP_HANGUS."
+  },
+  "src/lib/auth/otp-wa.ts": {
+    "summary": "kirimOtpLewatWa: mengirim kode OTP lewat adapter WhatsApp (teks untuk WAHA/log, template autentikasi untuk Cloud API) dan mencatat metadatanya di whatsapp_logs tanpa kode; bila gagal melempar galat 503 dengan pesan GALAT_KIRIM_OTP yang jelas."
+  },
+  "src/lib/auth/pendaftaran.test.ts": {
+    "summary": "Uji endpoint kirim OTP: kode 6 digit dikirim lewat WhatsApp (teks + template) dan disimpan sekali pakai, log WA tanpa kode, nomor bukan 628… ditolak, WhatsApp gagal → 503 berpesan jelas, batas 5 permintaan per 10 menit per IP, dan terjemahan pesan galat."
+  },
+  "src/lib/auth/proxy-sesi.test.ts": {
+    "summary": "Uji keputusanProxy: tanpa cookie sesi halaman dialihkan ke /masuk dan API ditolak; cookie sesi Kostera biasa maupun __Secure- diteruskan."
+  },
+  "src/lib/auth/proxy-sesi.ts": {
+    "summary": "keputusanProxy: keputusan pemeriksaan awal di proxy tanpa akses database — ada cookie sesi diteruskan, tidak ada dialihkan ke masuk (halaman) atau ditolak 401 (API)."
+  },
+  "src/lib/auth/server.ts": {
+    "summary": "Instance Better Auth aplikasi (getAuth, satu per proses) dengan database aktif dan OTP lewat provider WhatsApp, serta getSesiLogin yang membaca sesi dari cookie permintaan."
+  },
+  "src/lib/auth/verifikasi-otp.test.ts": {
+    "summary": "Uji verifikasi OTP: kode benar memasang cookie sesi dan tidak bisa dipakai ulang, kode salah ditolak dan hangus setelah 5 kali, kode lewat 5 menit ditolak, dan kode baru menggantikan kode lama."
+  },
+  "src/lib/auth/workspace.test.ts": {
+    "summary": "Uji sesi dan pembatasan akses organisasi: daftar keanggotaan aktif, pilih kos saat punya beberapa, satu kos dipilih otomatis, tanpa kos diarahkan siapkan kos, keanggotaan nonaktif tidak bisa dibuka, dan pilih kos hanya untuk kos yang dikelola."
+  },
+  "src/lib/auth/workspace.ts": {
+    "summary": "Aturan akses workspace per sesi login: daftarKeanggotaanAktif, tentukanWorkspace (hanya keanggotaan aktif; satu kos dipilih otomatis dan disimpan di sesi, lebih dari satu harus dipilih, tanpa kos atau tanpa sesi), dan pilihWorkspaceAktif (403 bila tidak punya akses)."
+  },
+  "src/lib/daftar-kos.test.ts": {
+    "summary": "Uji periksaDataKos: data kos pertama yang valid tanpa galat (spasi di tepi diabaikan) dan galat per kolom."
+  },
+  "src/lib/daftar-kos.ts": {
+    "summary": "Validasi data kos pertama saat daftar (periksaDataKos): nama pemilik, nama kos, dan jumlah kamar 1 sampai MAKS_KAMAR_AWAL, dipakai form dan endpoint pembuatan workspace."
+  },
+  "src/lib/data/dashboard.ts": {
+    "summary": "getDashboardData: kontrak data Dashboard Kos yang seluruhnya dibaca dari database untuk workspace aktif pada periode berjalan WIB — ringkasan kos, daftar invoice, rekap pemasukan, tagihan Perlu review, dan ringkasan tiket keluhan."
+  },
+  "src/lib/data/halaman-kamar-kosong.ts": {
+    "summary": "getHalamanKamarKosong: data halaman Kamar kosong (kamar kosong dengan penghuni terakhir dan kamar nonaktif) untuk kos aktif."
+  },
+  "src/lib/data/halaman-kamar.ts": {
+    "summary": "getHalamanKamar: data halaman Kamar & Penghuni (kamar beserta penghuni aktif dan tagihan belum lunas, penghuni nonaktif, kamar kosong) untuk kos aktif."
+  },
+  "src/lib/data/halaman-pilih-kos.ts": {
+    "summary": "getHalamanPilihKos: semua kos yang bisa dibuka pengguna yang sedang masuk, sama dengan GET /api/akun/workspace dan aturan workspace-aktif."
+  },
+  "src/lib/data/halaman-reminder.ts": {
+    "summary": "Data halaman reminder dari database: getHalamanReminder (jadwal, saklar otomatis, statistik, tunggakan, antrian, riwayat terbaru), getHalamanJadwalPengingat, getHalamanKirimReminder (kandidat dan kapan terakhir diingatkan), dan getHalamanRiwayatReminder (riwayat satu bulan)."
+  },
+  "src/lib/data/halaman-tiket.ts": {
+    "summary": "Data halaman tiket: getHalamanStatusTiket (penyewa lewat token invoice, tiket miliknya) dan getHalamanTiketOwner (semua tiket kos aktif untuk owner/admin), keduanya dari tabel tickets."
+  },
+  "src/lib/data/invoice-publik.test.ts": {
+    "summary": "Uji getInvoicePublik: data satu invoice berdasarkan token termasuk sisa dan bisaDibayar, rincian biaya, tanggal bayar, riwayat pembayaran dan uang masuk (pending tidak dihitung), draf dan lebih bayar tidak bisa dibayar, serta token acak dan validasi format."
+  },
+  "src/lib/data/invoice-publik.ts": {
+    "summary": "Data invoice publik /invoice/[token] untuk penyewa tanpa login: getInvoicePublik mengembalikan satu invoice (kos, penghuni, kamar, rincian, status, riwayat pembayaran, sudahDiterima, sisa, bisaDibayar lewat tagihanBisaDibayar); tokenValid untuk format token dan HEADER_INVOICE_PUBLIK (tanpa cache, noindex, no-referrer)."
+  },
+  "src/lib/data/invoice.test.ts": {
+    "summary": "Uji getDaftarInvoice: invoice periode dengan yang perlu ditindak di atas, filter status, data penghuni dan kamar, batas satu organisasi, pencarian tidak peka huruf dan aman dari wildcard LIKE, serta bacaFilterDaftarInvoice untuk parameter query."
+  },
+  "src/lib/data/invoice.ts": {
+    "summary": "Daftar invoice dari database untuk tabel Status Bayar dan GET /api/dashboard/invoices: getDaftarInvoice (periode atau semua, status, kata kunci, urutan prioritas), isInvoiceStatus, dan bacaFilterDaftarInvoice; selalu dibatasi satu organisasi."
+  },
+  "src/lib/data/kamar.test.ts": {
+    "summary": "Uji data kamar: 40 kamar Kos Melati dengan 34 penghuni aktif, data penghuni dan tagihan belum lunas, penghuni nonaktif urut terakhir keluar, dan kamar kosong dengan penghuni terakhir."
+  },
+  "src/lib/data/kamar.ts": {
+    "summary": "Data kamar untuk halaman Kamar & Penghuni: getDaftarKamarPenghuni (kamar dan penghuni aktif beserta tagihan terbuka), getPenghuniNonaktif, getKamarKosong (kapan dan siapa penghuni terakhir), dan getKamarNonaktif; selalu satu organisasi."
+  },
+  "src/lib/data/kos.test.ts": {
+    "summary": "Uji getRingkasanKos: 40 kamar dan 34 terisi sesuai PRD, daftar kamar urut nomor, hanya kamar organisasinya, kamar nonaktif tidak dihitung, kos tanpa kamar persen 0, dan organisasi tak dikenal null."
+  },
+  "src/lib/data/kos.ts": {
+    "summary": "getRingkasanKos: ringkasan kos dan kamar dari database (jumlah kamar aktif, terisi, kosong, per tipe) untuk Dashboard Kos dan GET /api/dashboard/ringkasan; null bila organisasi tidak ada."
+  },
+  "src/lib/data/kosta.ts": {
+    "summary": "getHalamanKosta: data halaman Chat Kosta dari database — daftar kos dari keanggotaan owner/admin, kos aktif percakapan, dan riwayat percakapan dari wa_messages dengan status preview mengikuti action_drafts."
+  },
+  "src/lib/data/pemantauan.ts": {
+    "summary": "getHalamanPembayaran: data halaman Pemantauan Pembayaran — tagihan satu periode beserta pembayaran yang sudah diterima dan tagihan Perlu review; periode kosong atau tidak valid memakai bulan berjalan WIB."
+  },
+  "src/lib/data/pemasukan.test.ts": {
+    "summary": "Uji getRekapPemasukan: uang masuk dari pembayaran valid periode ini (Rp12,5jt dari 19 pembayaran), tiga pembayaran terakhir, rekap tagihan per status, periode kosong bernilai nol, dan isolasi antar kos."
+  },
+  "src/lib/data/pemasukan.ts": {
+    "summary": "getRekapPemasukan: rekap pemasukan satu periode dari database untuk kartu Pemasukan Bulan Ini dan GET /api/dashboard/pemasukan — uang masuk hanya dari pembayaran valid hasil webhook, rekap tagihan per status, dan pembayaran terbaru; dihitung di database."
+  },
+  "src/lib/data/pembayaran.test.ts": {
+    "summary": "Uji getDaftarTagihanPembayaran: tagihan lunas dibayar penuh, perlu review kurang bayar, pembayaran pending belum dihitung tetapi tercatat, filter Perlu review lintas periode, dan periode tanpa tagihan kosong."
+  },
+  "src/lib/data/pembayaran.ts": {
+    "summary": "getDaftarTagihanPembayaran: tagihan beserta pembayaran yang tercatat untuk halaman Pemantauan Pembayaran; dibayar = uang diterima gateway (valid maupun tidak cocok), pending belum dihitung, dan Lunas tetap hanya dari pembayaran valid."
+  },
+  "src/lib/data/perlu-review.test.ts": {
+    "summary": "Uji getPerluReview: tagihan perlu review beserta uang yang sudah diterima, urut periode dan kamar, pembayaran pending tidak dihitung, dan organisasi lain tidak melihatnya."
+  },
+  "src/lib/data/perlu-review.ts": {
+    "summary": "getPerluReview: tagihan berstatus Perlu review (nominal bayar tidak cocok) di semua periode beserta uang diterima, untuk banner di Dashboard dan halaman Pembayaran."
+  },
+  "src/lib/data/reminder.test.ts": {
+    "summary": "Uji data reminder: riwayat pengingat terbaru dengan nama dan kamar, riwayat per bulan kirim WIB dan batas jumlah, statistik terkirim/gagal/penyewa unik, kandidat tagihan belum lunas dengan terakhir diingatkan, filter status/jenis/periode tagihan/pencarian aman wildcard, kursor halaman lanjut, dan pembaca query endpoint."
+  },
+  "src/lib/data/reminder.ts": {
+    "summary": "Data pengingat bayar dari tabel reminders (tanpa kirim tagihan dan konfirmasi lunas): getRiwayatReminder dengan filter dan kursor, bacaFilterRiwayatReminder, kursorSetelah, getStatistikReminder, getKandidatReminder, serta kontakPenyewa sebagai aturan bersama penyewa yang sudah dihubungi (dipakai batas 24 jam)."
+  },
+  "src/lib/data/session.ts": {
+    "summary": "Sesi workspace per permintaan: getSesiPengguna (sesi Better Auth), getWorkspaceSession untuk halaman (mengalihkan ke /masuk, /daftar/workspace, atau /pilih-kos), dan getWorkspaceSessionApi untuk route handler (galat JSON 401/409)."
+  },
+  "src/lib/data/tagihan-terjadwal.ts": {
+    "summary": "getHalamanTagihanTerjadwal: data halaman Tagihan Terjadwal — pengaturan tersimpan kos atau bawaan, jumlah kamar terisi, dan total sewa, semuanya dari database."
+  },
+  "src/lib/data/tagihan.ts": {
+    "summary": "getHalamanTagihan: data halaman Tagihan & Invoice — daftar invoice satu periode milik workspace aktif; periode kosong atau tidak valid memakai bulan berjalan WIB."
+  },
+  "src/lib/data/tambah-kamar.ts": {
+    "summary": "getHalamanTambahKamar: data wizard Tambah kos & kamar — kos aktif, nomor kamar yang sudah dipakai, dan tipe kamar yang ada untuk baris awal wizard."
+  },
+  "src/lib/data/tiket.ts": {
+    "summary": "Data tiket keluhan dari tabel tickets: penyewaDariToken (penyewa pemilik token invoice dan kamarnya sekarang), getTiketPenyewa (hanya tiket penyewa itu), getTiketKos (semua tiket kos dengan kamar dan pelapor, berjalan di atas), getRingkasanTiket (jumlah per status untuk banner), dan keTiketPenyewa."
+  },
+  "src/lib/draft-aksi.test.ts": {
+    "summary": "Uji statusSetelah: draft menunggu konfirmasi bisa disetujui atau dibatalkan, disetujui menjadi dijalankan, dan keputusan yang tidak berlaku ditolak."
+  },
+  "src/lib/draft-aksi.ts": {
+    "summary": "Alur status draft aksi Kosta (action_drafts): statusSetelah menentukan status berikutnya (menunggu_konfirmasi → disetujui → dijalankan, atau dibatalkan) atau null bila keputusan tidak berlaku."
+  },
+  "src/lib/format.test.ts": {
+    "summary": "Uji format Indonesia: formatRupiah dan formatAngka dengan pemisah titik, formatRupiahSingkat (rb/jt/M), tanggal yang tidak bergeser zona waktu, formatWaktu dan formatJam WIB, selisihHari, serta periode sebelum/berikutnya melewati pergantian tahun."
+  },
+  "src/lib/format.ts": {
+    "summary": "Format angka dan tanggal gaya Indonesia: formatAngka, formatRupiah, formatRupiahSingkat, formatTanggal, formatTanggalPendek, formatHari, formatPeriode, formatJam dan formatWaktu (WIB), selisihHari, periodeBerikutnya, periodeSebelumnya; tanggal ISO diperlakukan sebagai tanggal kalender."
+  },
+  "src/lib/invoice.test.ts": {
+    "summary": "Uji helper invoice: urutkanInvoice (prioritas, jatuh tempo, nominal, nama, kamar alami), parseUrutInvoice, keteranganWaktu (lunas, lewat, hari ini, sisa hari), dan peringatanTagihan untuk preview Buat tagihan."
+  },
+  "src/lib/invoice.ts": {
+    "summary": "Helper tampilan invoice: keteranganWaktu (kapan dibayar atau seberapa dekat/lewat jatuh tempo), PILIHAN_URUT, parseUrutInvoice, urutkanInvoice, dan peringatanTagihan untuk preview Buat tagihan."
+  },
+  "src/lib/kamar-kosong.test.ts": {
+    "summary": "Uji saringKamarKosong dan helper-nya: urut nomor numerik, paling lama kosong, harga, saring per tipe tanpa mengubah array asal, parseUrutKosong, hariKosong, filter harga maksimal, dan bacaFilterKamarKosong."
+  },
+  "src/lib/kamar-kosong.ts": {
+    "summary": "Saring dan urutkan kamar kosong untuk /kamar/kosong: PILIHAN_URUT_KOSONG, parseUrutKosong, saringKamarKosong (tipe, harga maksimal, urutan), bacaFilterKamarKosong untuk query endpoint, dan hariKosong sejak penghuni terakhir keluar."
+  },
+  "src/lib/kosta/deps.ts": {
+    "summary": "getDepsKosta: dependensi Kosta dari environment — adapter WhatsApp, parser LLM opsional, alamat situs, dan tanggal hari ini WIB."
+  },
+  "src/lib/kosta/draft.test.ts": {
+    "summary": "Uji alur preview → konfirmasi aksi Kosta: draft pengingat disetujui terkirim ke penunggak, konfirmasi ganda ditolak, aturan 24 jam, yang sudah bayar dilewati, batal tidak mengirim, preview kedaluwarsa, draft tagihan dibuat saat disetujui, dan riwayat percakapan dari database."
+  },
+  "src/lib/kosta/draft.ts": {
+    "summary": "Alur preview → konfirmasi aksi Kosta (action_drafts): siapkanDraftReminder, siapkanDraftTagihan (penghuni belum ditagih, jatuh tempo mengikuti aturan tagihan terjadwal), koreksiDraftTagihan, draftMenungguTerakhir, batalkanDraft, dan putuskanDraft yang atomik (menunggu → disetujui) lalu menjalankan pengiriman atau pembuatan tagihan; preview kedaluwarsa setelah MASA_BERLAKU_DRAFT_MS."
+  },
+  "src/lib/kosta/format-balasan.ts": {
+    "summary": "Format balasan Kosta untuk WhatsApp: formatWhatsApp mengubah lampiran daftar/rekap/preview menjadi teks berformat WA (di web tampil sebagai kartu), plus TEKS_BANTUAN berisi contoh perintah."
+  },
+  "src/lib/kosta/intent.test.ts": {
+    "summary": "Uji parser intent Kosta: parseCepat (konfirmasi, ganti kos), periodeDariTeks, parseKataKunci sebagai cadangan tanpa LLM, validasiIntent untuk hasil LLM, normalisasiKamar, parseRupiah, dan parseKoreksi (kecualikan kamar, ubah nominal, ubah jatuh tempo)."
+  },
+  "src/lib/kosta/intent.ts": {
+    "summary": "Intent pesan owner ke Kosta dan daftar ALAT (tool) terbatas untuk parser: normalisasiKamar, validasiIntent (hasil LLM divalidasi deterministik), parseCepat, periodeDariTeks, parseRupiah, parseKoreksi, dan parseKataKunci; parser hanya menghasilkan intent dan parameter, angka tetap dari database."
+  },
+  "src/lib/kosta/llm.ts": {
+    "summary": "Klien LLM parser pesan owner (API chat completions gaya OpenAI lewat OpenRouter/gateway): buatParserLlm mengirim teks dengan konteks minimum dan tool terbatas lalu membaca tool call; getParserLlm null bila LLM belum dikonfigurasi; hasil tetap divalidasi validasiIntent."
+  },
+  "src/lib/kosta/proses-pesan.test.ts": {
+    "summary": "Uji prosesPesanKosta lewat WhatsApp: pertanyaan tunggakan dijawab dari database dengan lampiran, draft tagihan → koreksi → batal lewat chat, ganti dan pilih kos tanpa membaca data kos lain, serta bantuan untuk pesan di luar kemampuan dan nomor asing."
+  },
+  "src/lib/kosta/proses-pesan.ts": {
+    "summary": "Orkestrator Kosta prosesPesanKosta: cocokkan nomor dan kos, pahami intent, jalankan tool baca/aksi, simpan balasan di wa_messages, dan untuk saluran WhatsApp kirim balasan lewat kirimDanCatat (tercatat di whatsapp_logs); semua angka dari database, LLM hanya memilih intent."
+  },
+  "src/lib/kosta/riwayat.ts": {
+    "summary": "Riwayat percakapan Kosta dari wa_messages: pastikanPercakapan (buat percakapan per nomor WA pengguna), getPercakapanPengguna, dan catatPesan; status kartu preview mengikuti draft terbaru di action_drafts."
+  },
+  "src/lib/kosta/router.test.ts": {
+    "summary": "Uji router Kosta: buatParserLlm mengirim teks dan tool terbatas lalu membaca tool call (galat → null), getParserLlm tanpa kunci null, pahamiPesan (perintah pasti tanpa LLM, kalimat bebas lewat LLM tervalidasi, cadangan kata kunci), dan ruteTool."
+  },
+  "src/lib/kosta/router.ts": {
+    "summary": "Router Kosta: pahamiPesan dengan urutan perintah pasti → LLM bila dikonfigurasi → kata kunci sebagai cadangan, dan ruteTool yang memanggil penangan sesuai intent."
+  },
+  "src/lib/kosta/terima-pesan.test.ts": {
+    "summary": "Uji simpanPesanMasuk: pesan owner masuk ke percakapannya dengan pengguna dan kos aktif, kiriman ulang ID sama tidak dobel, nomor asing tercatat tanpa pengguna/kos, dan pesan terlambat tidak memundurkan waktu pesan terakhir."
+  },
+  "src/lib/kosta/terima-pesan.ts": {
+    "summary": "simpanPesanMasuk: menyimpan pesan WhatsApp masuk ke wa_conversations dan wa_messages per nomor secara idempoten (ID pesan provider sama tidak dobel); nomor yang belum tertaut tetap tercatat tanpa membuka data kos apa pun."
+  },
+  "src/lib/kosta/tool-aksi.test.ts": {
+    "summary": "Uji tool aksi Kosta: toolDraftTagihan (periode sudah ditagih, bulan depan, penghuni baru, preview baru menggantikan lama), koreksi dan batal draft, penolakan kamar di luar draft, dan toolSiapkanReminder."
+  },
+  "src/lib/kosta/tool-aksi.ts": {
+    "summary": "Tool aksi Kosta yang menyiapkan draft menunggu konfirmasi owner tanpa mengubah data atau mengirim pesan: toolDraftTagihan, toolKoreksiDraft, toolBatalDraft, dan toolSiapkanReminder (penerima dan total, melewati penyewa yang dihubungi dalam 24 jam)."
+  },
+  "src/lib/kosta/tool-baca.test.ts": {
+    "summary": "Uji tool baca Kosta: rekap pemasukan dari pembayaran terverifikasi, cek status tagihan satu kamar, tunggakan urut paling lama telat termasuk bulan lalu, isolasi kos, dan kamar kosong per tipe dengan potensi sewa."
+  },
+  "src/lib/kosta/tool-baca.ts": {
+    "summary": "Tool baca Kosta yang menjawab dengan angka langsung dari database: toolTunggakan, toolKamarKosong, toolRekapPemasukan, dan toolCekKamar, masing-masing mengembalikan teks singkat plus lampiran terstruktur (BalasanKosta)."
+  },
+  "src/lib/kosta/workspace.test.ts": {
+    "summary": "Uji pencocokan nomor WA ke workspace Kosta: owner multi-kos mempertahankan kos aktif, diminta memilih bila belum, keanggotaan nonaktif ditolak, satu kos langsung dipakai, nomor asing/belum terverifikasi tidak dikenal, penyewa tidak memakai Kosta, dan cariPilihanWorkspace."
+  },
+  "src/lib/kosta/workspace.ts": {
+    "summary": "Pencocokan pengirim WhatsApp ke kos yang boleh dikelola lewat Kosta: cocokkanNomorWa (hanya nomor terverifikasi, hanya owner/admin aktif), daftarWorkspace, pilihWorkspace, dan cariPilihanWorkspace (nomor urut atau potongan nama kos)."
+  },
+  "src/lib/landing/content.ts": {
+    "summary": "Konten landing Kostera: HERO, INTIP_DASHBOARD, CHAT_KOSTA (percakapan contoh), MASALAH, BENEFIT, CARA_KERJA, PREVIEW_DASHBOARD, FAQ, CTA_TENGAH, dan CTA_PENUTUP; angka mockup mengikuti data contoh Kos Melati."
+  },
+  "src/lib/landing/konten-publik.test.ts": {
+    "summary": "Uji kontenPublik: aman diserialisasi JSON tanpa kehilangan isi, copy utama sesuai PRD, dan ikon dikirim sebagai nama ikon Lucide."
+  },
+  "src/lib/landing/konten-publik.ts": {
+    "summary": "kontenPublik: konten landing dalam bentuk JSON untuk GET /api/landing/konten, bersumber dari content.ts dengan komponen ikon diganti nama ikon Lucide; hanya copy dan data contoh."
+  },
+  "src/lib/mock/kos-melati.ts": {
+    "summary": "Data contoh Kos Melati untuk seed dan uji: organisasi, owner, 40 kamar, penghuni (termasuk yang sudah keluar), invoice, pembayaran (termasuk C09 yang tidak cocok), dan reminder, disusun agar cocok dengan angka PRD (34 terisi, 3 jatuh tempo, Rp12,5jt masuk)."
+  },
+  "src/lib/mock/kosta.ts": {
+    "summary": "Data contoh percakapan owner Kos Melati dengan Kosta (mockPercakapanKosta) serta pemilik dan kos lain yang dikelola owner (mockPemilikLain, mockWorkspaceLain) untuk seed dan uji pemilih multi-kos."
+  },
+  "src/lib/mock/tiket.ts": {
+    "summary": "mockTiketContoh: lima tiket keluhan contoh penyewa Kos Melati (berbagai kategori dan status) yang diisikan ke tabel tickets oleh seed."
+  },
+  "src/lib/nomor-wa.ts": {
+    "summary": "Helper nomor WhatsApp Indonesia: normalisasiNomorWa mengubah format lokal atau +62 menjadi format 62… (null bila tidak valid) dan tampilNomorWa untuk tampilan +62 812-…."
+  },
+  "src/lib/otp.test.ts": {
+    "summary": "Uji aturan kode OTP: hanya digit dengan maksimal 6 dan format hitung mundur kirim ulang."
+  },
+  "src/lib/otp.ts": {
+    "summary": "Aturan kode OTP verifikasi nomor WhatsApp: PANJANG_OTP, MASA_BERLAKU_OTP_MENIT, JEDA_KIRIM_ULANG_DETIK, MAKS_PERCOBAAN_OTP, bersihkanKodeOtp, dan formatHitungMundur; dipakai halaman verifikasi dan konfigurasi OTP Better Auth."
+  },
+  "src/lib/pembayaran/gateway.test.ts": {
+    "summary": "Uji gateway pembayaran: charge Midtrans QRIS (sandbox, Basic auth, masa berlaku, isi QR), VA BCA/BNI/BRI/Permata dan URL produksi, VA Mandiri sebagai Mandiri Bill (kode bayar + kode perusahaan), penolakan atau respons tidak lengkap menjadi Error, serta getGatewayPembayaran memilih simulasi atau Midtrans."
+  },
+  "src/lib/pembayaran/gateway.ts": {
+    "summary": "Adapter gateway pembayaran untuk membuat transaksi QRIS/Virtual Account: tipe PermintaanTransaksi, TransaksiGateway, GatewayPembayaran; getGatewayPembayaran memakai Midtrans Core API bila MIDTRANS_SERVER_KEY diisi (produksi dengan MIDTRANS_PRODUCTION) atau gateway simulasi yang membuat nomor VA/QR contoh tidak bisa dibayar."
+  },
+  "src/lib/pembayaran/konfirmasi.ts": {
+    "summary": "kirimKonfirmasiLunas: setelah webhook valid membuat tagihan Lunas, mengirim WhatsApp ke penyewa berisi nominal dan link bukti (teks + template kostera_pembayaran_diterima) lewat kirimDanCatat dan mencatatnya di reminders; tagihan yang tidak lunas tidak dikonfirmasi."
+  },
+  "src/lib/pembayaran/metode.test.ts": {
+    "summary": "Uji metode bayar lewat tautan: urutan QRIS (15 menit) lalu VA bank (24 jam), sisaTagihan tidak pernah negatif, format nomor VA dan sisa waktu, langkah bayar per metode termasuk Mandiri Multipayment, dan aturan tagihanBisaDibayar."
+  },
+  "src/lib/pembayaran/metode.ts": {
+    "summary": "Metode bayar lewat tautan invoice (fungsi murni): METODE_BAYAR (QRIS dan VA BCA/BNI/BRI/Mandiri/Permata dengan masa berlaku), cariMetode, tipe InstruksiBayar (nomor VA, kode perusahaan, isi QR, batas waktu), sisaTagihan, tagihanBisaDibayar (ada sisa, bukan draf, bukan lunas), formatNomorVa, formatSisaWaktu, dan langkahBayar."
+  },
+  "src/lib/pembayaran/midtrans.ts": {
+    "summary": "Integrasi Midtrans Core API: buatGatewayMidtrans membuat transaksi QRIS/VA lewat POST /v2/charge (sandbox atau produksi, Basic auth server key, custom expiry, Mandiri lewat echannel) dan membaca instruksinya; tandaTanganMidtransValid memverifikasi signature SHA-512 notifikasi; bacaNotifikasiMidtrans menormalkan notifikasi (status, nominal, metode, waktu WIB, orderId, invoiceIdDariOrder).",
+    "sections": [
+      {
+        "symbol": "bacaNotifikasiMidtrans",
+        "startLine": 1,
+        "endLine": 89,
+        "summary": "Tipe NotifikasiPembayaran, verifikasi tanda tangan, pemetaan status dan metode Midtrans, serta normalisasi notifikasi HTTP."
+      },
+      {
+        "symbol": "buatGatewayMidtrans",
+        "startLine": 90,
+        "endLine": 158,
+        "summary": "Body charge per metode, pembacaan respons (qr_string, va_numbers, permata_va_number, bill_key + biller_code, expiry_time), dan galat bila gateway menolak."
+      }
+    ]
+  },
+  "src/lib/pembayaran/notifikasi-review.ts": {
+    "summary": "kirimNotifikasiPerluReview: saat tagihan ditandai Perlu review, mengirim WhatsApp ke owner/admin aktif berisi uang diterima vs tagihan dan selisihnya lewat kirimDanCatat, serta mencatatnya di riwayat chat Kosta mereka."
+  },
+  "src/lib/pembayaran/pembayaran.test.ts": {
+    "summary": "Uji alur pembayaran: tanda tangan dan normalisasi notifikasi Midtrans, prosesNotifikasiPembayaran (cocok → Lunas, duplikat, pending lalu settlement, kurang bayar → Perlu review, pelunasan kekurangan, bayar ganda), kirimKonfirmasiLunas dengan template, dan kirimNotifikasiPerluReview."
+  },
+  "src/lib/pembayaran/pencocokan.test.ts": {
+    "summary": "Uji cocokkanNominal: total pas menjadi Lunas; kurang, lebih, dan bayar ganda menjadi Perlu review dengan selisih; serta ringkasan keputusan untuk catatan webhook."
+  },
+  "src/lib/pembayaran/pencocokan.ts": {
+    "summary": "Pencocokan nominal pembayaran deterministik (cocokkanNominal, ringkasKeputusan): membandingkan total uang yang sudah diterima termasuk pembayaran sebelumnya dengan tagihan — pas menjadi Lunas, kurang/lebih/bayar ganda menjadi Perlu review."
+  },
+  "src/lib/pembayaran/proses-notifikasi.ts": {
+    "summary": "prosesNotifikasiPembayaran: satu-satunya jalur yang membuat invoice Lunas — idempoten lewat webhook_events, mengunci invoice, memperbarui status payment_attempts (berhasil/kedaluwarsa/gagal, berhasil tidak ditimpa), memperlakukan pending untuk transaksi halaman bayar sebagai menunggu dibayar, mencatat payments, dan menentukan Lunas atau Perlu review lewat cocokkanNominal."
+  },
+  "src/lib/pembayaran/status-bayar.test.ts": {
+    "summary": "Uji statusKonfirmasi di halaman bayar: tanpa pembayaran baru menunggu, pending baru diproses, lunas, uang baru tidak cocok diperiksa, dan tagihan yang sejak awal diperiksa menunggu sampai ada uang baru."
+  },
+  "src/lib/pembayaran/status-bayar.ts": {
+    "summary": "Status konfirmasi pembayaran yang dilihat penyewa setelah membuka instruksi bayar: statusKonfirmasi membandingkan keadaan tagihan kini dengan saat instruksi dibuat (menunggu, diproses, lunas, diperiksa), statusAkhir, dan JEDA_CEK_STATUS_MS untuk polling."
+  },
+  "src/lib/pembayaran/transaksi.test.ts": {
+    "summary": "Uji buatTransaksiBayar: transaksi untuk sisa tagihan tersimpan, idempoten untuk metode sama yang masih berlaku, permintaan bersamaan hanya satu transaksi, nominal kurang bayar = sisa, penolakan lunas/draf/token/metode tidak dikenal, gateway gagal 502 tanpa menyimpan, serta notifikasi pending/settlement/expire/cancel untuk transaksi halaman bayar."
+  },
+  "src/lib/pembayaran/transaksi.ts": {
+    "summary": "buatTransaksiBayar untuk POST /api/invoice/[token]/bayar: mengunci invoice, menghitung sisa, menolak tagihan draf/lunas (409), memakai ulang transaksi menunggu dengan metode dan nominal sama yang masih berlaku, atau membuat transaksi baru di gateway (order invoice~percobaan) lalu menyimpannya di payment_attempts; gateway gagal menjadi 502 berpesan GALAT_GATEWAY; bacaMetodeBayar memvalidasi metode."
+  },
+  "src/lib/penghuni.test.ts": {
+    "summary": "Uji lamaTinggal: tahun dan bulan dihitung, bulan yang belum genap tidak dihitung."
+  },
+  "src/lib/penghuni.ts": {
+    "summary": "lamaTinggal: lama tinggal penghuni antara dua tanggal, misalnya 2 tahun 3 bulan, 5 bulan, atau kurang dari 1 bulan."
+  },
+  "src/lib/penjadwal/jatuh-tempo.ts": {
+    "summary": "tandaiJatuhTempo: dijalankan cron harian, mengubah tagihan Menunggu/Terkirim yang tanggal jatuh temponya sudah lewat menjadi Jatuh tempo dan mengembalikan jumlahnya."
+  },
+  "src/lib/penjadwal/otorisasi.ts": {
+    "summary": "cronDiizinkan: otorisasi endpoint cron dengan header Bearer CRON_SECRET (format Vercel Cron) dibandingkan secara waktu konstan; tanpa CRON_SECRET semua ditolak."
+  },
+  "src/lib/penjadwal/pengingat-otomatis.test.ts": {
+    "summary": "Uji kirimPengingatOtomatis: slot jatuh waktu dikirim dengan isi dan template sesuai waktu serta tercatat di reminders dan whatsapp_logs, putaran ulang atau bersamaan tidak dobel, di luar 06.00–21.00 ditunda lalu disusulkan, saklar/jadwal nonaktif dihormati, dan satu penyewa sekali per 24 jam."
+  },
+  "src/lib/penjadwal/pengingat-otomatis.ts": {
+    "summary": "kirimPengingatOtomatis (cron /api/cron/pengingat): untuk kos dengan saklar menyala dan jadwal aktif, mengambil slot dalam 24 jam terakhir untuk tagihan belum dibayar pada jam 06.00–21.00 WIB, satu penyewa sekali per 24 jam, mengklaim slot di reminders agar tidak dobel, lalu mengirim lewat kirimDanCatat dan mencatat hasilnya."
+  },
+  "src/lib/penjadwal/tagihan-terjadwal.test.ts": {
+    "summary": "Uji terbitkanTagihanTerjadwal: hanya kos dengan jadwal aktif, tagihan semua penghuni aktif di tanggal terbit dengan rincian dan jatuh tempo sesuai aturan, aman diulang, belum tanggal terbit belum diterbitkan, serta uji cronDiizinkan."
+  },
+  "src/lib/penjadwal/tagihan-terjadwal.ts": {
+    "summary": "terbitkanTagihanTerjadwal (cron harian): menerbitkan tagihan periode berjalan untuk kos yang mengaktifkan tagihan terjadwal begitu tanggal terbit tiba; penghuni yang sudah bertagihan dilewati dan hari yang terlewat disusulkan."
+  },
+  "src/lib/pesan.test.ts": {
+    "summary": "Uji template pesan WhatsApp: pengingat sebelum/lewat jatuh tempo, template resmi sama dengan teks provider teks, aturan Meta (variabel berurutan, tidak di awal/akhir, nama unik) untuk semua template penyewa termasuk tiket, tagihan baru, pembayaran diterima, dan kode OTP."
+  },
+  "src/lib/pesan.ts": {
+    "summary": "Template pesan WhatsApp ke penyewa (angka dari database): TEMPLATE_TAGIHAN, TEMPLATE_LUNAS, TEMPLATE_PENGINGAT (sebelum/lewat), TEMPLATE_TIKET, TEMPLATE_OTP beserta pembentuk teks untuk provider teks (pesanTagihan, pesanLunas, pesanPengingat, pesanTiket, pesanOtp) dan versi template resmi Cloud API dengan tombol URL (templateTagihan, templateLunas, templatePengingat, templateTiket, templateOtp); isiTemplate mengisi variabel."
+  },
+  "src/lib/pindah-kamar.test.ts": {
+    "summary": "Uji kamarTujuan: hanya kamar kosong, tipe yang sama didahulukan lalu urut nomor, dan kosong bila tidak ada kamar kosong."
+  },
+  "src/lib/pindah-kamar.ts": {
+    "summary": "kamarTujuan: pilihan kamar tujuan pindah kamar — hanya kamar kosong, tipe yang sama didahulukan."
+  },
+  "src/lib/reminder.test.ts": {
+    "summary": "Uji aturan pengingat: label jadwal H-3/H/H+3, antrianPengingat 7 hari ke depan, periksaJadwal (batas offset, jam wajar, bentrok, jumlah), bolehDiingatkan (jeda 24 jam), saring riwayat, dan slot pengingat jatuh waktu."
+  },
+  "src/lib/reminder.ts": {
+    "summary": "Aturan pengingat bayar (fungsi murni) untuk halaman Reminder dan penjadwal: JADWAL_BAWAAN, label dan keterangan jadwal, antrianPengingat, periksaJadwal, dalamJamKirim (06–21 WIB), slotPengingatJatuhWaktu, JEDA_PENGINGAT_JAM dan bolehDiingatkan, STATUS_BISA_DIINGATKAN, GALAT_TERPUTUS, serta filter riwayat (STATUS_RIWAYAT, saringRiwayatReminder, jenis dan periode di riwayat)."
+  },
+  "src/lib/rencana-kamar.test.ts": {
+    "summary": "Uji buatDaftarKamar dan periksaRencana: kos baru mulai 01 per kode, melanjutkan nomor terbesar, kode sama tidak bentrok, lebih dari 99 kamar tiga digit, dan baris tidak valid ditandai."
+  },
+  "src/lib/rencana-kamar.ts": {
+    "summary": "Penomoran kamar otomatis untuk wizard Tambah kos & kamar: periksaRencana memvalidasi baris (kode 1–3 huruf, jumlah, harga) dan buatDaftarKamar melanjutkan nomor terbesar per kode sehingga tidak pernah bentrok."
+  },
+  "src/lib/riwayat-kosta.test.ts": {
+    "summary": "Uji ringkasRiwayat dan labelHari: riwayat Kosta dikelompokkan per hari WIB terbaru di atas, topik dari pertanyaan pertama owner, aksi dengan statusnya, dan label Hari ini/Kemarin/tanggal."
+  },
+  "src/lib/riwayat-kosta.ts": {
+    "summary": "Ringkasan riwayat percakapan Kosta per hari WIB untuk panel riwayat: ringkasRiwayat, labelHari, dan tanggalPesan."
+  },
+  "src/lib/situs.ts": {
+    "summary": "urlSitus (alamat publik dari APP_URL untuk metadata, sitemap, dan link absolut) dan RUTE_PRIVAT (aplikasi, API, dan link invoice yang tidak diindeks)."
+  },
+  "src/lib/tagihan-terjadwal.test.ts": {
+    "summary": "Uji aturan tagihan terjadwal: terbitBerikutnya, jatuhTempoUntuk (ikut tanggal masuk, dipotong ke akhir bulan pendek, tanggal tetap), peringatanJadwal, dan ringkasJadwal."
+  },
+  "src/lib/tagihan-terjadwal.ts": {
+    "summary": "Aturan tagihan terjadwal bulanan (fungsi murni): PENGATURAN_BAWAAN, terbitBerikutnya, jatuhTempoUntuk (tanggal masuk penghuni atau tanggal tetap), peringatanJadwal untuk pengaturan berisiko, dan ringkasJadwal."
+  },
+  "src/lib/tiket.test.ts": {
+    "summary": "Uji aturan tiket: kategori dan label, validasi kategori dan deskripsi, urutan daftar (berjalan dulu, terbaru di atas), jumlah per status, status berikutnya untuk owner, dan format nomor tiket."
+  },
+  "src/lib/tiket.ts": {
+    "summary": "Aturan murni tiket keluhan: KATEGORI_TIKET, LABEL_STATUS_TIKET, PANJANG_DESKRIPSI, formatNomorTiket (TKT-0012), labelKategori, periksaTiket, URUTAN_STATUS_TIKET, tipe TiketPenyewa dan TiketKos, urutkanTiket, hitungTiket, dan statusBerikutnya (baru → diproses → selesai)."
+  },
+  "src/lib/types.ts": {
+    "summary": "Tipe domain Kostera mengikuti skema database: Organization, Owner, Room, Tenant, Invoice dan InvoiceStatus, Payment, InvoiceRow, ringkasan kamar dan kos, rekap tagihan dan pemasukan, DashboardData (termasuk ringkasan tiket), tipe Kosta (LampiranKosta, PreviewAksi, DataDraftAksi, PesanKosta, WorkspaceRingkas); nominal integer rupiah dan tanggal ISO."
+  },
+  "src/lib/utils.ts": {
+    "summary": "Mengekspor ulang helper cn dari paket cn untuk menggabungkan class Tailwind secara kondisional."
+  },
+  "src/lib/waktu.test.ts": {
+    "summary": "Uji waktu WIB: pergantian hari mengikuti WIB bukan UTC, periodeValid, dan jamWib format 24 jam."
+  },
+  "src/lib/waktu.ts": {
+    "summary": "Waktu kalender Kostera selalu WIB (Asia/Jakarta): jamWib, tanggalWib, hariIniWib, periodeWib, dan periodeValid."
+  },
+  "src/lib/whatsapp/index.ts": {
+    "summary": "Adapter pengiriman WhatsApp dengan satu antarmuka PengirimWhatsApp: provider log (bawaan, simulasi), WAHA untuk sandbox/pilot, atau Meta Cloud API untuk produksi, dipilih lewat WHATSAPP_PROVIDER dengan daftar nomor uji opsional; tipe TemplateWhatsApp, PesanWhatsApp, HasilKirim, dan kirimAman yang tidak pernah melempar."
+  },
+  "src/lib/whatsapp/log.test.ts": {
+    "summary": "Uji kirimDanCatat dan tabel whatsapp_logs: kiriman berhasil tercatat dengan provider, template, dan ID pesan tanpa isi pesan, galat provider tercatat gagal tanpa melempar, gagal menulis log tidak membatalkan kiriman, constraint jenis dan galat, serta log terhapus bersama kosnya."
+  },
+  "src/lib/whatsapp/log.ts": {
+    "summary": "kirimDanCatat: mengirim WhatsApp lewat kirimAman lalu mencatat metadatanya (tujuan, jenis pesan, kos, referensi, provider, template, status, galat, ID pesan provider) di whatsapp_logs tanpa isi pesan; dipakai semua pengirim pesan keluar (pengingat, tagihan, konfirmasi lunas, perlu review, Kosta, OTP, tiket)."
+  },
+  "src/lib/whatsapp/meta.test.ts": {
+    "summary": "Uji adapter Meta Cloud API: teks biasa ke endpoint messages dengan Bearer token, pesan bertemplate dengan variabel dan tombol URL dinamis, penolakan atau galat jaringan menjadi ok false, daftar nomor uji, dan konfigurasi wajib."
+  },
+  "src/lib/whatsapp/meta.ts": {
+    "summary": "buatPengirimMeta: adapter WhatsApp Cloud API resmi untuk produksi — kirim ke Graph API messages dengan Bearer token, pesan yang dimulai bisnis dikirim sebagai template (variabel isi dan tombol URL), teks bebas hanya dalam jendela 24 jam; galat dikembalikan sebagai ok false."
+  },
+  "src/lib/whatsapp/waha.test.ts": {
+    "summary": "Uji adapter WAHA: kirim teks ke /api/sendText dengan chatId dan X-Api-Key, galat HTTP atau server mati menjadi ok false, daftar nomor uji, dan pemilihan provider getPengirimWhatsApp."
+  },
+  "src/lib/whatsapp/waha.ts": {
+    "summary": "buatPengirimWaha: adapter WAHA (WhatsApp HTTP API self-hosted) untuk lokal, sandbox, dan pilot — mengirim teks ke endpoint sendText dengan sesi dan API key, opsional membatasi ke nomor uji."
+  },
+  "src/lib/whatsapp/webhook.test.ts": {
+    "summary": "Uji webhook WhatsApp: bacaPesanMasuk untuk Meta dan WAHA (teks pribadi diambil; status, media, grup, pesan sendiri diabaikan), tandaTanganValid (X-Hub-Signature-256 dan HMAC WAHA), serta tantanganMeta."
+  },
+  "src/lib/whatsapp/webhook.ts": {
+    "summary": "Webhook pesan masuk WhatsApp: tandaTanganValid memverifikasi HMAC Meta atau WAHA, tantanganMeta menjawab verifikasi langganan, dan bacaPesanMasuk menormalkan payload menjadi PesanMasuk (hanya teks pribadi dari nomor lain)."
+  },
+  "src/proxy.ts": {
+    "summary": "Proxy Next.js (pengganti middleware): pemeriksaan awal optimistis untuk halaman dan API aplikasi — tanpa cookie sesi halaman diarahkan ke /masuk dan API dijawab 401; keabsahan sesi dan hak akses kos tetap diperiksa di lapisan data."
+  },
+  "tsconfig.json": {
+    "summary": "Konfigurasi TypeScript: strict, noEmit, moduleResolution bundler, plugin Next.js, alias @/* ke src/*, dan izin impor ekstensi .ts agar modul bisa diuji langsung dengan node test runner."
+  },
+  "vercel.json": {
+    "summary": "Konfigurasi Vercel Cron: /api/cron/harian setiap 17.05 UTC (00.05 WIB) dan /api/cron/pengingat setiap 02.05 UTC (09.05 WIB)."
+  }
+}
