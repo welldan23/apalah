@@ -75,9 +75,15 @@ dikirim ulang tidak diproses dua kali.
 
 ## Template WhatsApp resmi (produksi)
 
-Dengan `WHATSAPP_PROVIDER=meta`, pesan yang dimulai Kostera ke penyewa wajib memakai template
-yang sudah disetujui. Daftarkan di WhatsApp Manager (bahasa Indonesia `id`), isi persisnya ada di
-`src/lib/pesan.ts`:
+Dengan `WHATSAPP_PROVIDER=meta`, pesan yang dimulai Kostera (ke penyewa, dan notifikasi ke owner)
+wajib memakai template yang sudah disetujui. Isinya dibuat dari `src/lib/pesan.ts`; daftarkan
+sekaligus lewat Graph API dengan `META_WA_TOKEN` + `META_WABA_ID` + `APP_URL`:
+
+```bash
+npm run meta:template            # lihat isi semua template
+npm run meta:template -- daftar  # daftarkan ke WhatsApp Business Account
+npm run meta:template -- cek     # status persetujuan (harus APPROVED semua)
+```
 
 | Template | Kategori | Dipakai untuk |
 | --- | --- | --- |
@@ -86,10 +92,13 @@ yang sudah disetujui. Daftarkan di WhatsApp Manager (bahasa Indonesia `id`), isi
 | `kostera_pengingat_lewat` | Utility | Pengingat setelah lewat jatuh tempo |
 | `kostera_pembayaran_diterima` | Utility | Konfirmasi pembayaran diterima (Lunas) |
 | `kostera_tiket_diperbarui` | Utility | Kabar tiket keluhan sedang ditangani / selesai |
+| `kostera_pembayaran_perlu_dicek` | Utility | Ke owner/admin: nominal pembayaran tidak cocok (Perlu review) |
 | `kostera_kode_otp` | Authentication | Kode OTP daftar/masuk |
 
-Semua template Utility punya satu tombol URL ke `https://domain-kamu/invoice/{{1}}` (untuk tiket,
-`{{1}}` diisi `<token>/tiket/status`).
+Template Utility punya satu tombol URL ke `https://domain-kamu/invoice/{{1}}` (untuk tiket, `{{1}}`
+diisi `<token>/tiket/status`); `kostera_pembayaran_perlu_dicek` memakai tombol statis ke
+`/pembayaran?status=perlu_review`. Balasan Kosta AI ke owner tidak butuh template karena selalu
+dikirim dalam 24 jam setelah owner chat.
 
 Buka http://localhost:3000 — otomatis diarahkan ke `/dashboard`.
 

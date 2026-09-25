@@ -4,8 +4,8 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import { formatPeriode, formatRupiah } from "../format.ts";
 import { catatPesan, pastikanPercakapan } from "../kosta/riwayat.ts";
+import { pesanPerluReview, templatePerluReview } from "../pesan.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import { kirimDanCatat } from "../whatsapp/log.ts";
 
@@ -38,8 +38,6 @@ export async function kirimNotifikasiPerluReview(
     .select({ diterima: sql<number>`coalesce(sum(${payments.nominalDibayar}), 0)`.mapWith(Number) })
     .from(payments)
     .where(and(eq(payments.invoiceId, invoiceId), inArray(payments.status, ["valid", "tidak_cocok"])));
-  const selisih = diterima - inv.nominal;
-
   const pengelola = await db
     .select({ nomorWa: users.nomorWa })
     .from(members)
@@ -53,19 +51,17 @@ export async function kirimNotifikasiPerluReview(
       ),
     );
 
-  const teks = [
-    `Perlu diperiksa — ${inv.namaKos}`,
-    `Pembayaran kamar ${inv.nomorKamar} (${inv.namaPenghuni}) periode ${formatPeriode(inv.periode)}: diterima ${formatRupiah(diterima)} dari tagihan ${formatRupiah(inv.nominal)} (${selisih < 0 ? "kurang" : "lebih"} ${formatRupiah(Math.abs(selisih))}).`,
-    "Status tidak diubah jadi Lunas sampai kamu memeriksanya.",
-    `Cek: ${baseUrl}/pembayaran?status=perlu_review`,
-  ].join("\n");
+  // Owner belum tentu chat dalam 24 jam terakhir, jadi lewat Cloud API wajib template resmi.
+  const data = { ...inv, diterima };
+  const teks = pesanPerluReview(data, `${baseUrl}/pembayaran?status=perlu_review`);
+  const template = templatePerluReview(data);
 
   let terkirim = 0;
   for (const { nomorWa } of pengelola) {
     const { ok } = await kirimDanCatat(
       db,
       wa,
-      { ke: nomorWa, teks },
+      { ke: nomorWa, teks, template },
       { jenis: "perlu_review", organizationId: inv.organizationId, referensiId: invoiceId },
     );
     if (ok) terkirim += 1;

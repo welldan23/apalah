@@ -46,6 +46,17 @@ export const TEMPLATE_TIKET = {
   isi: "Halo {{1}}, tiket {{2}} ({{3}}) untuk kamar {{4}} di {{5}} sekarang {{6}}. Detailnya ada di link berikut.",
 } as const;
 
+/**
+ * Ke owner/admin saat nominal pembayaran tidak cocok (Perlu review). Pesan yang dimulai bisnis, jadi
+ * wajib template walau penerimanya owner. {{1}} kos, {{2}} kamar, {{3}} penyewa, {{4}} periode,
+ * {{5}} uang diterima, {{6}} nominal tagihan, {{7}} selisih ("kurang Rp50.000"). Tombol URL statis
+ * "Periksa pembayaran" ke `{APP_URL}/pembayaran?status=perlu_review`.
+ */
+export const TEMPLATE_PERLU_REVIEW = {
+  nama: "kostera_pembayaran_perlu_dicek",
+  isi: "Perlu diperiksa — {{1}}\nPembayaran kamar {{2}} ({{3}}) periode {{4}}: diterima {{5}} dari tagihan {{6}} ({{7}}).\nStatus tidak diubah jadi Lunas sampai kamu memeriksanya.",
+} as const;
+
 /** Ganti variabel {{1}}, {{2}}, … dengan nilai berurutan. */
 export const isiTemplate = (isi: string, variabel: string[]) =>
   isi.replace(/\{\{(\d+)\}\}/g, (_, n: string) => variabel[Number(n) - 1] ?? "");
@@ -155,6 +166,38 @@ const variabelTiket = (t: DataTiket, namaKos: string) => [
 /** Kabar tiket untuk provider teks (WAHA, log), dengan link status tiket di baris terakhir. */
 export function pesanTiket(t: DataTiket, namaKos: string, linkStatus: string) {
   return denganLink(isiTemplate(TEMPLATE_TIKET.isi, variabelTiket(t, namaKos)), linkStatus);
+}
+
+type DataPerluReview = {
+  namaKos: string;
+  nomorKamar: string;
+  namaPenghuni: string;
+  periode: string;
+  nominal: number;
+  diterima: number;
+};
+
+function variabelPerluReview(d: DataPerluReview) {
+  const selisih = d.diterima - d.nominal;
+  return [
+    d.namaKos,
+    d.nomorKamar,
+    d.namaPenghuni,
+    formatPeriode(d.periode),
+    formatRupiah(d.diterima),
+    formatRupiah(d.nominal),
+    `${selisih < 0 ? "kurang" : "lebih"} ${formatRupiah(Math.abs(selisih))}`,
+  ];
+}
+
+/** Notifikasi Perlu review untuk provider teks (WAHA, log) & riwayat chat, dengan link cek di baris terakhir. */
+export function pesanPerluReview(d: DataPerluReview, linkCek: string) {
+  return `${isiTemplate(TEMPLATE_PERLU_REVIEW.isi, variabelPerluReview(d))}\nCek: ${linkCek}`;
+}
+
+/** Template resmi yang isinya sama dengan pesanPerluReview; tombolnya URL statis (tanpa variabel). */
+export function templatePerluReview(d: DataPerluReview): TemplateWhatsApp {
+  return { nama: TEMPLATE_PERLU_REVIEW.nama, bahasa: "id", variabel: variabelPerluReview(d) };
 }
 
 /** Template resmi yang isinya sama dengan pesanTiket; tombol membuka status tiket lewat token invoice. */

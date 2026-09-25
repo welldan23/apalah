@@ -91,8 +91,16 @@ tagihan, buka link invoice dari ponsel lain.
 
 ## 6. Mengaktifkan cron, Midtrans, dan Meta
 
-- **Meta:** daftarkan template di README (bagian *Template WhatsApp resmi*), set Callback URL
-  `https://app.kostera.id/api/webhook/whatsapp` + verify token.
+- **Meta (WhatsApp first — ini jalur utama Kosta AI):**
+  1. Di Meta for Developers: app tipe *Business* + produk WhatsApp, nomor bisnis, System User
+     dengan izin `whatsapp_business_messaging` & `whatsapp_business_management` → token permanen
+     (`META_WA_TOKEN`), plus Phone Number ID (`META_WA_PHONE_NUMBER_ID`), WhatsApp Business
+     Account ID (`META_WABA_ID`), dan App Secret (`WHATSAPP_WEBHOOK_SECRET`).
+  2. Template: `npm run meta:template -- daftar`, lalu `npm run meta:template -- cek` sampai
+     semuanya `APPROVED`. Tanpa `kostera_kode_otp` yang disetujui, OTP (daftar/masuk) tidak terkirim.
+  3. Webhook: Callback URL `https://app.kostera.id/api/webhook/whatsapp`, verify token =
+     `WHATSAPP_VERIFY_TOKEN`, langganan field `messages`.
+  4. Uji: chat nomor bisnis dari nomor owner yang sudah daftar → Kosta AI membalas.
 - **Midtrans (sandbox dulu):** Notification URL `https://app.kostera.id/api/webhook/pembayaran/midtrans`.
   Status Lunas hanya dari notifikasi bertanda tangan dengan `status_code` 200 dan nominal cocok.
   Pindah ke produksi: ganti server key produksi + `MIDTRANS_PRODUCTION=true`, jalankan lagi

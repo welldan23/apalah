@@ -237,11 +237,11 @@ describe("kirimKonfirmasiLunas", () => {
 describe("kirimNotifikasiPerluReview", () => {
   let db: Db;
   let tutup: () => Promise<void>;
-  const terkirim: { ke: string; teks: string }[] = [];
+  const terkirim: PesanWhatsApp[] = [];
   const wa = {
     provider: "uji",
     simulasi: false,
-    async kirim(p: { ke: string; teks: string }) {
+    async kirim(p: PesanWhatsApp) {
       terkirim.push(p);
       return { ok: true as const };
     },
@@ -266,6 +266,12 @@ describe("kirimNotifikasiPerluReview", () => {
         "Cek: https://kostera.id/pembayaran?status=perlu_review",
       ].join("\n"),
     );
+    // Pesan dimulai bisnis → lewat Cloud API wajib template resmi (owner belum tentu chat dalam 24 jam).
+    assert.deepEqual(terkirim[0].template, {
+      nama: "kostera_pembayaran_perlu_dicek",
+      bahasa: "id",
+      variabel: ["Kos Melati", "A08", "Bagus Wicaksono", "September 2026", "Rp450.000", "Rp500.000", "kurang Rp50.000"],
+    });
     const riwayat = await db.select().from(schema.waMessages).where(eq(schema.waMessages.conversationId, "wac_owner_kos_melati"));
     assert.ok(riwayat.some((m) => m.arah === "keluar" && m.isi.startsWith("Perlu diperiksa — Kos Melati")));
   });
