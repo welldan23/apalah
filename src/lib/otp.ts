@@ -1,4 +1,4 @@
-// Aturan kode OTP verifikasi nomor WhatsApp — dipakai halaman verifikasi dan (nanti) endpoint OTP.
+// Aturan kode OTP verifikasi nomor WhatsApp — dipakai halaman verifikasi dan konfigurasi OTP Better Auth.
 
 export const PANJANG_OTP = 6;
 /** Kode berlaku sejak dikirim. */

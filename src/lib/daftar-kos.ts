@@ -1,4 +1,4 @@
-// Data kos pertama saat daftar — dipakai form pembuatan workspace dan (nanti) endpoint-nya.
+// Data kos pertama saat daftar — dipakai form pembuatan workspace dan endpoint POST /api/akun/workspace.
 
 /** Sama dengan batas sekali tambah kamar. */
 export const MAKS_KAMAR_AWAL = 500;

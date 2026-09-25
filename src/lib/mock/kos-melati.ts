@@ -2,7 +2,6 @@
 // Angkanya sengaja disusun agar cocok dengan contoh di PRD:
 // 40 kamar, 34 terisi, 3 tagihan jatuh tempo, Rp12,5jt masuk bulan ini — plus satu
 // pembayaran yang nominalnya tidak cocok (C09) untuk contoh status Perlu Review.
-// Akan diganti query database saat lapisan backend dibangun.
 
 import type {
   Invoice,
