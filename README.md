@@ -59,19 +59,25 @@ paling banyak sekali per penyewa per 24 jam, dan jadwal yang terlewat disusulkan
   5 * * * *  curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://domain-kamu/api/cron/pengingat > /dev/null
   ```
 
-## Pembayaran online (Midtrans)
+## Pembayaran online (Xendit)
 
 Penyewa membayar dari link invoice lewat QRIS atau Virtual Account (BCA, BNI, BRI, Mandiri,
-Permata). Tanpa `MIDTRANS_SERVER_KEY`, halaman bayar memakai **mode contoh** (nomor VA/QR tidak
-bisa dibayar). Untuk mengaktifkan:
+Permata). Uangnya masuk ke **sub-akun xenPlatform milik kos itu** (bukan ke akun Kostera), dan biaya
+transaksi Xendit dipotong dari saldo sub-akun tersebut. Tanpa `XENDIT_SECRET_KEY`, halaman bayar
+memakai **mode contoh** (nomor VA/QR tidak bisa dibayar). Untuk mengaktifkan:
 
-1. Isi `MIDTRANS_SERVER_KEY` dengan server key dari dashboard Midtrans (sandbox dulu), dan
-   `MIDTRANS_PRODUCTION=true` hanya untuk kunci produksi.
-2. Di dashboard Midtrans → Settings → Payment → Notification URL, isi
-   `https://domain-kamu/api/webhook/pembayaran/midtrans`.
+1. Aktifkan xenPlatform di dashboard Xendit, lalu buat sub-akun untuk tiap kos (di mode test pun
+   bisa). Sambungkan ID sub-akunnya ke kos lewat konsol `/platform` → detail workspace (wajib alasan,
+   tercatat di log admin). Kos tanpa sub-akun tidak bisa membuat QRIS/VA.
+2. Isi `XENDIT_SECRET_KEY` (secret key `xnd_development_…` dulu) dan `XENDIT_WEBHOOK_TOKEN` (Settings →
+   Webhooks → *Webhook verification token*).
+3. Di Settings → Webhooks, arahkan webhook **Payments** ke
+   `https://domain-kamu/api/webhook/pembayaran/xendit`, dan atur webhook sub-akun ke akun master.
 
-Status Lunas hanya berubah lewat notifikasi Midtrans yang tanda tangannya valid; notifikasi yang
-dikirim ulang tidak diproses dua kali.
+Status Lunas hanya berubah bila token webhook cocok **dan** status pembayarannya dibaca ulang dari
+API Xendit; isi webhook tidak pernah dipercaya langsung. Notifikasi yang dikirim ulang tidak diproses
+dua kali. Begitu Lunas, penyewa dapat bukti bayar dan owner/admin dapat kabar "Pembayaran masuk"
+lewat WhatsApp.
 
 ## Template WhatsApp resmi (produksi)
 

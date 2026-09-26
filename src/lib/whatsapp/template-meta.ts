@@ -12,11 +12,13 @@ import { pathToFileURL } from "node:url";
 import { MASA_BERLAKU_OTP_MENIT } from "../otp.ts";
 import {
   TEMPLATE_LUNAS,
+  TEMPLATE_PEMBAYARAN_MASUK,
   TEMPLATE_PENGINGAT,
   TEMPLATE_PERLU_REVIEW,
   TEMPLATE_TAGIHAN,
   TEMPLATE_TIKET,
   templateLunas,
+  templatePembayaranMasuk,
   templatePengingat,
   templatePerluReview,
   templateTagihan,
@@ -83,6 +85,11 @@ export function daftarTemplateMeta(appUrl: string): TemplateMeta[] {
         TOKEN_CONTOH,
       ),
       { teks: "Lihat status tiket", url: invoice },
+    ),
+    utility(
+      TEMPLATE_PEMBAYARAN_MASUK.isi,
+      templatePembayaranMasuk({ namaKos: "Kos Melati", nomorKamar: "A05", namaPenghuni: "Rizky Ramadhan", periode: "2026-09", nominal: 500_000, metode: "VA BCA" }),
+      { teks: "Lihat pembayaran", url: `${appUrl.replace(/\/+$/, "")}/pembayaran` },
     ),
     utility(
       TEMPLATE_PERLU_REVIEW.isi,

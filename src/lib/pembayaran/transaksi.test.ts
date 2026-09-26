@@ -9,14 +9,16 @@ import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
 import { GalatAksi } from "../aksi/galat.ts";
 import { getInvoicePublik } from "../data/invoice-publik.ts";
-import type { GatewayPembayaran, PermintaanTransaksi } from "./gateway.ts";
-import { bacaNotifikasiMidtrans } from "./midtrans.ts";
+import { getGatewayPembayaran, type GatewayPembayaran, type PermintaanTransaksi } from "./gateway.ts";
 import { prosesNotifikasiPembayaran } from "./proses-notifikasi.ts";
-import { bacaMetodeBayar, buatTransaksiBayar, GALAT_GATEWAY } from "./transaksi.ts";
+import { bacaMetodeBayar, buatTransaksiBayar, GALAT_BELUM_AKTIF, GALAT_GATEWAY } from "./transaksi.ts";
+import { notifikasiXendit, type EventXendit } from "./xendit.ts";
 
 // A03: Rp500.000, Menunggu. C09: Rp800.000, sudah masuk Rp750.000 (Perlu review). A01: Lunas.
 const TOKEN_A03 = "demo-a03-2026-09";
 const SEKARANG = new Date("2026-09-25T10:00:00+07:00");
+/** Sub-akun xenPlatform Kos Melati di uji ini. */
+const AKUN = "5cafeb170a2b18519b1b8761";
 
 function gatewayUji({ gagal = false, jeda = 0 } = {}) {
   const permintaan: PermintaanTransaksi[] = [];
@@ -26,7 +28,7 @@ function gatewayUji({ gagal = false, jeda = 0 } = {}) {
     async buatTransaksi(p) {
       permintaan.push(p);
       if (jeda) await new Promise((r) => setTimeout(r, jeda));
-      if (gagal) throw new Error("Midtrans 500: internal error");
+      if (gagal) throw new Error("Xendit 500: SERVER_ERROR");
       const kedaluwarsaPada = new Date(SEKARANG.getTime() + p.masaBerlakuMenit * 60_000);
       return p.metode === "qris"
         ? { referensi: `trx-${p.orderId}`, kedaluwarsaPada, qrString: `QR-${p.orderId}` }
@@ -36,18 +38,23 @@ function gatewayUji({ gagal = false, jeda = 0 } = {}) {
   return { gateway, permintaan };
 }
 
-/** Notifikasi Midtrans (tanda tangan sudah diverifikasi di route). */
+const EVENT: Record<string, EventXendit> = {
+  SUCCEEDED: "payment.capture",
+  AUTHORIZED: "payment.authorization",
+  FAILED: "payment.failure",
+  EXPIRED: "payment_request.expiry",
+};
+
+/** Notifikasi dari data yang sudah dibaca ulang dari API Xendit (lihat webhook-xendit). */
 const notif = (orderId: string, status: string, nominal: number) =>
-  bacaNotifikasiMidtrans({
-    order_id: orderId,
-    transaction_id: `trx-${orderId}`,
-    transaction_status: status,
-    // Selalu dikirim Midtrans dan ikut ditandatangani: 200 berhasil, 201 pending, 202 ditolak/batal.
-    status_code: status === "settlement" ? "200" : status === "pending" ? "201" : "202",
-    gross_amount: `${nominal}.00`,
-    payment_type: "bank_transfer",
-    va_numbers: [{ bank: "bca", va_number: "8808000012345678" }],
-    settlement_time: status === "settlement" ? "2026-09-25 10:05:00" : undefined,
+  notifikasiXendit(EVENT[status], {
+    payment_id: `py-${orderId}`,
+    payment_request_id: `trx-${orderId}`,
+    reference_id: orderId,
+    status,
+    request_amount: nominal,
+    channel_code: "BCA_VIRTUAL_ACCOUNT",
+    captures: status === "SUCCEEDED" ? [{ capture_amount: nominal, capture_timestamp: "2026-09-25T03:05:00Z" }] : [],
   })!;
 
 describe("buat transaksi bayar dari link invoice", () => {
@@ -61,13 +68,16 @@ describe("buat transaksi bayar dari link invoice", () => {
   beforeEach(async () => {
     ({ db, tutup } = await buatDbUji());
     await isiDataContoh(db);
+    await db.update(schema.organizations).set({ xenditAkunId: AKUN }).where(eq(schema.organizations.id, "org_kos_melati"));
   });
   afterEach(() => tutup());
 
   it("membuat transaksi untuk sisa tagihan dan menyimpan instruksinya", async () => {
     const { gateway, permintaan } = gatewayUji();
     const instruksi = await buatTransaksiBayar(db, TOKEN_A03, "va_bca", { gateway, sekarang: SEKARANG });
-    assert.deepEqual(permintaan, [{ orderId: "inv_2026-09_A03~1", nominal: 500_000, metode: "va_bca", masaBerlakuMenit: 1440 }]);
+    assert.deepEqual(permintaan, [
+      { orderId: "inv_2026-09_A03~1", nominal: 500_000, metode: "va_bca", masaBerlakuMenit: 1440, akunId: AKUN, namaPenerima: "Kos Melati" },
+    ]);
     assert.deepEqual(instruksi, {
       metode: "va_bca",
       nominal: 500_000,
@@ -76,9 +86,42 @@ describe("buat transaksi bayar dari link invoice", () => {
     });
     const [t] = await transaksiDari("inv_2026-09_A03");
     assert.deepEqual(
-      [t.organizationId, t.percobaan, t.orderId, t.status, t.referensiProvider],
-      ["org_kos_melati", 1, "inv_2026-09_A03~1", "menunggu", "trx-inv_2026-09_A03~1"],
+      [t.organizationId, t.percobaan, t.orderId, t.status, t.referensiProvider, t.akunGateway],
+      ["org_kos_melati", 1, "inv_2026-09_A03~1", "menunggu", "trx-inv_2026-09_A03~1", AKUN],
     );
+  });
+
+  it("kos tanpa sub-akun Xendit: gateway sungguhan ditolak (uang tidak boleh masuk ke akun Kostera); simulasi tetap jalan", async () => {
+    await db.update(schema.organizations).set({ xenditAkunId: null }).where(eq(schema.organizations.id, "org_kos_melati"));
+    const { gateway, permintaan } = gatewayUji();
+    await gagalDengan(buatTransaksiBayar(db, TOKEN_A03, "qris", { gateway, sekarang: SEKARANG }), 409, new RegExp(GALAT_BELUM_AKTIF.slice(0, 30)));
+    assert.equal(permintaan.length, 0);
+
+    const simulasi = await buatTransaksiBayar(db, TOKEN_A03, "qris", { gateway: getGatewayPembayaran({}), sekarang: SEKARANG });
+    assert.match(simulasi.qrString!, /SIMULASI/);
+    assert.equal((await transaksiDari("inv_2026-09_A03"))[0].akunGateway, null);
+  });
+
+  it("sub-akun kos diganti / dulu mode contoh → VA lama tidak dipakai ulang, dibuat baru ke sub-akun yang sekarang", async () => {
+    const simulasi = await buatTransaksiBayar(db, TOKEN_A03, "va_bca", { gateway: getGatewayPembayaran({}), sekarang: SEKARANG });
+    const { gateway, permintaan } = gatewayUji();
+    const pertama = await buatTransaksiBayar(db, TOKEN_A03, "va_bca", { gateway, sekarang: SEKARANG });
+    assert.notEqual(pertama.nomorVa, simulasi.nomorVa);
+    const AKUN_BARU = "6a34caaa8a9c47963f1b7abc";
+    await db.update(schema.organizations).set({ xenditAkunId: AKUN_BARU }).where(eq(schema.organizations.id, "org_kos_melati"));
+    await buatTransaksiBayar(db, TOKEN_A03, "va_bca", { gateway, sekarang: SEKARANG });
+    assert.deepEqual(permintaan.map((p) => p.akunId), [AKUN, AKUN_BARU]);
+    const akun = (await transaksiDari("inv_2026-09_A03")).sort((a, b) => a.percobaan - b.percobaan).map((t) => t.akunGateway);
+    assert.deepEqual(akun, [null, AKUN, AKUN_BARU]);
+  });
+
+  it("batas nominal metode: sisa Rp5.000 tidak bisa lewat VA BCA (min Rp10.000), bisa lewat QRIS", async () => {
+    // C09 sudah masuk Rp750.000 dari Rp800.000 → naikkan jadi Rp795.000 supaya sisa Rp5.000.
+    await db.update(schema.payments).set({ nominalDibayar: 795_000 }).where(eq(schema.payments.invoiceId, "inv_2026-09_C09"));
+    const { gateway, permintaan } = gatewayUji();
+    await gagalDengan(buatTransaksiBayar(db, "demo-c09-2026-09", "va_bca", { gateway, sekarang: SEKARANG }), 400, /minimal Rp10\.000/);
+    assert.equal(permintaan.length, 0);
+    assert.equal((await buatTransaksiBayar(db, "demo-c09-2026-09", "qris", { gateway, sekarang: SEKARANG })).nominal, 5_000);
   });
 
   it("idempoten: metode sama saat masih berlaku → instruksi yang sama, tanpa transaksi baru", async () => {
@@ -140,12 +183,12 @@ describe("buat transaksi bayar dari link invoice", () => {
   });
 
   describe("notifikasi gateway untuk transaksi dari halaman bayar", () => {
-    it("pending = menunggu dibayar (bukan uang masuk); settlement → Lunas & transaksi berhasil; ulang = duplikat", async () => {
+    it("diotorisasi = menunggu dibayar (bukan uang masuk); berhasil → Lunas & transaksi berhasil; ulang = duplikat", async () => {
       const { gateway } = gatewayUji();
       await buatTransaksiBayar(db, TOKEN_A03, "va_bca", { gateway, sekarang: SEKARANG });
       const order = "inv_2026-09_A03~1";
 
-      assert.deepEqual(await prosesNotifikasiPembayaran(db, notif(order, "pending", 500_000)), {
+      assert.deepEqual(await prosesNotifikasiPembayaran(db, notif(order, "AUTHORIZED", 500_000)), {
         duplikat: false,
         hasil: "menunggu pembayaran",
         invoiceId: "inv_2026-09_A03",
@@ -154,25 +197,25 @@ describe("buat transaksi bayar dari link invoice", () => {
       const saatPending = await getInvoicePublik(db, TOKEN_A03);
       assert.deepEqual([saatPending?.pembayaran, saatPending?.bisaDibayar], [[], true]);
 
-      const lunas = await prosesNotifikasiPembayaran(db, notif(order, "settlement", 500_000));
+      const lunas = await prosesNotifikasiPembayaran(db, notif(order, "SUCCEEDED", 500_000));
       assert.equal(!lunas.duplikat && lunas.statusInvoice, "lunas");
-      assert.deepEqual(await prosesNotifikasiPembayaran(db, notif(order, "settlement", 500_000)), { duplikat: true });
+      assert.deepEqual(await prosesNotifikasiPembayaran(db, notif(order, "SUCCEEDED", 500_000)), { duplikat: true });
       const [t] = await transaksiDari("inv_2026-09_A03");
       assert.equal(t.status, "berhasil");
       const inv = await getInvoicePublik(db, TOKEN_A03);
       assert.deepEqual([inv?.status, inv?.sisa, inv?.pembayaran.map((p) => [p.metode, p.status])], ["lunas", 0, [["VA BCA", "valid"]]]);
 
       // Notifikasi kedaluwarsa yang terlambat tidak menimpa transaksi yang sudah berhasil.
-      await prosesNotifikasiPembayaran(db, notif(order, "expire", 500_000));
+      await prosesNotifikasiPembayaran(db, notif(order, "EXPIRED", 500_000));
       assert.equal((await transaksiDari("inv_2026-09_A03"))[0].status, "berhasil");
     });
 
-    it("expire → kedaluwarsa, deny/cancel → gagal; tagihan tetap bisa dibayar", async () => {
+    it("kedaluwarsa → kedaluwarsa, gagal → gagal; tagihan tetap bisa dibayar", async () => {
       const { gateway } = gatewayUji();
       await buatTransaksiBayar(db, TOKEN_A03, "qris", { gateway, sekarang: SEKARANG });
       await buatTransaksiBayar(db, TOKEN_A03, "va_bca", { gateway, sekarang: SEKARANG });
-      await prosesNotifikasiPembayaran(db, notif("inv_2026-09_A03~1", "expire", 500_000));
-      await prosesNotifikasiPembayaran(db, notif("inv_2026-09_A03~2", "cancel", 500_000));
+      await prosesNotifikasiPembayaran(db, notif("inv_2026-09_A03~1", "EXPIRED", 500_000));
+      await prosesNotifikasiPembayaran(db, notif("inv_2026-09_A03~2", "FAILED", 500_000));
       const status = (await transaksiDari("inv_2026-09_A03")).sort((a, b) => a.percobaan - b.percobaan).map((t) => t.status);
       assert.deepEqual(status, ["kedaluwarsa", "gagal"]);
       assert.equal((await getInvoicePublik(db, TOKEN_A03))?.bisaDibayar, true);

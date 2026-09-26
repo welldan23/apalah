@@ -85,13 +85,15 @@ export function periksaEnvProduksi(env: Env): HasilCek {
   if (!env.CRON_SECRET) peringatan.push("CRON_SECRET kosong: semua /api/cron/* menolak (401) — tagihan terjadwal & pengingat otomatis tidak jalan.");
   else if (env.CRON_SECRET.length < 32) galat.push("CRON_SECRET terlalu pendek, minimal 32 karakter acak.");
 
-  const kunci = env.MIDTRANS_SERVER_KEY ?? "";
-  const produksiMidtrans = env.MIDTRANS_PRODUCTION === "true";
-  if (!kunci) peringatan.push("MIDTRANS_SERVER_KEY kosong: halaman bayar memakai mode contoh (VA/QR tidak bisa dibayar).");
-  else if (produksiMidtrans && kunci.startsWith("SB-")) galat.push("MIDTRANS_PRODUCTION=true tapi server key-nya sandbox (SB-…).");
-  else if (!produksiMidtrans && !kunci.startsWith("SB-")) galat.push("Server key Midtrans produksi dipakai tanpa MIDTRANS_PRODUCTION=true.");
-  if (produksiMidtrans) {
-    peringatan.push("Midtrans PRODUKSI aktif: pastikan Notification URL di dashboard Midtrans = APP_URL + /api/webhook/pembayaran/midtrans.");
+  const kunci = env.XENDIT_SECRET_KEY ?? "";
+  if (!kunci) peringatan.push("XENDIT_SECRET_KEY kosong: halaman bayar memakai mode contoh (VA/QR tidak bisa dibayar).");
+  else if (!/^xnd_(development|production)_/.test(kunci)) {
+    galat.push("XENDIT_SECRET_KEY bukan secret key Xendit (harus diawali xnd_development_ atau xnd_production_).");
+  } else if (kunci.startsWith("xnd_development_")) {
+    peringatan.push("Xendit mode TEST (xnd_development_…): pembayaran penyewa bukan uang sungguhan.");
+  }
+  if (kunci && !env.XENDIT_WEBHOOK_TOKEN) {
+    galat.push("XENDIT_WEBHOOK_TOKEN wajib: tanpa itu webhook Xendit ditolak dan tagihan tidak pernah jadi Lunas.");
   }
   if (!env.LLM_API_KEY) peringatan.push("LLM_API_KEY kosong: Kosta AI hanya memakai parser kata kunci.");
   return { galat, peringatan };

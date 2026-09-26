@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { cariMetode, formatNomorVa, formatSisaWaktu, langkahBayar, METODE_BAYAR, sisaTagihan, tagihanBisaDibayar } from "./metode.ts";
+import {
+  alasanNominalDitolak,
+  cariMetode,
+  formatNomorVa,
+  formatSisaWaktu,
+  langkahBayar,
+  METODE_BAYAR,
+  sisaTagihan,
+  tagihanBisaDibayar,
+} from "./metode.ts";
 
 describe("metode bayar via tautan", () => {
   it("QRIS dulu (15 menit), lalu Virtual Account bank (24 jam)", () => {
@@ -28,11 +37,15 @@ describe("metode bayar via tautan", () => {
 
   it("langkah bayar sesuai metode", () => {
     assert.match(langkahBayar(cariMetode("qris")!, "Rp50.000").join(" "), /Scan kode QR[\s\S]*Rp50\.000/);
-    assert.match(langkahBayar(cariMetode("va_mandiri")!, "Rp800.000")[0], /m-banking\/ATM Mandiri/);
-    // Mandiri lewat Midtrans dibayar di menu Multipayment dengan kode perusahaan.
-    const mandiri = langkahBayar(cariMetode("va_mandiri")!, "Rp800.000", "70012");
-    assert.match(mandiri[0], /Bayar → Multipayment/);
-    assert.match(mandiri[1], /kode perusahaan 70012/);
+    assert.match(langkahBayar(cariMetode("va_mandiri")!, "Rp800.000")[0], /m-banking\/ATM Mandiri, pilih Transfer → Virtual Account/);
+  });
+
+  it("batas nominal dari bank/jaringan QRIS: VA BCA min Rp10.000, QRIS maks Rp10 juta", () => {
+    assert.match(alasanNominalDitolak(cariMetode("va_bca")!, 9_999)!, /Virtual Account BCA minimal Rp10\.000/);
+    assert.match(alasanNominalDitolak(cariMetode("qris")!, 10_000_001)!, /QRIS maksimal Rp10\.000\.000/);
+    assert.equal(alasanNominalDitolak(cariMetode("va_bca")!, 10_000), null);
+    assert.equal(alasanNominalDitolak(cariMetode("qris")!, 5_000), null);
+    assert.equal(alasanNominalDitolak(cariMetode("va_mandiri")!, 5_000), null);
   });
 
   it("bisa dibayar hanya bila ada sisa dan tagihannya bukan draf / lunas", () => {

@@ -7,7 +7,7 @@
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
-import type { NotifikasiPembayaran } from "./midtrans.ts";
+import type { NotifikasiPembayaran } from "./gateway.ts";
 import { cocokkanNominal, ringkasKeputusan } from "./pencocokan.ts";
 
 const { invoices, paymentAttempts, payments, webhookEvents } = schema;
@@ -45,10 +45,9 @@ export async function prosesNotifikasiPembayaran(db: Db, n: NotifikasiPembayaran
       .select({ id: paymentAttempts.id, status: paymentAttempts.status, referensi: paymentAttempts.referensiProvider })
       .from(paymentAttempts)
       .where(eq(paymentAttempts.orderId, n.orderId));
-    // transaction_id tidak ikut ditandatangani: notifikasi sah yang transaction_id-nya diganti akan
-    // lolos sebagai event baru. Order yang dibuat Kostera hanya punya satu transaksi di gateway.
+    // Order yang dibuat Kostera hanya punya satu transaksi di gateway.
     if (transaksi?.referensi && transaksi.referensi !== n.referensi) {
-      return selesai("diabaikan: transaction_id bukan milik order ini", { invoiceId: inv.id });
+      return selesai("diabaikan: referensi transaksi bukan milik order ini", { invoiceId: inv.id });
     }
     const tandaiTransaksi = async (status: "berhasil" | "kedaluwarsa" | "gagal") => {
       // Yang sudah berhasil tidak ditimpa notifikasi yang datang terlambat.
@@ -62,8 +61,8 @@ export async function prosesNotifikasiPembayaran(db: Db, n: NotifikasiPembayaran
       .from(payments)
       .where(and(eq(payments.provider, n.provider), eq(payments.referensiProvider, n.referensi)));
 
-    if (n.status === "gagal") {
-      await tandaiTransaksi(n.statusGateway === "expire" ? "kedaluwarsa" : "gagal");
+    if (n.status === "gagal" || n.status === "kedaluwarsa") {
+      await tandaiTransaksi(n.status);
       if (lama?.status === "pending") await tx.delete(payments).where(eq(payments.id, lama.id));
       return selesai(`gagal: ${n.statusGateway}`, { invoiceId: inv.id, statusInvoice: inv.status });
     }

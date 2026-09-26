@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { ChevronLeft, CirclePause, CirclePlay, Eye } from "lucide-react";
 
 import { FormPilot } from "@/components/platform/form-pilot";
+import { FormXendit } from "@/components/platform/form-xendit";
 import { StatusBadge } from "@/components/status-badge";
 import { Card } from "@/components/ui/card";
 import { getDb } from "@/db";
@@ -81,6 +82,14 @@ export default async function DetailWorkspacePage({ params }: PageProps<"/platfo
         <Card className="gap-3 p-4 shadow-none">
           <h2 className="font-semibold">{w.pilot.aktif ? "Suspend pilot" : "Aktifkan kembali pilot"}</h2>
           <FormPilot organizationId={w.id} aktif={w.pilot.aktif} />
+        </Card>
+
+        <Card className="gap-3 p-4 shadow-none">
+          <h2 className="font-semibold">
+            Pembayaran online (Xendit) ·{" "}
+            <span className={w.xenditAkunId ? "text-success" : "text-muted-foreground"}>{w.xenditAkunId ? "aktif" : "belum aktif"}</span>
+          </h2>
+          <FormXendit organizationId={w.id} akunId={w.xenditAkunId} />
         </Card>
       </div>
 

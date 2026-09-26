@@ -3,20 +3,28 @@
 // lamanya yang dikembalikan (muat ulang / klik dua kali tidak membuat VA baru). Baris invoice
 // dikunci selama transaksi dibuat, jadi dua permintaan bersamaan tidak membuat dua transaksi.
 
-import { and, desc, eq, gt, inArray, max, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, max, sql } from "drizzle-orm";
 
 import { schema, type Db } from "../../db/index.ts";
 import { GalatAksi } from "../aksi/galat.ts";
 import { tokenValid } from "../data/invoice-publik.ts";
 import type { GatewayPembayaran } from "./gateway.ts";
-import { cariMetode, sisaTagihan, tagihanBisaDibayar, type IdMetodeBayar, type InstruksiBayar } from "./metode.ts";
+import {
+  alasanNominalDitolak,
+  cariMetode,
+  sisaTagihan,
+  tagihanBisaDibayar,
+  type IdMetodeBayar,
+  type InstruksiBayar,
+} from "./metode.ts";
 
-const { invoices, paymentAttempts, payments } = schema;
+const { invoices, organizations, paymentAttempts, payments } = schema;
 
 /** Transaksi lama hanya dipakai ulang bila masih berlaku setidaknya selama ini. */
 const SISA_BERLAKU_MINIMUM_MS = 60_000;
 
 export const GALAT_GATEWAY = "Pembayaran online sedang bermasalah. Coba lagi sebentar lagi, atau pilih cara bayar lain.";
+export const GALAT_BELUM_AKTIF = "Pembayaran online untuk kos ini belum aktif. Hubungi pemilik kos untuk cara bayar lain.";
 
 export function bacaMetodeBayar(body: Record<string, unknown>): IdMetodeBayar {
   const metode = typeof body.metode === "string" ? cariMetode(body.metode) : undefined;
@@ -31,7 +39,6 @@ const keInstruksi = (t: BarisTransaksi): InstruksiBayar => ({
   nominal: t.nominal,
   kedaluwarsaPada: t.kedaluwarsaPada.toISOString(),
   ...(t.nomorVa && { nomorVa: t.nomorVa }),
-  ...(t.kodePerusahaan && { kodePerusahaan: t.kodePerusahaan }),
   ...(t.qrString && { qrString: t.qrString }),
 });
 
@@ -42,14 +49,22 @@ export async function buatTransaksiBayar(
   { gateway, sekarang = new Date() }: { gateway: GatewayPembayaran; sekarang?: Date },
 ): Promise<InstruksiBayar> {
   if (!tokenValid(token)) throw new GalatAksi("Tagihan tidak ditemukan.", 404);
-  const { masaBerlakuMenit } = cariMetode(metode)!;
+  const metodeBayar = cariMetode(metode)!;
 
   return db.transaction(async (tx) => {
     const [inv] = await tx
-      .select({ id: invoices.id, organizationId: invoices.organizationId, nominal: invoices.nominal, status: invoices.status })
+      .select({
+        id: invoices.id,
+        organizationId: invoices.organizationId,
+        nominal: invoices.nominal,
+        status: invoices.status,
+        namaKos: organizations.namaKos,
+        akunId: organizations.xenditAkunId,
+      })
       .from(invoices)
+      .innerJoin(organizations, eq(organizations.id, invoices.organizationId))
       .where(eq(invoices.tokenPublik, token))
-      .for("update");
+      .for("update", { of: invoices });
     if (!inv) throw new GalatAksi("Tagihan tidak ditemukan.", 404);
 
     // Sama dengan dasar pencocokan nominal: uang diterima + yang sedang diperiksa pemilik kos.
@@ -66,13 +81,21 @@ export async function buatTransaksiBayar(
         409,
       );
     }
+    // Uang penyewa hanya boleh masuk ke sub-akun Xendit milik kos, tidak pernah ke akun Kostera.
+    if (!gateway.simulasi && !inv.akunId) throw new GalatAksi(GALAT_BELUM_AKTIF, 409);
+    const ditolak = alasanNominalDitolak(metodeBayar, sisa);
+    if (ditolak) throw new GalatAksi(ditolak);
 
+    // Sub-akun yang dipakai transaksi baru; transaksi lama hanya dipakai ulang bila penerimanya sama
+    // (mis. sub-akun kos baru diganti, atau dulu masih mode contoh).
+    const akunGateway = gateway.simulasi ? null : inv.akunId;
     const [aktif] = await tx
       .select()
       .from(paymentAttempts)
       .where(
         and(
           eq(paymentAttempts.invoiceId, inv.id),
+          akunGateway ? eq(paymentAttempts.akunGateway, akunGateway) : isNull(paymentAttempts.akunGateway),
           eq(paymentAttempts.metode, metode),
           eq(paymentAttempts.nominal, sisa),
           eq(paymentAttempts.status, "menunggu"),
@@ -92,7 +115,14 @@ export async function buatTransaksiBayar(
 
     let hasil;
     try {
-      hasil = await gateway.buatTransaksi({ orderId, nominal: sisa, metode, masaBerlakuMenit });
+      hasil = await gateway.buatTransaksi({
+        orderId,
+        nominal: sisa,
+        metode,
+        masaBerlakuMenit: metodeBayar.masaBerlakuMenit,
+        ...(akunGateway && { akunId: akunGateway }),
+        namaPenerima: inv.namaKos,
+      });
     } catch (err) {
       console.error(`[pembayaran] transaksi ${orderId} gagal dibuat:`, err);
       throw new GalatAksi(GALAT_GATEWAY, 502);
@@ -108,9 +138,9 @@ export async function buatTransaksiBayar(
         metode,
         nominal: sisa,
         nomorVa: hasil.nomorVa ?? null,
-        kodePerusahaan: hasil.kodePerusahaan ?? null,
         qrString: hasil.qrString ?? null,
         referensiProvider: hasil.referensi,
+        akunGateway,
         kedaluwarsaPada: hasil.kedaluwarsaPada,
       })
       .returning();

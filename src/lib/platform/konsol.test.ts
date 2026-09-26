@@ -15,7 +15,16 @@ import { prosesPesanKosta } from "../kosta/proses-pesan.ts";
 import { terimaWebhookWhatsApp } from "../kosta/webhook-masuk.ts";
 import type { PengirimWhatsApp } from "../whatsapp/index.ts";
 import { periksaAksesPlatform } from "./akses.ts";
-import { aturPilotKosta, bacaInputPilot, cariWorkspace, getDetailWorkspace, getLogPlatform, getMetrikPlatform } from "./konsol.ts";
+import {
+  aturAkunXendit,
+  aturPilotKosta,
+  bacaInputPilot,
+  bacaInputXendit,
+  cariWorkspace,
+  getDetailWorkspace,
+  getLogPlatform,
+  getMetrikPlatform,
+} from "./konsol.ts";
 
 const ORG = "org_kos_melati";
 const OWNER = "6281234567890"; // Ratna (usr_ratna)
@@ -144,5 +153,35 @@ describe("konsol platform (platform_admin)", () => {
       [["resume_pilot", "sudah pulih"], ["suspend_pilot", "nomor WAHA diblokir"]],
     );
     assert.equal((await getMetrikPlatform(db)).workspace.pilotDisuspend, 0);
+  });
+
+  it("sub-akun Xendit: format & alasan wajib, satu sub-akun untuk satu kos, perubahan akun lama → baru tercatat", async () => {
+    const AKUN = "5cafeb170a2b18519b1b8761";
+    assert.deepEqual(bacaInputXendit({ akunId: ` ${AKUN.toUpperCase()} `, alasan: "KYC owner disetujui" }), { akunId: AKUN, alasan: "KYC owner disetujui" });
+    assert.deepEqual(bacaInputXendit({ akunId: null, alasan: "owner berhenti" }), { akunId: null, alasan: "owner berhenti" });
+    for (const body of [{ akunId: "xnd_development_rahasia", alasan: "salah tempel" }, { akunId: "123", alasan: "terlalu pendek" }, { alasan: "tanpa akun" }, { akunId: AKUN }]) {
+      assert.throws(() => bacaInputXendit(body), (err) => err instanceof GalatAksi && err.status === 400);
+    }
+
+    await aturAkunXendit(db, { organizationId: ORG, akunId: AKUN, alasan: "KYC owner disetujui", adminUserId: "usr_ratna" });
+    assert.equal((await getDetailWorkspace(db, { organizationId: ORG, adminUserId: "usr_ratna" }))?.xenditAkunId, AKUN);
+    await assert.rejects(
+      aturAkunXendit(db, { organizationId: "org_griya_asri", akunId: AKUN, alasan: "salah kos", adminUserId: "usr_ratna" }),
+      (err) => err instanceof GalatAksi && err.status === 409,
+    );
+    await assert.rejects(
+      aturAkunXendit(db, { organizationId: "org_tidak_ada", akunId: null, alasan: "uji", adminUserId: "usr_ratna" }),
+      (err) => err instanceof GalatAksi && err.status === 404,
+    );
+    await aturAkunXendit(db, { organizationId: ORG, akunId: null, alasan: "owner berhenti", adminUserId: "usr_ratna" });
+    const [org] = await db.select({ akun: schema.organizations.xenditAkunId }).from(schema.organizations).where(eq(schema.organizations.id, ORG));
+    assert.equal(org.akun, null);
+    assert.deepEqual(
+      (await getLogPlatform(db)).filter((l) => l.aksi === "atur_xendit").map((l) => l.detail),
+      [
+        { akunLama: AKUN, akunBaru: null, alasan: "owner berhenti" },
+        { akunLama: null, akunBaru: AKUN, alasan: "KYC owner disetujui" },
+      ],
+    );
   });
 });

@@ -57,6 +57,12 @@ export const TEMPLATE_PERLU_REVIEW = {
   isi: "Perlu diperiksa — {{1}}\nPembayaran kamar {{2}} ({{3}}) periode {{4}}: diterima {{5}} dari tagihan {{6}} ({{7}}).\nStatus tidak diubah jadi Lunas sampai kamu memeriksanya.",
 } as const;
 
+/** Ke owner/admin saat tagihan Lunas lewat payment gateway; {{1}} kos … {{6}} cara bayar. */
+export const TEMPLATE_PEMBAYARAN_MASUK = {
+  nama: "kostera_pembayaran_masuk",
+  isi: "Pembayaran masuk — {{1}}\nKamar {{2}} ({{3}}) membayar sewa periode {{4}} sebesar {{5}} lewat {{6}}. Tagihan otomatis Lunas dan bukti bayar dikirim ke penyewa.\nUangnya masuk ke saldo Xendit kos kamu (dipotong biaya transaksi Xendit).",
+} as const;
+
 /** Ganti variabel {{1}}, {{2}}, … dengan nilai berurutan. */
 export const isiTemplate = (isi: string, variabel: string[]) =>
   isi.replace(/\{\{(\d+)\}\}/g, (_, n: string) => variabel[Number(n) - 1] ?? "");
@@ -203,4 +209,32 @@ export function templatePerluReview(d: DataPerluReview): TemplateWhatsApp {
 /** Template resmi yang isinya sama dengan pesanTiket; tombol membuka status tiket lewat token invoice. */
 export function templateTiket(t: DataTiket, namaKos: string, tokenInvoice: string): TemplateWhatsApp {
   return { nama: TEMPLATE_TIKET.nama, bahasa: "id", variabel: variabelTiket(t, namaKos), tombolUrl: `${tokenInvoice}/tiket/status` };
+}
+
+type DataPembayaranMasuk = {
+  namaKos: string;
+  nomorKamar: string;
+  namaPenghuni: string;
+  periode: string;
+  nominal: number;
+  metode: string;
+};
+
+const variabelPembayaranMasuk = (d: DataPembayaranMasuk) => [
+  d.namaKos,
+  d.nomorKamar,
+  d.namaPenghuni,
+  formatPeriode(d.periode),
+  formatRupiah(d.nominal),
+  d.metode,
+];
+
+/** Kabar uang masuk untuk provider teks (WAHA, log) & riwayat chat, dengan link di baris terakhir. */
+export function pesanPembayaranMasuk(d: DataPembayaranMasuk, link: string) {
+  return `${isiTemplate(TEMPLATE_PEMBAYARAN_MASUK.isi, variabelPembayaranMasuk(d))}\nLihat: ${link}`;
+}
+
+/** Template resmi yang isinya sama dengan pesanPembayaranMasuk; tombolnya URL statis. */
+export function templatePembayaranMasuk(d: DataPembayaranMasuk): TemplateWhatsApp {
+  return { nama: TEMPLATE_PEMBAYARAN_MASUK.nama, bahasa: "id", variabel: variabelPembayaranMasuk(d) };
 }

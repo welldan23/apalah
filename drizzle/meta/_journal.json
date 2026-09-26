@@ -127,6 +127,13 @@
       "when": 1790311730272,
       "tag": "0017_platform_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790393776891,
+      "tag": "0018_xendit_subakun",
+      "breakpoints": true
     }
   ]
 }

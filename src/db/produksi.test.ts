@@ -20,7 +20,8 @@ const ENV_SEHAT = {
   WHATSAPP_WEBHOOK_SECRET: "w".repeat(40),
   WHATSAPP_VERIFY_TOKEN: "verifikasi-uji",
   CRON_SECRET: "c".repeat(64),
-  MIDTRANS_SERVER_KEY: "SB-Mid-server-uji-rahasia",
+  XENDIT_SECRET_KEY: "xnd_production_uji-rahasia",
+  XENDIT_WEBHOOK_TOKEN: "token-webhook-xendit-uji-rahasia",
   LLM_API_KEY: "kunci-llm-uji-rahasia",
 };
 
@@ -29,12 +30,12 @@ describe("cek:produksi", () => {
     assert.deepEqual(periksaEnvProduksi(ENV_SEHAT), { galat: [], peringatan: [] });
     const buruk = periksaEnvProduksi({ ...ENV_SEHAT, WHATSAPP_PROVIDER: "waha", BETTER_AUTH_SECRET: "pendek-rahasia", CRON_SECRET: "cron-pendek-rahasia" });
     const teks = JSON.stringify(buruk);
-    for (const rahasia of ["uji-db-rahasia", "pendek-rahasia", "cron-pendek-rahasia", "token-meta-uji-rahasia", "SB-Mid-server-uji-rahasia"]) {
+    for (const rahasia of ["uji-db-rahasia", "pendek-rahasia", "cron-pendek-rahasia", "token-meta-uji-rahasia", "xnd_production_uji-rahasia", "token-webhook-xendit-uji-rahasia"]) {
       assert.ok(!teks.includes(rahasia), rahasia);
     }
   });
 
-  it("menolak PGlite, WAHA, provider log, http, secret pendek, dan kunci Midtrans yang tidak cocok dengan modenya", () => {
+  it("menolak PGlite, WAHA, provider log, http, secret pendek, dan kunci Xendit yang salah / tanpa token webhook", () => {
     const galat = (env: Record<string, string | undefined>) => periksaEnvProduksi({ ...ENV_SEHAT, ...env }).galat.join("\n");
     assert.match(galat({ DATABASE_URL: undefined }), /DATABASE_URL/);
     assert.match(galat({ WHATSAPP_PROVIDER: "waha" }), /WAHA hanya untuk pilot internal/);
@@ -48,13 +49,20 @@ describe("cek:produksi", () => {
     assert.match(galat({ BETTER_AUTH_SECRET: "pendek" }), /BETTER_AUTH_SECRET/);
     assert.match(galat({ BETTER_AUTH_URL: "https://kostera.id" }), /BETTER_AUTH_URL/);
     assert.match(galat({ CRON_SECRET: "pendek" }), /CRON_SECRET/);
-    assert.match(galat({ MIDTRANS_PRODUCTION: "true" }), /server key-nya sandbox/);
-    assert.match(galat({ MIDTRANS_SERVER_KEY: "Mid-server-uji" }), /tanpa MIDTRANS_PRODUCTION=true/);
-    assert.equal(galat({ MIDTRANS_SERVER_KEY: "Mid-server-uji", MIDTRANS_PRODUCTION: "true" }), "");
+    assert.match(galat({ XENDIT_SECRET_KEY: "xnd_public_production_uji" }), /bukan secret key Xendit/);
+    assert.match(galat({ XENDIT_WEBHOOK_TOKEN: undefined }), /XENDIT_WEBHOOK_TOKEN wajib/);
+    const test = periksaEnvProduksi({ ...ENV_SEHAT, XENDIT_SECRET_KEY: "xnd_development_uji" });
+    assert.deepEqual([test.galat, test.peringatan], [[], ["Xendit mode TEST (xnd_development_…): pembayaran penyewa bukan uang sungguhan."]]);
   });
 
-  it("yang belum disiapkan (cron, Midtrans, LLM) jadi peringatan, bukan galat", () => {
-    const hasil = periksaEnvProduksi({ ...ENV_SEHAT, CRON_SECRET: undefined, MIDTRANS_SERVER_KEY: undefined, LLM_API_KEY: undefined });
+  it("yang belum disiapkan (cron, Xendit, LLM) jadi peringatan, bukan galat", () => {
+    const hasil = periksaEnvProduksi({
+      ...ENV_SEHAT,
+      CRON_SECRET: undefined,
+      XENDIT_SECRET_KEY: undefined,
+      XENDIT_WEBHOOK_TOKEN: undefined,
+      LLM_API_KEY: undefined,
+    });
     assert.deepEqual(hasil.galat, []);
     assert.equal(hasil.peringatan.length, 3);
     assert.match(hasil.peringatan.join("\n"), /cron.*401/);

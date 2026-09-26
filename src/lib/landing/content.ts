@@ -301,7 +301,7 @@ export const FAQ: { tanya: string; jawab: string }[] = [
   {
     tanya: "Kapan status tagihan berubah jadi Lunas?",
     jawab:
-      "Hanya saat pembayaran terverifikasi dari payment gateway. Kosta AI tidak bisa menandai lunas dari chat atau bukti transfer. Kalau nominal yang dibayar tidak cocok, tagihan ditandai Perlu Review supaya kamu cek dulu.",
+      "Otomatis, begitu pembayaran QRIS/VA penyewa terverifikasi payment gateway (Xendit) — kamu langsung dapat kabar di WhatsApp, tanpa perlu cek mutasi atau mencatat. Kosta AI tidak bisa menandai lunas dari chat atau bukti transfer. Kalau nominal yang dibayar tidak cocok, tagihan ditandai Perlu Review supaya kamu cek dulu.",
   },
   {
     tanya: "Apakah penyewa bisa melihat data penyewa lain?",

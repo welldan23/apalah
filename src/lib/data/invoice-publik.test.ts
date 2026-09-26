@@ -100,7 +100,7 @@ describe("getInvoicePublik", () => {
       invoiceId: "inv_2026-09_C09",
       nominalDibayar: 50_000,
       metode: "VA BCA",
-      provider: "midtrans",
+      provider: "xendit",
       referensiProvider: "uji-pending-c09",
       status: "pending",
     });
@@ -118,7 +118,7 @@ describe("getInvoicePublik", () => {
       invoiceId: "inv_2026-09_C09",
       nominalDibayar: 100_000,
       metode: "VA BNI",
-      provider: "midtrans",
+      provider: "xendit",
       referensiProvider: "uji-lebih-c09",
       status: "tidak_cocok",
     });

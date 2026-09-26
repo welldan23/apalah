@@ -2,6 +2,7 @@
 // Fungsi murni — dipakai halaman bayar penyewa dan endpoint pembuat transaksi.
 
 import type { InvoiceStatus } from "@/lib/types";
+import { formatRupiah } from "../format.ts";
 
 export type IdMetodeBayar = "qris" | "va_bca" | "va_bni" | "va_bri" | "va_mandiri" | "va_permata";
 
@@ -12,14 +13,18 @@ export type MetodeBayar = {
   keterangan: string;
   /** Batas waktu bayar sejak instruksi dibuat. */
   masaBerlakuMenit: number;
+  /** Batas nominal per transaksi dari bank/jaringan QRIS (dokumentasi Xendit), bila ada. */
+  nominalMin?: number;
+  nominalMaks?: number;
 };
 
-const va = (id: IdMetodeBayar, bank: string): MetodeBayar => ({
+const va = (id: IdMetodeBayar, bank: string, batas: Pick<MetodeBayar, "nominalMin" | "nominalMaks"> = {}): MetodeBayar => ({
   id,
   jenis: "va",
   label: `Virtual Account ${bank}`,
   keterangan: `Transfer lewat m-banking, internet banking, atau ATM ${bank}.`,
   masaBerlakuMenit: 24 * 60,
+  ...batas,
 });
 
 export const METODE_BAYAR: MetodeBayar[] = [
@@ -29,8 +34,9 @@ export const METODE_BAYAR: MetodeBayar[] = [
     label: "QRIS",
     keterangan: "Scan pakai GoPay, OVO, DANA, ShopeePay, atau m-banking apa pun.",
     masaBerlakuMenit: 15,
+    nominalMaks: 10_000_000,
   },
-  va("va_bca", "BCA"),
+  va("va_bca", "BCA", { nominalMin: 10_000, nominalMaks: 50_000_000 }),
   va("va_bni", "BNI"),
   va("va_bri", "BRI"),
   va("va_mandiri", "Mandiri"),
@@ -38,6 +44,17 @@ export const METODE_BAYAR: MetodeBayar[] = [
 ];
 
 export const cariMetode = (id: string) => METODE_BAYAR.find((m) => m.id === id);
+
+/** Alasan metode ini tidak bisa dipakai untuk nominal tersebut; null bila bisa. */
+export function alasanNominalDitolak(metode: MetodeBayar, nominal: number) {
+  if (metode.nominalMin && nominal < metode.nominalMin) {
+    return `${metode.label} minimal ${formatRupiah(metode.nominalMin)}. Pilih cara bayar lain, mis. QRIS.`;
+  }
+  if (metode.nominalMaks && nominal > metode.nominalMaks) {
+    return `${metode.label} maksimal ${formatRupiah(metode.nominalMaks)} per transaksi. Pilih cara bayar lain, mis. Virtual Account Mandiri.`;
+  }
+  return null;
+}
 
 /** Instruksi bayar untuk satu transaksi (kontrak endpoint pembuat transaksi). */
 export type InstruksiBayar = {
@@ -47,8 +64,6 @@ export type InstruksiBayar = {
   kedaluwarsaPada: string;
   /** Untuk VA. */
   nomorVa?: string;
-  /** VA yang dibayar lewat menu Multipayment (Mandiri): kode perusahaan yang dimasukkan dulu. */
-  kodePerusahaan?: string;
   /** Untuk QRIS: isi QR dari gateway. */
   qrString?: string;
 };
@@ -73,7 +88,7 @@ export function formatSisaWaktu(ms: number) {
 }
 
 /** Langkah bayar singkat untuk penyewa. */
-export function langkahBayar(metode: MetodeBayar, nominal: string, kodePerusahaan?: string) {
+export function langkahBayar(metode: MetodeBayar, nominal: string) {
   if (metode.jenis === "qris") {
     return [
       "Buka aplikasi e-wallet atau m-banking, lalu pilih Scan/QRIS.",
@@ -82,13 +97,6 @@ export function langkahBayar(metode: MetodeBayar, nominal: string, kodePerusahaa
     ];
   }
   const bank = metode.label.replace("Virtual Account ", "");
-  if (kodePerusahaan) {
-    return [
-      `Buka m-banking/ATM ${bank}, pilih Bayar → Multipayment.`,
-      `Masukkan kode perusahaan ${kodePerusahaan}, lalu nomor Virtual Account di atas sebagai kode bayar.`,
-      `Pastikan nominal ${nominal} dan nama tagihan sesuai, lalu selesaikan pembayaran.`,
-    ];
-  }
   return [
     `Buka m-banking/ATM ${bank}, pilih Transfer → Virtual Account.`,
     "Masukkan nomor Virtual Account di atas.",

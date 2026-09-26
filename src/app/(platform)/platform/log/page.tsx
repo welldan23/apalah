@@ -15,7 +15,10 @@ const LABEL: Record<string, string> = {
   resume_pilot: "Aktifkan kembali pilot Kosta AI",
   tambah_admin: "Menambah platform admin",
   hapus_admin: "Menghapus platform admin",
+  atur_xendit: "Mengatur sub-akun Xendit",
 };
+
+const akun = (nilai: unknown) => (typeof nilai === "string" ? nilai : "kosong");
 
 /** Log setiap akses & perubahan oleh platform admin (100 terbaru). */
 export default async function LogPlatformPage() {
@@ -41,6 +44,7 @@ export default async function LogPlatformPage() {
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {l.admin ?? "skrip server"} · {formatWaktu(l.waktu.toISOString())}
+                  {l.aksi === "atur_xendit" ? ` · ${akun(l.detail.akunLama)} → ${akun(l.detail.akunBaru)}` : ""}
                   {typeof l.detail.alasan === "string" ? ` · alasan: ${l.detail.alasan}` : ""}
                 </span>
               </li>

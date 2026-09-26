@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { TEMPLATE_LUNAS, TEMPLATE_PENGINGAT, TEMPLATE_PERLU_REVIEW, TEMPLATE_TAGIHAN, TEMPLATE_TIKET } from "../pesan.ts";
+import {
+  TEMPLATE_LUNAS,
+  TEMPLATE_PEMBAYARAN_MASUK,
+  TEMPLATE_PENGINGAT,
+  TEMPLATE_PERLU_REVIEW,
+  TEMPLATE_TAGIHAN,
+  TEMPLATE_TIKET,
+} from "../pesan.ts";
 import { cekTemplateMeta, daftarkanTemplateMeta, daftarTemplateMeta } from "./template-meta.ts";
 
 const APP = "https://app.kostera.id";
@@ -15,10 +22,11 @@ const komponen = (t: ReturnType<typeof daftarTemplateMeta>[number], tipe: string
 describe("template WhatsApp resmi (Meta)", () => {
   const templates = daftarTemplateMeta(APP);
 
-  it("mencakup semua template yang dipakai aplikasi, termasuk notifikasi Perlu review ke owner", () => {
+  it("mencakup semua template yang dipakai aplikasi, termasuk kabar uang masuk & Perlu review ke owner", () => {
     assert.deepEqual(templates.map((t) => t.name).sort(), [
       "kostera_kode_otp",
       "kostera_pembayaran_diterima",
+      "kostera_pembayaran_masuk",
       "kostera_pembayaran_perlu_dicek",
       "kostera_pengingat_lewat",
       "kostera_pengingat_sebelum",
@@ -35,6 +43,12 @@ describe("template WhatsApp resmi (Meta)", () => {
       [TEMPLATE_PENGINGAT.lewat.nama]: TEMPLATE_PENGINGAT.lewat.isi,
       [TEMPLATE_TIKET.nama]: TEMPLATE_TIKET.isi,
       [TEMPLATE_PERLU_REVIEW.nama]: TEMPLATE_PERLU_REVIEW.isi,
+      [TEMPLATE_PEMBAYARAN_MASUK.nama]: TEMPLATE_PEMBAYARAN_MASUK.isi,
+    };
+    // Template untuk owner membuka dashboard (URL statis); untuk penyewa membuka invoice-nya.
+    const tombolStatis: Record<string, string> = {
+      [TEMPLATE_PERLU_REVIEW.nama]: `${APP}/pembayaran?status=perlu_review`,
+      [TEMPLATE_PEMBAYARAN_MASUK.nama]: `${APP}/pembayaran`,
     };
     for (const t of templates.filter((x) => x.category === "UTILITY")) {
       const body = komponen(t, "BODY")!;
@@ -49,8 +63,8 @@ describe("template WhatsApp resmi (Meta)", () => {
       const [tombol] = (komponen(t, "BUTTONS")!.buttons as Tombol[]);
       assert.equal(tombol.type, "URL");
       assert.ok(tombol.text.length <= 25, t.name);
-      if (t.name === TEMPLATE_PERLU_REVIEW.nama) {
-        assert.equal(tombol.url, `${APP}/pembayaran?status=perlu_review`);
+      if (tombolStatis[t.name]) {
+        assert.equal(tombol.url, tombolStatis[t.name]);
         assert.equal(tombol.example, undefined);
       } else {
         assert.equal(tombol.url, `${APP}/invoice/{{1}}`);
@@ -80,10 +94,10 @@ describe("template WhatsApp resmi (Meta)", () => {
         : Response.json({ id: "123", status: "PENDING", category: "UTILITY" });
     }) as typeof fetch;
     const hasil = await daftarkanTemplateMeta({ token: TOKEN, wabaId: "WABA123", fetch: palsu }, templates);
-    assert.equal(permintaan.length, 7);
+    assert.equal(permintaan.length, 8);
     assert.ok(permintaan.every((p) => p.url === "https://graph.facebook.com/v23.0/WABA123/message_templates" && p.method === "POST"));
     assert.ok(permintaan.every((p) => p.auth === `Bearer ${TOKEN}`));
-    assert.equal(hasil.filter((b) => b.startsWith("✓") && b.endsWith("PENDING")).length, 6);
+    assert.equal(hasil.filter((b) => b.startsWith("✓") && b.endsWith("PENDING")).length, 7);
     assert.ok(hasil.includes("✗ kostera_kode_otp → Meta: Nama template sudah dipakai"));
     assert.ok(!hasil.join("\n").includes(TOKEN));
   });
@@ -97,7 +111,7 @@ describe("template WhatsApp resmi (Meta)", () => {
         ],
       })) as typeof fetch;
     const hasil = await cekTemplateMeta({ token: TOKEN, wabaId: "WABA123", fetch: palsu }, templates);
-    assert.equal(hasil.filter((b) => b.startsWith("✓")).length, 6);
+    assert.equal(hasil.filter((b) => b.startsWith("✓")).length, 7);
     assert.ok(hasil.includes("✗ kostera_pembayaran_perlu_dicek → belum didaftarkan"));
   });
 });

@@ -1,6 +1,7 @@
 // Konsol platform Kostera (hanya platform_admin): metrik lintas workspace yang aman, cari workspace,
-// detail integrasi tersanitasi, dan suspend/resume pilot Kosta. Tidak ada jalur untuk mengubah invoice,
-// pembayaran, atau data penyewa. Membuka detail workspace selalu tercatat di platform_admin_logs.
+// detail integrasi tersanitasi, suspend/resume pilot Kosta, dan menyambungkan kos ke sub-akun Xendit-nya.
+// Tidak ada jalur untuk mengubah invoice, pembayaran, atau data penyewa. Membuka detail workspace dan
+// setiap perubahan selalu tercatat di platform_admin_logs.
 
 import { and, count, desc, eq, gte, ilike, inArray, isNotNull, lt, max, ne, or, sql } from "drizzle-orm";
 
@@ -147,7 +148,13 @@ export async function getDetailWorkspace(
   { organizationId, adminUserId, sekarang = new Date() }: { organizationId: string; adminUserId: string; sekarang?: Date },
 ) {
   const [org] = await db
-    .select({ id: organizations.id, namaKos: organizations.namaKos, jumlahKamar: organizations.jumlahKamar, dibuatPada: organizations.dibuatPada })
+    .select({
+      id: organizations.id,
+      namaKos: organizations.namaKos,
+      jumlahKamar: organizations.jumlahKamar,
+      dibuatPada: organizations.dibuatPada,
+      xenditAkunId: organizations.xenditAkunId,
+    })
     .from(organizations)
     .where(eq(organizations.id, organizationId));
   if (!org) return null;
@@ -209,11 +216,61 @@ export async function getDetailWorkspace(
 
 export type DetailWorkspace = NonNullable<Awaited<ReturnType<typeof getDetailWorkspace>>>;
 
-export function bacaInputPilot(body: Record<string, unknown>) {
-  if (typeof body.aktif !== "boolean") throw new GalatAksi("Pilih suspend atau aktifkan kembali.");
+function bacaAlasan(body: Record<string, unknown>) {
   const alasan = typeof body.alasan === "string" ? body.alasan.trim() : "";
   if (alasan.length < 5 || alasan.length > 200) throw new GalatAksi("Tulis alasan 5–200 karakter (tercatat di log platform).");
-  return { aktif: body.aktif, alasan };
+  return alasan;
+}
+
+export function bacaInputPilot(body: Record<string, unknown>) {
+  if (typeof body.aktif !== "boolean") throw new GalatAksi("Pilih suspend atau aktifkan kembali.");
+  return { aktif: body.aktif, alasan: bacaAlasan(body) };
+}
+
+/** ID akun Xendit (xenPlatform) = 24 karakter heksadesimal. */
+const POLA_AKUN_XENDIT = /^[0-9a-f]{24}$/;
+
+/** `akunId` null = lepaskan (pembayaran online kos berhenti). */
+export function bacaInputXendit(body: Record<string, unknown>) {
+  const akunId = body.akunId === null ? null : typeof body.akunId === "string" ? body.akunId.trim().toLowerCase() : undefined;
+  if (akunId === undefined || (akunId !== null && !POLA_AKUN_XENDIT.test(akunId))) {
+    throw new GalatAksi("ID sub-akun Xendit harus 24 karakter (salin dari menu xenPlatform di dashboard Xendit).");
+  }
+  return { akunId, alasan: bacaAlasan(body) };
+}
+
+/**
+ * Sambungkan kos ke sub-akun xenPlatform-nya (atau lepaskan). Menentukan ke mana uang penyewa masuk,
+ * jadi wajib alasan dan tercatat (akun lama → baru). QRIS/VA yang sudah dibuat ke akun lama tidak
+ * ditawarkan lagi, tapi pembayarannya tetap diverifikasi ke akun tempat transaksi itu dibuat.
+ */
+export async function aturAkunXendit(
+  db: Db,
+  { organizationId, akunId, alasan, adminUserId }: { organizationId: string; akunId: string | null; alasan: string; adminUserId: string },
+) {
+  return db.transaction(async (tx) => {
+    const [org] = await tx
+      .select({ id: organizations.id, akunLama: organizations.xenditAkunId })
+      .from(organizations)
+      .where(eq(organizations.id, organizationId))
+      .for("update");
+    if (!org) throw new GalatAksi("Workspace tidak ditemukan.", 404);
+    if (akunId) {
+      const [dipakai] = await tx
+        .select({ id: organizations.id })
+        .from(organizations)
+        .where(and(eq(organizations.xenditAkunId, akunId), ne(organizations.id, organizationId)));
+      if (dipakai) throw new GalatAksi("Sub-akun Xendit ini sudah tersambung ke kos lain.", 409);
+    }
+    await tx.update(organizations).set({ xenditAkunId: akunId }).where(eq(organizations.id, organizationId));
+    await catatLogPlatform(tx, {
+      adminUserId,
+      aksi: "atur_xendit",
+      organizationId,
+      detail: { akunLama: org.akunLama, akunBaru: akunId, alasan },
+    });
+    return { akunId };
+  });
 }
 
 /** Suspend / aktifkan kembali pilot Kosta satu kos; hanya tabel kosta_pilot yang berubah, dan tercatat. */

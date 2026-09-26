@@ -23,7 +23,7 @@ export async function periksaAksesPlatform(
   return { status: "admin", userId };
 }
 
-export type AksiPlatform = "lihat_workspace" | "suspend_pilot" | "resume_pilot" | "tambah_admin" | "hapus_admin";
+export type AksiPlatform = "lihat_workspace" | "suspend_pilot" | "resume_pilot" | "tambah_admin" | "hapus_admin" | "atur_xendit";
 
 /** Catat akses/perubahan platform admin. Detail tidak boleh berisi data penyewa. */
 export async function catatLogPlatform(

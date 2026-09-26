@@ -100,8 +100,8 @@ describe("Kosta: prepare_reminder per kamar & get_income_summary mingguan", () =
   it("rekap pemasukan minggu ini = pembayaran valid terverifikasi Senin–hari ini, hanya kos aktif", async () => {
     // Satu pembayaran pasti di minggu ini, satu lagi Minggu lalu (tidak dihitung).
     await db.insert(schema.payments).values([
-      { invoiceId: "inv_2026-09_A06", nominalDibayar: 123_000, metode: "QRIS", provider: "midtrans", referensiProvider: "uji-minggu-ini", status: "valid", diverifikasiPada: new Date("2026-09-22T10:00:00+07:00") },
-      { invoiceId: "inv_2026-09_A06", nominalDibayar: 77_000, metode: "QRIS", provider: "midtrans", referensiProvider: "uji-minggu-lalu", status: "valid", diverifikasiPada: new Date("2026-09-20T23:00:00+07:00") },
+      { invoiceId: "inv_2026-09_A06", nominalDibayar: 123_000, metode: "QRIS", provider: "xendit", referensiProvider: "uji-minggu-ini", status: "valid", diverifikasiPada: new Date("2026-09-22T10:00:00+07:00") },
+      { invoiceId: "inv_2026-09_A06", nominalDibayar: 77_000, metode: "QRIS", provider: "xendit", referensiProvider: "uji-minggu-lalu", status: "valid", diverifikasiPada: new Date("2026-09-20T23:00:00+07:00") },
     ]);
     const [harapan] = await db
       .select({ jumlah: schema.payments.nominalDibayar })

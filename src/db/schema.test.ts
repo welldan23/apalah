@@ -142,14 +142,14 @@ describe("skema & migrasi", () => {
     });
 
     it("webhook event unik per provider; satu event hanya mencatat satu pembayaran", async () => {
-      const event = { provider: "midtrans", eventId: "evt-uji-1", payload: { order_id: "x" } };
+      const event = { provider: "xendit", eventId: "evt-uji-1", payload: { order_id: "x" } };
       const [e] = await db.insert(schema.webhookEvents).values(event).returning();
       await ditolakOleh(db.insert(schema.webhookEvents).values(event), "webhook_events_provider_event_unik");
       // Provider lain boleh memakai event_id yang sama.
-      await db.insert(schema.webhookEvents).values({ ...event, provider: "xendit" });
+      await db.insert(schema.webhookEvents).values({ ...event, provider: "simulasi" });
 
       const [inv] = await db.select().from(schema.invoices).limit(1);
-      const bayar = { invoiceId: inv.id, nominalDibayar: 1, metode: "QRIS", provider: "midtrans", webhookEventId: e.id };
+      const bayar = { invoiceId: inv.id, nominalDibayar: 1, metode: "QRIS", provider: "xendit", webhookEventId: e.id };
       await db.insert(schema.payments).values({ ...bayar, referensiProvider: "uji-evt-1" });
       await ditolakOleh(
         db.insert(schema.payments).values({ ...bayar, referensiProvider: "uji-evt-2" }),

@@ -89,6 +89,11 @@ export const organizations = pgTable(
       .references(() => users.id),
     /** Saklar utama pengingat bayar otomatis; jadwalnya di reminder_schedules. */
     pengingatOtomatis: boolean().notNull().default(true),
+    /**
+     * ID sub-akun xenPlatform (Xendit) milik kos ini: uang penyewa masuk ke saldo sub-akun ini, bukan ke
+     * akun Kostera. Kosong = pembayaran online kos ini belum aktif.
+     */
+    xenditAkunId: text().unique("organizations_xendit_akun_unik"),
     dibuatPada: waktu().notNull().defaultNow(),
   },
   (t) => [check("organizations_jumlah_kamar_tidak_negatif", sql`${t.jumlahKamar} >= 0`)],
@@ -388,11 +393,11 @@ export const paymentAttempts = pgTable(
     nominal: integer().notNull(),
     status: statusTransaksiBayarEnum().notNull().default("menunggu"),
     nomorVa: text(),
-    /** Kode perusahaan/biller untuk VA yang dibayar lewat menu Multipayment (mis. Mandiri Bill). */
-    kodePerusahaan: text(),
     qrString: text(),
     /** ID transaksi di gateway. */
     referensiProvider: text().unique("payment_attempts_referensi_unik"),
+    /** Sub-akun Xendit penerima uang saat transaksi dibuat — dipakai memverifikasi notifikasinya. */
+    akunGateway: text(),
     kedaluwarsaPada: waktu().notNull(),
     dibuatPada: waktu().notNull().defaultNow(),
   },
@@ -636,7 +641,7 @@ export const whatsappLogs = pgTable(
     index("whatsapp_logs_jenis_referensi").on(t.jenis, t.referensiId),
     check(
       "whatsapp_logs_jenis",
-      sql`${t.jenis} in ('pengingat', 'tagihan', 'konfirmasi_lunas', 'perlu_review', 'kosta', 'otp', 'tiket')`,
+      sql`${t.jenis} in ('pengingat', 'tagihan', 'konfirmasi_lunas', 'pembayaran_masuk', 'perlu_review', 'kosta', 'otp', 'tiket')`,
     ),
     check("whatsapp_logs_galat_bila_gagal", sql`(${t.status} = 'gagal') = (${t.galat} is not null)`),
   ],
@@ -737,7 +742,7 @@ export const platformAdminLogs = pgTable(
     index("platform_admin_logs_waktu").on(t.dibuatPada),
     check(
       "platform_admin_logs_aksi",
-      sql`${t.aksi} in ('lihat_workspace', 'suspend_pilot', 'resume_pilot', 'tambah_admin', 'hapus_admin')`,
+      sql`${t.aksi} in ('lihat_workspace', 'suspend_pilot', 'resume_pilot', 'tambah_admin', 'hapus_admin', 'atur_xendit')`,
     ),
   ],
 );

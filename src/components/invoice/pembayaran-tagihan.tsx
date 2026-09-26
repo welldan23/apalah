@@ -218,12 +218,6 @@ function InstruksiPembayaran({
         ) : (
           <div className="flex flex-col gap-3 rounded-xl border bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              {instruksi.kodePerusahaan && (
-                <p className="mb-1 text-sm">
-                  <span className="text-muted-foreground">Kode perusahaan </span>
-                  <span className="font-semibold tabular-nums">{instruksi.kodePerusahaan}</span>
-                </p>
-              )}
               <p className="text-xs text-muted-foreground">Nomor Virtual Account</p>
               <p className="text-xl font-semibold whitespace-nowrap tabular-nums select-all">
                 {formatNomorVa(instruksi.nomorVa ?? "")}
@@ -238,7 +232,7 @@ function InstruksiPembayaran({
 
       {!kedaluwarsa && (
         <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-sm">
-          {langkahBayar(metode, formatRupiah(instruksi.nominal), instruksi.kodePerusahaan).map((langkah) => (
+          {langkahBayar(metode, formatRupiah(instruksi.nominal)).map((langkah) => (
             <li key={langkah}>{langkah}</li>
           ))}
         </ol>

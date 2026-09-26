@@ -16,7 +16,7 @@ Variables, tipe *Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
 - **`kostera.id` sekarang menampilkan landing lama** (statis). Memindahkan DNS-nya ke Vercel
   menggantinya dengan landing baru dari repo ini.
 - Akses yang dibutuhkan: project Vercel (atau token deploy), zona DNS `kostera.id` di Cloudflare,
-  database PostgreSQL produksi, akun Midtrans, dan WhatsApp Business (Meta).
+  database PostgreSQL produksi, akun Xendit dengan xenPlatform aktif, dan WhatsApp Business (Meta).
 
 ## 1. Arsitektur
 
@@ -44,8 +44,8 @@ Variables, tipe *Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
 | `META_WA_TOKEN`, `META_WA_PHONE_NUMBER_ID` | ya | System User token & Phone Number ID |
 | `WHATSAPP_WEBHOOK_SECRET` | ya* | App Secret Meta (HMAC webhook masuk) |
 | `WHATSAPP_VERIFY_TOKEN` | ya* | token verifikasi langganan webhook Meta |
-| `MIDTRANS_SERVER_KEY` | nanti | mulai dari **sandbox** (`SB-Mid-server-…`) |
-| `MIDTRANS_PRODUCTION` | — | biarkan kosong/`false` sampai server key produksi & Notification URL siap |
+| `XENDIT_SECRET_KEY` | nanti | mulai dari kunci **test** (`xnd_development_…`); `xnd_production_…` = uang sungguhan |
+| `XENDIT_WEBHOOK_TOKEN` | nanti* | wajib begitu `XENDIT_SECRET_KEY` diisi — tanpa itu tagihan tidak pernah Lunas |
 | `CRON_SECRET` | nanti | **kosongkan dulu** = semua cron menolak (401). Isi setelah WA & pembayaran terverifikasi |
 | `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` | tidak | tanpa kunci, Kosta AI memakai parser kata kunci |
 
@@ -58,7 +58,7 @@ Variables, tipe *Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
    `pg_dump --format=custom --no-owner "$DATABASE_URL" > kostera-$(date +%F-%H%M).dump`
    (simpan di tempat aman, di luar repo). Database baru yang masih kosong tidak perlu dibackup.
 2. **Cek konfigurasi** (hanya membaca, tidak mencetak nilai rahasia) dengan environment produksi:
-   `npm run cek:produksi` → harus `✓ Tidak ada galat`. Peringatan (cron/Midtrans belum diisi) boleh
+   `npm run cek:produksi` → harus `✓ Tidak ada galat`. Peringatan (cron/Xendit belum diisi) boleh
    ada selama memang disengaja.
 3. **Migrasi terkendali** dari mesin tepercaya: `npm run db:migrate` (aman diulang). **Jangan pernah**
    menjalankan `npm run db:seed` ke database produksi (skrip menolak bila `NODE_ENV=production`).
@@ -83,14 +83,14 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://app.kostera.id/masuk          
 curl -sS -o /dev/null -w "%{http_code}\n" https://app.kostera.id/api/dashboard/ringkasan  # 401
 curl -sS -o /dev/null -w "%{http_code}\n" https://app.kostera.id/api/cron/harian    # 401
 curl -sS -o /dev/null -w "%{http_code}\n" -X POST -H 'content-type: application/json' \
-  -d '{}' https://app.kostera.id/api/webhook/pembayaran/midtrans                     # 401
+  -d '{}' https://app.kostera.id/api/webhook/pembayaran/xendit                       # 401
 curl -sSI https://app.kostera.id/ | grep -i x-frame-options                         # DENY
 ```
 
 Lalu uji manual: daftar/masuk dengan nomor WA sungguhan (OTP lewat template Meta), buat kos,
 tagihan, buka link invoice dari ponsel lain.
 
-## 6. Mengaktifkan cron, Midtrans, dan Meta
+## 6. Mengaktifkan cron, Xendit, dan Meta
 
 - **Meta (WhatsApp first — ini jalur utama Kosta AI):**
   1. Di Meta for Developers: app tipe *Business* + produk WhatsApp, nomor bisnis, System User
@@ -102,10 +102,20 @@ tagihan, buka link invoice dari ponsel lain.
   3. Webhook: Callback URL `https://app.kostera.id/api/webhook/whatsapp`, verify token =
      `WHATSAPP_VERIFY_TOKEN`, langganan field `messages`.
   4. Uji: chat nomor bisnis dari nomor owner yang sudah daftar → Kosta AI membalas.
-- **Midtrans (sandbox dulu):** Notification URL `https://app.kostera.id/api/webhook/pembayaran/midtrans`.
-  Status Lunas hanya dari notifikasi bertanda tangan dengan `status_code` 200 dan nominal cocok.
-  Pindah ke produksi: ganti server key produksi + `MIDTRANS_PRODUCTION=true`, jalankan lagi
-  `npm run cek:produksi`, perbarui Notification URL di dashboard produksi.
+- **Xendit (mode test dulu):**
+  1. Dashboard Xendit → xenPlatform → *Activate xenPlatform* (pilih kasus "membantu merchant menerima
+     pembayaran"). Uang penyewa masuk ke **sub-akun per kos**, bukan ke akun Kostera; biaya transaksi
+     dipotong dari saldo sub-akun (ditanggung owner).
+  2. Buat sub-akun untuk kos (verifikasi KYC oleh owner lewat undangan Xendit di mode live), atur
+     webhook sub-akun ke akun master, lalu sambungkan ID sub-akunnya di `/platform` → detail workspace.
+  3. Settings → Webhooks: URL **Payments** `https://app.kostera.id/api/webhook/pembayaran/xendit`;
+     salin *Webhook verification token* ke `XENDIT_WEBHOOK_TOKEN`.
+  4. Uji di mode test: buka link invoice → pilih VA/QRIS → simulasikan pembayaran dari dashboard Xendit
+     (atau `POST /v3/payment_requests/{id}/simulate`) → tagihan Lunas, penyewa & owner dapat WA.
+  5. Pindah ke uang sungguhan: ganti ke `xnd_production_…` + token webhook mode live, jalankan lagi
+     `npm run cek:produksi`, perbarui URL webhook di dashboard live.
+  Status Lunas hanya bila token webhook cocok, transaksinya dibuat Kostera, dan status + nominalnya
+  dibaca ulang dari API Xendit atas nama sub-akun kos.
 - **Cron:** setelah WA & pembayaran terverifikasi, isi `CRON_SECRET` lalu redeploy. Vercel Cron
   mengirim header `Authorization: Bearer <CRON_SECRET>` otomatis (jadwal di `vercel.json`).
 

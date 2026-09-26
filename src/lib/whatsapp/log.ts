@@ -4,7 +4,15 @@
 import { schema, type Db } from "../../db/index.ts";
 import { kirimAman, type HasilKirim, type PengirimWhatsApp, type PesanWhatsApp } from "./index.ts";
 
-export type JenisPesanWa = "pengingat" | "tagihan" | "konfirmasi_lunas" | "perlu_review" | "kosta" | "otp" | "tiket";
+export type JenisPesanWa =
+  | "pengingat"
+  | "tagihan"
+  | "konfirmasi_lunas"
+  | "pembayaran_masuk"
+  | "perlu_review"
+  | "kosta"
+  | "otp"
+  | "tiket";
 
 export type KonteksKirimWa = {
   jenis: JenisPesanWa;

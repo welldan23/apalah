@@ -41,7 +41,7 @@ describe("getPerluReview", () => {
       invoiceId: "inv_2026-09_A03",
       nominalDibayar: 500_000,
       metode: "VA BCA",
-      provider: "midtrans",
+      provider: "xendit",
       referensiProvider: "uji-pending-review",
       status: "pending",
     });
