@@ -347,9 +347,13 @@ async function jalankanReminder(
   if (masih.length === 0) return "Semua tagihan di preview sudah dibayar, jadi tidak ada pengingat yang dikirim.";
 
   const hasil = await kirimReminder(db, organizationId, { invoiceIds: masih.map((m) => m.id) }, wa, { baseUrl });
+  const gagalSungguhan = hasil.gagal.filter((k) => !hasil.ditahan.includes(k));
   return [
     hasil.terkirim || hasil.gagal.length ? `Pengingat terkirim ke ${hasil.terkirim} penyewa.` : "Tidak ada pengingat yang dikirim.",
-    hasil.gagal.length ? `Gagal ke kamar ${hasil.gagal.join(", ")}.` : "",
+    hasil.ditahan.length
+      ? `Mode pilot: pengingat ke kamar ${hasil.ditahan.join(", ")} ditahan karena nomornya di luar daftar uji, jadi tidak ada pesan yang sampai ke penyewa itu.`
+      : "",
+    gagalSungguhan.length ? `Gagal ke kamar ${gagalSungguhan.join(", ")}.` : "",
     dilewati ? `${dilewati} tagihan dilewati karena sudah dibayar.` : "",
     hasil.dilewati.length
       ? `Kamar ${hasil.dilewati.join(", ")} dilewati karena penyewanya sudah dihubungi dalam 24 jam terakhir.`

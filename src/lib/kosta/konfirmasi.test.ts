@@ -8,7 +8,7 @@ import * as schema from "../../db/schema.ts";
 import { isiDataContoh } from "../../db/seed.ts";
 import { buatDbUji } from "../../db/testing.ts";
 import { GalatAksi } from "../aksi/galat.ts";
-import type { PengirimWhatsApp, PesanWhatsApp } from "../whatsapp/index.ts";
+import { GALAT_DI_LUAR_DAFTAR_UJI, type PengirimWhatsApp, type PesanWhatsApp } from "../whatsapp/index.ts";
 import { siapkanDraftReminder } from "./draft.ts";
 import { ALAT, parseCepat } from "./intent.ts";
 import { kedaluwarsakanDraftDanCatat, putuskanDraftDariDashboard } from "./keputusan.ts";
@@ -27,10 +27,13 @@ describe("Kosta: konfirmasi aksi dengan kode, kedaluwarsa, dan batas status baya
   let db: Db;
   let tutup: () => Promise<void>;
   const terkirim: PesanWhatsApp[] = [];
+  /** Meniru pilot WAHA: hanya nomor owner di daftar uji, pesan ke penyewa ditahan. */
+  let modePilot = false;
   const wa: PengirimWhatsApp = {
     provider: "uji",
     simulasi: false,
     async kirim(pesan) {
+      if (modePilot && pesan.ke !== OWNER) return { ok: false, galat: GALAT_DI_LUAR_DAFTAR_UJI };
       terkirim.push(pesan);
       return { ok: true };
     },
@@ -55,6 +58,7 @@ describe("Kosta: konfirmasi aksi dengan kode, kedaluwarsa, dan batas status baya
     ({ db, tutup } = await buatDbUji());
     await isiDataContoh(db);
     terkirim.length = 0;
+    modePilot = false;
   });
   afterEach(() => tutup());
 
@@ -95,6 +99,15 @@ describe("Kosta: konfirmasi aksi dengan kode, kedaluwarsa, dan batas status baya
     assert.equal(ulang.balasan.teks, `Aksi ${kode} sudah dijalankan sebelumnya, jadi tidak dijalankan lagi.`);
     assert.equal(kePenyewa(), 3);
     assert.deepEqual([ulang.audit.hasil, ulang.audit.statusKonfirmasi], ["ditolak", "dijalankan"]);
+  });
+
+  it("mode pilot: YA + kode → pengingat ke penyewa ditahan, owner diberi tahu jelas (bukan sekadar gagal)", async () => {
+    modePilot = true;
+    const { balasan } = await chat(`YA ${kodeAksi(DRAFT_CONTOH)}`);
+    assert.equal(kePenyewa(), 0);
+    assert.match(balasan.teks, /^Pengingat terkirim ke 0 penyewa\. Mode pilot: pengingat ke kamar .+ ditahan karena nomornya di luar daftar uji/);
+    assert.doesNotMatch(balasan.teks, /Gagal ke kamar/);
+    assert.equal(await statusDraft(DRAFT_CONTOH), "dijalankan");
   });
 
   it("kode aksi dari percakapan/kos lain tidak cocok", async () => {

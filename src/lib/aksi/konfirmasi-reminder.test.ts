@@ -57,6 +57,7 @@ describe("konfirmasi kirim reminder massal", () => {
     assert.deepEqual(await kirimReminder(db, ORG, { invoiceIds: IDS }, wa, opsi()), {
       terkirim: 2,
       gagal: [],
+      ditahan: [],
       dilewati: ["B06"],
       simulasi: false,
     });

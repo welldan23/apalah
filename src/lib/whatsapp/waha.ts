@@ -1,6 +1,7 @@
 // Adapter WAHA (WhatsApp HTTP API, self-hosted) — untuk lokal, sandbox, dan pilot.
 // Kirim teks: POST {url}/api/sendText { session, chatId: "628…@c.us", text } dengan header X-Api-Key.
 
+import { GALAT_DI_LUAR_DAFTAR_UJI } from "./galat.ts";
 import type { PengirimWhatsApp } from "./index.ts";
 
 export type KonfigurasiWaha = {
@@ -29,7 +30,7 @@ export function buatPengirimWaha({
     simulasi: false,
     async kirim({ ke, teks }) {
       if (nomorUji && !nomorUji.includes(ke)) {
-        return { ok: false, galat: "Nomor di luar daftar uji sandbox." };
+        return { ok: false, galat: GALAT_DI_LUAR_DAFTAR_UJI };
       }
       try {
         const res = await ambil(alamat, {

@@ -3,6 +3,7 @@
 // Pesan yang dimulai bisnis (tagihan, pengingat) wajib template yang sudah disetujui; teks bebas
 // hanya sampai bila penerima mengirim pesan dalam 24 jam terakhir (mis. balasan Kosta ke owner).
 
+import { GALAT_DI_LUAR_DAFTAR_UJI } from "./galat.ts";
 import type { PengirimWhatsApp, TemplateWhatsApp } from "./index.ts";
 
 export type KonfigurasiMeta = {
@@ -47,7 +48,7 @@ export function buatPengirimMeta({
     simulasi: false,
     async kirim({ ke, teks, template }) {
       if (nomorUji && !nomorUji.includes(ke)) {
-        return { ok: false, galat: "Nomor di luar daftar uji sandbox." };
+        return { ok: false, galat: GALAT_DI_LUAR_DAFTAR_UJI };
       }
       const isi = template ? isiTemplate(template) : { type: "text", text: { body: teks, preview_url: true } };
       try {

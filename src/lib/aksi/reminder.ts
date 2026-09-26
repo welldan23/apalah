@@ -10,7 +10,7 @@ import { schema, type Db } from "../../db/index.ts";
 import { kontakPenyewa } from "../data/reminder.ts";
 import { GALAT_TERPUTUS, JEDA_PENGINGAT_JAM } from "../reminder.ts";
 import { hariIniWib } from "../waktu.ts";
-import type { PengirimWhatsApp } from "../whatsapp/index.ts";
+import { kirimanDitahan, type PengirimWhatsApp } from "../whatsapp/index.ts";
 import { kirimDanCatat } from "../whatsapp/log.ts";
 import { GalatAksi } from "./galat.ts";
 import { susunPesanReminder, type PesanReminder } from "./pesan-reminder.ts";
@@ -23,6 +23,8 @@ export type HasilKirimReminder = {
   terkirim: number;
   /** Nomor kamar yang gagal dikirimi. */
   gagal: string[];
+  /** Bagian dari `gagal` yang sengaja ditahan pengaman pilot (nomor di luar WHATSAPP_NOMOR_UJI). */
+  ditahan: string[];
   /** Nomor kamar yang tidak dikirimi karena penyewanya sudah dihubungi dalam 24 jam terakhir. */
   dilewati: string[];
   /** true bila provider WhatsApp masih mode pengembangan (pesan tidak benar-benar terkirim). */
@@ -91,7 +93,7 @@ export async function kirimReminder(
   });
 
   // Dikirim satu per satu supaya tidak membanjiri provider WhatsApp; hasilnya menimpa klaim.
-  const hasil: { p: PesanReminder; ok: boolean }[] = [];
+  const hasil: { p: PesanReminder; ok: boolean; ditahan: boolean }[] = [];
   for (const { p, id } of diklaim) {
     const kirim = await kirimDanCatat(
       db,
@@ -103,12 +105,13 @@ export async function kirimReminder(
       .update(reminders)
       .set({ status: kirim.ok ? "terkirim" : "gagal", galat: kirim.ok ? null : kirim.galat })
       .where(eq(reminders.id, id));
-    hasil.push({ p, ok: kirim.ok });
+    hasil.push({ p, ok: kirim.ok, ditahan: !kirim.ok && kirimanDitahan(kirim.galat) });
   }
 
   return {
     terkirim: hasil.filter((h) => h.ok).length,
     gagal: hasil.filter((h) => !h.ok).map((h) => h.p.nomorKamar),
+    ditahan: hasil.filter((h) => h.ditahan).map((h) => h.p.nomorKamar),
     dilewati: dilewati.map((p) => p.nomorKamar),
     simulasi: wa.simulasi,
   };

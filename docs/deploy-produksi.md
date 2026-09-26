@@ -39,7 +39,8 @@ Variables, tipe *Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
 | `LANDING_URL` | ya | `https://kostera.id` — kosongkan bila semua masih di satu domain (mis. `*.vercel.app`) |
 | `BETTER_AUTH_SECRET` | ya | acak ≥ 32 karakter (`openssl rand -base64 32`) |
 | `BETTER_AUTH_URL` | tidak | kosongkan, atau sama persis dengan `APP_URL` |
-| `WHATSAPP_PROVIDER` | ya | `meta` — **bukan** `waha`/`log` |
+| `WHATSAPP_PROVIDER` | ya | `meta` — **bukan** `waha`/`log` (kecuali pilot WAHA, lihat bagian 6a) |
+| `KOSTERA_MODE` | — | kosong = produksi penuh; `pilot` hanya untuk pilot WAHA internal |
 | `META_WA_TOKEN`, `META_WA_PHONE_NUMBER_ID` | ya | System User token & Phone Number ID |
 | `WHATSAPP_WEBHOOK_SECRET` | ya* | App Secret Meta (HMAC webhook masuk) |
 | `WHATSAPP_VERIFY_TOKEN` | ya* | token verifikasi langganan webhook Meta |
@@ -107,6 +108,28 @@ tagihan, buka link invoice dari ponsel lain.
   `npm run cek:produksi`, perbarui Notification URL di dashboard produksi.
 - **Cron:** setelah WA & pembayaran terverifikasi, isi `CRON_SECRET` lalu redeploy. Vercel Cron
   mengirim header `Authorization: Bearer <CRON_SECRET>` otomatis (jadwal di `vercel.json`).
+
+## 6a. Pilot WAHA (sementara, khusus owner)
+
+Selama akun Meta & template belum siap, Kosta AI bisa dipilot lewat WAHA (WhatsApp HTTP API,
+self-hosted, **tidak resmi**). Aturannya ketat supaya tidak ada pesan nyasar ke penyewa sungguhan:
+
+- **Hanya nomor di `WHATSAPP_NOMOR_UJI` yang dikirimi** — termasuk OTP, jadi hanya owner pilot yang
+  bisa daftar/masuk. Tagihan & pengingat ke penyewa **ditahan** (tercatat gagal "di luar daftar uji").
+- **Pakai nomor WhatsApp khusus pilot**, bukan nomor pribadi/utama: nomor yang dipakai WAHA berisiko
+  diblokir WhatsApp.
+- **Server WAHA** (Docker di VPS) wajib di belakang HTTPS dan memakai API key; jangan buka port WAHA
+  langsung ke internet tanpa keduanya. Scan QR sekali dari HP nomor pilot.
+- **Webhook di WAHA:** URL `https://app.kostera.id/api/webhook/whatsapp`, event `message`, HMAC key =
+  `WHATSAPP_WEBHOOK_SECRET` (SHA-512). Tanpa HMAC yang cocok, pesan ditolak (401).
+- **Environment (Vercel):** `KOSTERA_MODE=pilot`, `WHATSAPP_PROVIDER=waha`, `WAHA_URL=https://…`,
+  `WAHA_API_KEY`, `WAHA_SESSION` (bawaan `default`), `WHATSAPP_NOMOR_UJI=628…,628…` (nomor owner
+  pilot), `WHATSAPP_WEBHOOK_SECRET`. **Jangan** isi `WAHA_IZINKAN_SEMUA_NOMOR`.
+- `npm run cek:produksi` dengan env di atas harus `✓ Tidak ada galat` (satu peringatan "Mode pilot").
+
+**Pindah ke produksi (Meta):** daftarkan template (`npm run meta:template -- daftar` sampai semuanya
+`APPROVED`), ganti `WHATSAPP_PROVIDER=meta` + variabel `META_*` + `WHATSAPP_VERIFY_TOKEN`, hapus
+`KOSTERA_MODE`, `WAHA_*`, dan `WHATSAPP_NOMOR_UJI`, jalankan `cek:produksi`, lalu deploy ulang.
 
 ## 7. Operasional
 

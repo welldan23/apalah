@@ -9,6 +9,7 @@
 //   META_WA_API_VERSION opsional); pesan yang dimulai bisnis dikirim sebagai template.
 
 import { normalisasiNomorWa } from "../nomor-wa.ts";
+import { GALAT_DI_LUAR_DAFTAR_UJI } from "./galat.ts";
 import { buatPengirimMeta } from "./meta.ts";
 import { buatPengirimWaha } from "./waha.ts";
 
@@ -61,6 +62,11 @@ export async function kirimAman(wa: PengirimWhatsApp, pesan: PesanWhatsApp): Pro
 }
 
 type Env = Partial<Record<string, string>>;
+
+export { GALAT_DI_LUAR_DAFTAR_UJI };
+
+/** true bila kiriman gagal karena sengaja ditahan pengaman pilot, bukan karena gangguan. */
+export const kirimanDitahan = (galat: string) => galat === GALAT_DI_LUAR_DAFTAR_UJI || galat === GALAT_WAHA_TANPA_DAFTAR;
 
 export const GALAT_WAHA_TANPA_DAFTAR =
   "Kiriman WAHA ditahan: isi WHATSAPP_NOMOR_UJI (nomor pilot yang boleh dikirimi), atau set WAHA_IZINKAN_SEMUA_NOMOR=true bila memang disengaja.";

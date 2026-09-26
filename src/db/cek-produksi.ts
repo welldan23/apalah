@@ -11,18 +11,20 @@ import { inArray, like, sql } from "drizzle-orm";
 
 import { mockOrganization } from "../lib/mock/kos-melati.ts";
 import { mockWorkspaceLain } from "../lib/mock/kosta.ts";
+import { normalisasiNomorWa } from "../lib/nomor-wa.ts";
 import { getDb, tutupDb, schema, type Db } from "./index.ts";
 
 type Env = Partial<Record<string, string>>;
 export type HasilCek = { galat: string[]; peringatan: string[] };
 
-const originDari = (url: string | undefined) => {
+const urlAtauNull = (url: string | undefined) => {
   try {
-    return url ? new URL(url).origin : null;
+    return url ? new URL(url) : null;
   } catch {
     return null;
   }
 };
+const originDari = (url: string | undefined) => urlAtauNull(url)?.origin ?? null;
 
 /** Cek environment produksi tanpa membaca database. */
 export function periksaEnvProduksi(env: Env): HasilCek {
@@ -43,19 +45,42 @@ export function periksaEnvProduksi(env: Env): HasilCek {
     galat.push("BETTER_AUTH_URL harus sama dengan APP_URL (atau dikosongkan), kalau tidak login ditolak.");
   }
 
+  // KOSTERA_MODE=pilot: pilot internal lewat WAHA, khusus nomor owner di WHATSAPP_NOMOR_UJI.
+  // Kosong = produksi penuh (wajib Meta Cloud API).
+  const modePilot = env.KOSTERA_MODE === "pilot";
+  if (env.KOSTERA_MODE && !modePilot) galat.push('KOSTERA_MODE hanya boleh "pilot" atau dikosongkan (produksi).');
   const provider = env.WHATSAPP_PROVIDER || "log";
-  if (provider === "waha") galat.push("WHATSAPP_PROVIDER=waha tidak boleh di produksi — WAHA hanya untuk sandbox/pilot internal.");
-  else if (provider !== "meta") galat.push(`WHATSAPP_PROVIDER=${provider}: produksi wajib "meta" (WhatsApp Cloud API); selain itu OTP & pesan tidak terkirim.`);
+  if (provider === "waha" && !modePilot) {
+    galat.push("WHATSAPP_PROVIDER=waha tidak boleh di produksi — WAHA hanya untuk pilot internal (KOSTERA_MODE=pilot).");
+  } else if (provider === "waha") {
+    peringatan.push(
+      "Mode pilot WAHA: hanya nomor di WHATSAPP_NOMOR_UJI yang dikirimi (OTP & Kosta AI); pesan ke penyewa ditahan. Pindah ke Meta untuk produksi.",
+    );
+    if (!(env.WHATSAPP_NOMOR_UJI ?? "").split(",").some((n) => normalisasiNomorWa(n))) {
+      galat.push("Mode pilot wajib WHATSAPP_NOMOR_UJI: nomor WA owner pilot (format 628…, dipisah koma).");
+    }
+    const waha = urlAtauNull(env.WAHA_URL);
+    const lokal = ["localhost", "127.0.0.1", "[::1]"].includes(waha?.hostname ?? "");
+    if (!waha || (waha.protocol !== "https:" && !(waha.protocol === "http:" && lokal))) {
+      galat.push("WAHA_URL wajib alamat https (http hanya boleh untuk localhost di server yang sama).");
+    }
+    if (!env.WAHA_API_KEY) galat.push("WAHA_API_KEY wajib — tanpa itu siapa pun bisa memakai sesi WhatsApp di server WAHA.");
+  } else if (provider !== "meta") {
+    galat.push(`WHATSAPP_PROVIDER=${provider}: produksi wajib "meta" (WhatsApp Cloud API); selain itu OTP & pesan tidak terkirim.`);
+  }
   if (provider === "meta" && (!env.META_WA_TOKEN || !env.META_WA_PHONE_NUMBER_ID)) {
     galat.push("META_WA_TOKEN dan META_WA_PHONE_NUMBER_ID wajib diisi untuk WhatsApp Cloud API.");
   }
-  if (env.WAHA_IZINKAN_SEMUA_NOMOR === "true") galat.push("WAHA_IZINKAN_SEMUA_NOMOR=true tidak boleh di produksi.");
-  if (env.WAHA_URL || env.WAHA_API_KEY) peringatan.push("Variabel WAHA_* terisi padahal tidak dipakai di produksi — sebaiknya dihapus.");
+  if (env.WAHA_IZINKAN_SEMUA_NOMOR === "true") galat.push("WAHA_IZINKAN_SEMUA_NOMOR=true tidak boleh di produksi maupun pilot.");
+  if (provider !== "waha" && (env.WAHA_URL || env.WAHA_API_KEY)) {
+    peringatan.push("Variabel WAHA_* terisi padahal tidak dipakai di produksi — sebaiknya dihapus.");
+  }
   if (provider === "meta" && env.WHATSAPP_NOMOR_UJI) {
     peringatan.push("WHATSAPP_NOMOR_UJI terisi: pesan hanya dikirim ke nomor uji itu, penyewa lain tidak menerima apa pun.");
   }
-  if (!env.WHATSAPP_WEBHOOK_SECRET) peringatan.push("WHATSAPP_WEBHOOK_SECRET kosong: webhook WhatsApp masuk menolak semua, Kosta AI via WhatsApp tidak aktif.");
-  if (provider === "meta" && !env.WHATSAPP_VERIFY_TOKEN) peringatan.push("WHATSAPP_VERIFY_TOKEN kosong: langganan webhook Meta tidak bisa diverifikasi.");
+  // WhatsApp first: tanpa ini Kosta AI tidak bisa menerima chat sama sekali.
+  if (!env.WHATSAPP_WEBHOOK_SECRET) galat.push("WHATSAPP_WEBHOOK_SECRET wajib: tanpa itu webhook WhatsApp menolak semua dan Kosta AI tidak menerima chat.");
+  if (provider === "meta" && !env.WHATSAPP_VERIFY_TOKEN) galat.push("WHATSAPP_VERIFY_TOKEN wajib: tanpa itu langganan webhook Meta tidak bisa diverifikasi.");
 
   if (!env.CRON_SECRET) peringatan.push("CRON_SECRET kosong: semua /api/cron/* menolak (401) — tagihan terjadwal & pengingat otomatis tidak jalan.");
   else if (env.CRON_SECRET.length < 32) galat.push("CRON_SECRET terlalu pendek, minimal 32 karakter acak.");

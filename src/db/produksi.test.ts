@@ -37,7 +37,7 @@ describe("cek:produksi", () => {
   it("menolak PGlite, WAHA, provider log, http, secret pendek, dan kunci Midtrans yang tidak cocok dengan modenya", () => {
     const galat = (env: Record<string, string | undefined>) => periksaEnvProduksi({ ...ENV_SEHAT, ...env }).galat.join("\n");
     assert.match(galat({ DATABASE_URL: undefined }), /DATABASE_URL/);
-    assert.match(galat({ WHATSAPP_PROVIDER: "waha" }), /WAHA hanya untuk sandbox/);
+    assert.match(galat({ WHATSAPP_PROVIDER: "waha" }), /WAHA hanya untuk pilot internal/);
     assert.match(galat({ WHATSAPP_PROVIDER: undefined }), /wajib "meta"/);
     assert.match(galat({ META_WA_TOKEN: undefined }), /META_WA_TOKEN/);
     assert.match(galat({ WAHA_IZINKAN_SEMUA_NOMOR: "true" }), /WAHA_IZINKAN_SEMUA_NOMOR/);
@@ -53,11 +53,46 @@ describe("cek:produksi", () => {
     assert.equal(galat({ MIDTRANS_SERVER_KEY: "Mid-server-uji", MIDTRANS_PRODUCTION: "true" }), "");
   });
 
-  it("yang belum disiapkan (cron, Midtrans, webhook WA, LLM) jadi peringatan, bukan galat", () => {
-    const hasil = periksaEnvProduksi({ ...ENV_SEHAT, CRON_SECRET: undefined, MIDTRANS_SERVER_KEY: undefined, WHATSAPP_WEBHOOK_SECRET: undefined, LLM_API_KEY: undefined });
+  it("yang belum disiapkan (cron, Midtrans, LLM) jadi peringatan, bukan galat", () => {
+    const hasil = periksaEnvProduksi({ ...ENV_SEHAT, CRON_SECRET: undefined, MIDTRANS_SERVER_KEY: undefined, LLM_API_KEY: undefined });
     assert.deepEqual(hasil.galat, []);
-    assert.equal(hasil.peringatan.length, 4);
+    assert.equal(hasil.peringatan.length, 3);
     assert.match(hasil.peringatan.join("\n"), /cron.*401/);
+  });
+
+  it("WhatsApp first: webhook WhatsApp tanpa secret / verify token Meta = galat, bukan sekadar peringatan", () => {
+    assert.match(periksaEnvProduksi({ ...ENV_SEHAT, WHATSAPP_WEBHOOK_SECRET: undefined }).galat.join("\n"), /WHATSAPP_WEBHOOK_SECRET wajib/);
+    assert.match(periksaEnvProduksi({ ...ENV_SEHAT, WHATSAPP_VERIFY_TOKEN: undefined }).galat.join("\n"), /WHATSAPP_VERIFY_TOKEN wajib/);
+  });
+
+  it("mode pilot WAHA: boleh hanya dengan KOSTERA_MODE=pilot, daftar nomor owner, API key, dan https", () => {
+    const pilot = {
+      ...ENV_SEHAT,
+      KOSTERA_MODE: "pilot",
+      WHATSAPP_PROVIDER: "waha",
+      WAHA_URL: "https://waha.contoh.id",
+      WAHA_API_KEY: "kunci-waha-uji-rahasia",
+      WHATSAPP_NOMOR_UJI: "0812-3456-7890, 6281377009900",
+      WHATSAPP_VERIFY_TOKEN: undefined,
+      META_WA_TOKEN: undefined,
+      META_WA_PHONE_NUMBER_ID: undefined,
+    };
+    const sehat = periksaEnvProduksi(pilot);
+    assert.deepEqual(sehat.galat, []);
+    assert.match(sehat.peringatan.join("\n"), /Mode pilot WAHA/);
+    assert.ok(!JSON.stringify(sehat).includes("kunci-waha-uji-rahasia"));
+
+    const galat = (env: Record<string, string | undefined>) => periksaEnvProduksi({ ...pilot, ...env }).galat.join("\n");
+    assert.match(galat({ KOSTERA_MODE: undefined }), /WAHA hanya untuk pilot internal/);
+    assert.match(galat({ KOSTERA_MODE: "demo" }), /KOSTERA_MODE hanya boleh/);
+    assert.match(galat({ WHATSAPP_NOMOR_UJI: undefined }), /wajib WHATSAPP_NOMOR_UJI/);
+    assert.match(galat({ WHATSAPP_NOMOR_UJI: "bukan-nomor" }), /wajib WHATSAPP_NOMOR_UJI/);
+    assert.match(galat({ WAHA_API_KEY: undefined }), /WAHA_API_KEY wajib/);
+    assert.match(galat({ WAHA_URL: "http://waha.contoh.id" }), /WAHA_URL wajib alamat https/);
+    assert.match(galat({ WAHA_URL: undefined }), /WAHA_URL wajib alamat https/);
+    assert.equal(galat({ WAHA_URL: "http://localhost:3000" }), "");
+    assert.match(galat({ WAHA_IZINKAN_SEMUA_NOMOR: "true" }), /WAHA_IZINKAN_SEMUA_NOMOR/);
+    assert.match(galat({ WHATSAPP_WEBHOOK_SECRET: undefined }), /WHATSAPP_WEBHOOK_SECRET wajib/);
   });
 
   it("data contoh di database terdeteksi", async () => {
