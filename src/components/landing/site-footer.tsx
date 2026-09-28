@@ -3,7 +3,7 @@ import { NAV_LANDING } from "@/components/landing/links";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t">
+    <footer className="border-t-2 border-foreground">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
           <KosteraLogo />
@@ -27,9 +27,7 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <p className="mx-auto max-w-6xl px-4 pb-8 text-xs text-muted-foreground sm:px-6">
-        © 2026 Kostera
-      </p>
+      <p className="mx-auto max-w-6xl px-4 pb-8 text-xs text-muted-foreground sm:px-6">© 2026 Kostera</p>
     </footer>
   );
 }

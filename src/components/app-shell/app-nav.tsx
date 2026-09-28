@@ -35,7 +35,7 @@ export function SidebarNav({ peran }: { peran: Peran }) {
             >
               <Icon className="size-4" />
               <span className="flex-1">{label}</span>
-              <span className="rounded-full border border-sidebar-border px-1.5 text-[0.65rem] font-medium">
+              <span className="rounded-sm border border-sidebar-border px-1 text-[0.65rem] font-medium">
                 Segera
               </span>
             </span>

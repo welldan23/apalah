@@ -43,17 +43,17 @@ export function StatusFilterChips({
             aria-pressed={aktif}
             onClick={() => onChange(value)}
             className={cn(
-              "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium sm:h-8 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-sm font-medium sm:h-8 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               aktif
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground",
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
             )}
           >
             {label}
             <span
               className={cn(
-                "rounded-full px-1.5 text-xs tabular-nums",
-                aktif ? "bg-primary-foreground/15" : "bg-card",
+                "font-mono text-xs",
+                aktif ? "text-background/70" : "text-muted-foreground",
                 !aktif && value === "jatuh_tempo" && jumlah(value) > 0 && "text-danger",
               )}
             >

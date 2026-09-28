@@ -65,19 +65,18 @@ export function BubblePesan({
     <li className={cn("flex", dariOwner ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-snug whitespace-pre-line shadow-xs sm:max-w-[70%]",
-          dariOwner
-            ? "rounded-br-sm bg-accent text-accent-foreground"
-            : "rounded-bl-sm bg-card text-card-foreground",
+          // Warna gelembung & latar mengikuti WhatsApp: percakapan ini sama dengan chat Kosta AI di WA.
+          "max-w-[85%] rounded-lg px-2.5 py-1.5 text-sm leading-snug whitespace-pre-line text-[#111b21] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] sm:max-w-[70%]",
+          dariOwner ? "rounded-tr-none bg-[#d9fdd3]" : "rounded-tl-none bg-white",
           pesan.lampiran && "w-72 max-w-[90%] sm:w-80",
         )}
       >
         <span className="sr-only">{dariOwner ? "Kamu: " : "Kosta AI: "}</span>
         {pesan.teks}
         {pesan.lampiran && <Lampiran lampiran={pesan.lampiran} onPutuskan={onPutuskan} />}
-        <span className="mt-1 flex items-center justify-end gap-1 text-[0.7rem] text-muted-foreground">
+        <span className="mt-0.5 flex items-center justify-end gap-1 text-[0.7rem] text-[#667781]">
           <time dateTime={pesan.waktu}>{formatJam(pesan.waktu)}</time>
-          {dariOwner && <CheckCheck className="size-3.5 text-primary" aria-label="Terkirim" />}
+          {dariOwner && <CheckCheck className="size-3.5 text-[#53bdeb]" aria-label="Terkirim" />}
         </span>
       </div>
     </li>

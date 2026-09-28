@@ -24,26 +24,21 @@ export default async function DashboardPage() {
     getDashboardData(),
     getKontrolKosta(await getDb(), { organizationId: session.organization.id, userId: session.user.id }),
   ]);
-  const namaDepan = data.owner.nama.split(" ")[0];
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 lg:gap-6">
       <div className="grid min-w-0 gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <header className="lg:col-start-1 lg:row-start-1">
           <p className="text-sm text-muted-foreground">{formatHari(data.hariIni)}</p>
-          <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">
-            Halo, {namaDepan}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ini kondisi {data.organization.namaKos} hari ini.
-          </p>
+          <h1 className="mt-0.5 text-3xl font-semibold tracking-[-0.02em]">{data.organization.namaKos}</h1>
+          {data.organization.alamat && <p className="mt-1 text-sm text-muted-foreground">{data.organization.alamat}</p>}
         </header>
 
         <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-2 lg:row-start-2">
+          <KosOverview data={data} />
           <BannerPerluReview items={data.perluReview} />
           <BannerTiket jumlah={data.tiket} />
           <KontrolKosta data={kosta} />
-          <KosOverview data={data} />
         </div>
 
         <div className="order-3 lg:order-none lg:col-start-2 lg:row-start-1">

@@ -35,7 +35,7 @@ export function KartuKamar({
         <span className="text-lg font-semibold tabular-nums">{kamar.nomorKamar}</span>
         <span
           className={cn(
-            "inline-flex h-5 items-center rounded-full px-2 text-xs font-medium",
+            "inline-flex h-5 items-center rounded-sm px-1.5 text-xs font-medium",
             kosong ? "bg-warning-soft text-warning" : "bg-accent text-accent-foreground",
           )}
         >

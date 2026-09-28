@@ -38,7 +38,7 @@ export default async function BayarTagihanPage({ params }: PageProps<"/invoice/[
         Rincian tagihan
       </Link>
 
-      <section className="rounded-2xl border bg-card p-5">
+      <section className="rounded-lg border bg-card p-5">
         <p className="text-sm text-muted-foreground">
           {inv.namaKos} · Kamar {inv.nomorKamar} · {formatPeriode(inv.periode)}
         </p>

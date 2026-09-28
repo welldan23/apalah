@@ -44,7 +44,7 @@ export function PilihWorkspace({ workspaces, aktifId }: { workspaces: WorkspaceR
                 disabled={memilih !== undefined}
                 aria-current={aktif ? "true" : undefined}
                 className={cn(
-                  "flex min-h-16 w-full items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none hover:border-primary/40 hover:bg-accent/30 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
+                  "flex min-h-16 w-full items-center gap-3 rounded-lg border bg-card p-3.5 text-left transition-colors outline-none hover:border-primary/40 hover:bg-accent/30 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
                   aktif && "border-primary/50",
                   memilih === ws.id && "border-primary bg-accent/40 disabled:opacity-100",
                 )}
@@ -75,7 +75,7 @@ export function PilihWorkspace({ workspaces, aktifId }: { workspaces: WorkspaceR
 
       <Link
         href="/kamar/tambah"
-        className="flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-dashed text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+        className="flex min-h-14 items-center justify-center gap-2 rounded-lg border border-dashed text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
       >
         <Plus className="size-4" aria-hidden="true" />
         Daftarkan kos baru

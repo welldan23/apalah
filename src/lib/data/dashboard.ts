@@ -34,7 +34,6 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   return {
     organization: ringkasan.organization,
-    owner: session.user,
     hariIni,
     periode,
     kamar: ringkasan.kamar,

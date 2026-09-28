@@ -79,7 +79,7 @@ export function PembayaranTagihan({
   }
 
   return (
-    <section aria-labelledby="metode-judul" className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
+    <section aria-labelledby="metode-judul" className="flex flex-col gap-4 rounded-lg border bg-card p-5">
       <h2 id="metode-judul" className="font-semibold">
         Pilih cara bayar
       </h2>
@@ -104,7 +104,7 @@ export function PembayaranTagihan({
                 <span className="flex items-center gap-2 text-sm font-medium">
                   {m.label}
                   {m.jenis === "qris" && (
-                    <span className="rounded-full bg-success-soft px-2 py-0.5 text-[0.7rem] font-medium text-success">
+                    <span className="rounded-sm border border-success/40 px-1.5 py-px text-[0.7rem] font-medium text-success">
                       Paling cepat
                     </span>
                   )}
@@ -192,7 +192,7 @@ function InstruksiPembayaran({
   }
 
   return (
-    <section aria-labelledby="instruksi-judul" className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
+    <section aria-labelledby="instruksi-judul" className="flex flex-col gap-4 rounded-lg border bg-card p-5">
       <div>
         <h2 id="instruksi-judul" className="font-semibold">
           {metode.label}
@@ -303,7 +303,7 @@ function KonfirmasiPembayaran({
 }) {
   const lunas = status === "lunas";
   return (
-    <section aria-live="polite" className="flex flex-col items-center gap-4 rounded-2xl border bg-card px-5 py-8 text-center">
+    <section aria-live="polite" className="flex flex-col items-center gap-4 rounded-lg border bg-card px-5 py-8 text-center">
       <span
         className={cn(
           "grid size-14 place-items-center rounded-full",

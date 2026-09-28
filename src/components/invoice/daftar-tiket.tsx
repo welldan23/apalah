@@ -17,7 +17,7 @@ const BADGE = {
 export function DaftarTiket({ token, tiket }: { token: string; tiket: TiketPenyewa[] }) {
   if (tiket.length === 0) {
     return (
-      <section className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-5 py-10 text-center">
+      <section className="flex flex-col items-center gap-3 rounded-lg border bg-card px-5 py-10 text-center">
         <p className="font-medium">Belum ada tiket</p>
         <p className="text-sm text-muted-foreground">Laporkan kerusakan atau keluhan, nanti statusnya bisa dipantau di sini.</p>
         <Button asChild size="lg" className="mt-1 h-11">
@@ -34,7 +34,7 @@ export function DaftarTiket({ token, tiket }: { token: string; tiket: TiketPenye
         const badge = BADGE[t.status];
         return (
           <li key={t.id}>
-            <article aria-labelledby={`tiket-${t.id}`} className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
+            <article aria-labelledby={`tiket-${t.id}`} className="flex flex-col gap-3 rounded-lg border bg-card p-4">
               <header className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 id={`tiket-${t.id}`} className="font-medium">

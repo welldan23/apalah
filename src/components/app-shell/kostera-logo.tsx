@@ -1,34 +1,25 @@
 import { cn } from "@/lib/utils";
 
+/** Tanda Kostera: gantungan kunci kamar kos (berlubang, huruf K) + wordmark huruf kecil. */
 export function KosteraLogo({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <svg
-        viewBox="0 0 32 32"
-        aria-hidden="true"
-        className="size-7 shrink-0"
-      >
-        <rect width="32" height="32" rx="9" className="fill-primary" />
+      <svg viewBox="0 0 22 30" aria-hidden="true" className="h-7 w-auto shrink-0">
         <path
-          d="M8 15.5 16 9l8 6.5"
+          fillRule="evenodd"
+          className="fill-primary"
+          d="M5 1h12a4 4 0 0 1 4 4v19.5L11 29 1 24.5V5a4 4 0 0 1 4-4Zm6 3.6a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8Z"
+        />
+        <path
+          d="M7.5 13v10M14.5 13l-5.6 5 5.6 5"
           fill="none"
-          strokeWidth="2.4"
+          strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="stroke-accent"
+          className="stroke-primary-foreground"
         />
-        <path
-          d="M11 14.5V23h10v-8.5"
-          fill="none"
-          strokeWidth="2.4"
-          strokeLinejoin="round"
-          className="stroke-accent"
-        />
-        <rect x="14.5" y="17.5" width="3" height="5.5" rx="1" className="fill-accent" />
       </svg>
-      <span className="text-[1.05rem] font-semibold tracking-tight text-foreground">
-        Kostera
-      </span>
+      <span className="text-[1.15rem] leading-none font-semibold tracking-[-0.01em] text-foreground">kostera</span>
     </span>
   );
 }

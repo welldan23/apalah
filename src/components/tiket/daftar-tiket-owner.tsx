@@ -97,15 +97,15 @@ export function DaftarTiketOwner({ tiket: awal }: { tiket: TiketKos[] }) {
               aria-pressed={aktif}
               onClick={() => saring(s)}
               className={cn(
-                "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                aktif ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
+                "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                aktif ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
               )}
             >
               {s === "semua" ? "Semua" : LABEL_STATUS_TIKET[s]}
               <span
                 className={cn(
-                  "rounded-full px-1.5 text-xs tabular-nums",
-                  aktif ? "bg-primary-foreground/15" : "bg-card",
+                  "font-mono text-xs",
+                  aktif ? "text-background/70" : "text-muted-foreground",
                   !aktif && s === "baru" && n > 0 && "text-danger",
                 )}
               >
@@ -140,7 +140,7 @@ export function DaftarTiketOwner({ tiket: awal }: { tiket: TiketKos[] }) {
             const pesanWa = `Halo ${t.namaPenghuni.split(" ")[0]}, soal tiket ${t.nomor} (${labelKategori(t.kategori).toLowerCase()}) di kamar ${t.nomorKamar}: `;
             return (
               <li key={t.id}>
-                <article aria-labelledby={`tiket-${t.id}`} className="flex h-full flex-col gap-3 rounded-2xl border bg-card p-4">
+                <article aria-labelledby={`tiket-${t.id}`} className="flex h-full flex-col gap-3 rounded-lg border bg-card p-4">
                   <header className="flex items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-xs font-semibold tabular-nums">
                       {t.nomorKamar}

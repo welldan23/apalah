@@ -98,8 +98,9 @@ export function DaftarPembayaran({
 
   return (
     <>
-      <div role="group" aria-label="Saring per status" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {RINGKASAN.map(({ status, label }) => {
+      {/* Satu strip bergaris (bukan kartu terpisah); tiap sel sekaligus tombol saring. */}
+      <div role="group" aria-label="Saring per status" className="grid grid-cols-2 overflow-hidden rounded-lg border bg-card lg:grid-cols-4">
+        {RINGKASAN.map(({ status, label }, i) => {
           const baris = sumberUntuk(status);
           const nominal = baris.reduce((total, t) => total + t.nominal, 0);
           const aktif = filter === status;
@@ -111,16 +112,19 @@ export function DaftarPembayaran({
               aria-pressed={aktif}
               onClick={() => gantiFilter(aktif ? "semua" : status)}
               className={cn(
-                "flex flex-col gap-1 rounded-xl border bg-card p-3.5 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
-                aktif && "border-primary/60 ring-1 ring-primary/40",
-                perhatian && !aktif && "border-warning/50 bg-warning-soft/60",
+                "flex flex-col gap-1 p-4 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+                i % 2 === 1 && "border-l",
+                i >= 2 && "border-t lg:border-t-0",
+                i === 2 && "lg:border-l",
+                perhatian && "bg-warning-soft/60",
+                aktif && "bg-muted shadow-[inset_0_3px_0_var(--color-foreground)]",
               )}
             >
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <span aria-hidden="true" className={cn("size-2 rounded-full", TONE_DOT[toneStatusInvoice(status)])} />
                 {label}
               </span>
-              <span className="text-2xl font-semibold tabular-nums">{baris.length}</span>
+              <span className="text-3xl font-semibold tracking-[-0.02em]">{baris.length}</span>
               <span className="text-xs text-muted-foreground tabular-nums">
                 {formatRupiahSingkat(nominal)}
                 {status === "perlu_review" && " · semua periode"}

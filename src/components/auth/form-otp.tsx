@@ -99,7 +99,7 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
 
   if (status === "berhasil") {
     return (
-      <section aria-live="polite" className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-4 py-8 text-center">
+      <section aria-live="polite" className="flex flex-col items-center gap-3 rounded-lg border bg-card px-4 py-8 text-center">
         <span className="grid size-12 place-items-center rounded-full bg-success-soft text-success">
           <CircleCheck className="size-6" aria-hidden="true" />
         </span>
@@ -118,7 +118,7 @@ export function FormOtp({ nomorWa }: { nomorWa: string }) {
         e.preventDefault();
         void periksa(kode);
       }}
-      className="flex flex-col gap-4 rounded-2xl border bg-card p-4 sm:p-6"
+      className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-6"
     >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="kode-otp">Kode verifikasi</Label>

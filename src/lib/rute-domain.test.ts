@@ -35,7 +35,7 @@ describe("pembagian domain landing & aplikasi", () => {
     for (const path of ["daftar", "masuk", "dashboard", "invoice/abc123", "api/webhook/whatsapp", "app/"]) {
       assert.equal(dialihkan(landing.source, path), true, path);
     }
-    for (const path of ["_next/static/chunks/a.js", "_next/image", "api/landing/konten", "favicon.ico", "robots.txt", "sitemap.xml"]) {
+    for (const path of ["_next/static/chunks/a.js", "_next/image", "api/landing/konten", "icon.svg", "robots.txt", "sitemap.xml"]) {
       assert.equal(dialihkan(landing.source, path), false, path);
     }
   });

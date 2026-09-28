@@ -1,49 +1,52 @@
-import { CircleCheck } from "lucide-react";
+import Link from "next/link";
 
+import { HREF_MULAI } from "@/components/landing/links";
 import { SectionHeading } from "@/components/landing/section-heading";
-import { CARA_KERJA } from "@/lib/landing/content";
+import { Button } from "@/components/ui/button";
+import { CARA_KERJA, CTA_TENGAH } from "@/lib/landing/content";
 
 export function HowItWorksSection() {
   return (
     <section
       id="cara-kerja"
       aria-labelledby="cara-kerja-judul"
-      className="mx-auto max-w-6xl scroll-mt-20 px-4 py-14 sm:px-6 sm:py-20"
+      className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24"
     >
-      <SectionHeading
-        id="cara-kerja-judul"
-        eyebrow="Cara kerja"
-        judul="Siapkan sekali, lalu cukup lewat chat"
-      />
-      <ol className="mt-8 grid md:grid-cols-3 md:gap-6">
-        {CARA_KERJA.map(({ icon: Icon, judul, deskripsi, hasil }, i) => {
-          const terakhir = i === CARA_KERJA.length - 1;
-          return (
-            <li key={judul} className="relative flex gap-4 pb-6 last:pb-0 md:flex-col md:gap-4 md:pb-0">
-              {/* Garis penghubung: vertikal di mobile, horizontal di layar lebar. */}
-              {!terakhir && (
-                <span
-                  aria-hidden="true"
-                  className="absolute top-10 bottom-0 left-4 w-px bg-border md:top-4 md:right-[-1.5rem] md:bottom-auto md:left-12 md:h-px md:w-auto"
-                />
-              )}
-              <span className="relative grid size-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground ring-4 ring-background">
-                <span className="sr-only">Langkah </span>
+      <div className="grid gap-10 lg:grid-cols-[1fr_1.5fr] lg:gap-16">
+        <SectionHeading id="cara-kerja-judul" judul="Siapkan sekali, lalu cukup lewat chat" className="lg:sticky lg:top-24 lg:self-start" />
+        <ol className="flex flex-col">
+          {CARA_KERJA.map(({ judul, deskripsi, hasil }, i) => (
+            <li key={judul} className="grid grid-cols-[2.5rem_1fr] gap-x-4 border-t py-6 first:border-t-2 first:border-foreground sm:grid-cols-[3.5rem_1fr]">
+              <span aria-hidden="true" className="font-mono text-3xl leading-none font-medium text-muted-foreground/60 sm:text-4xl">
                 {i + 1}
               </span>
-              <div className="flex-1 rounded-2xl border bg-card p-5">
-                <Icon className="size-5 text-primary" aria-hidden="true" />
-                <h3 className="mt-3 font-semibold">{judul}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{deskripsi}</p>
-                <p className="mt-4 flex items-start gap-1.5 border-t pt-3 text-xs font-medium text-success">
-                  <CircleCheck className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-                  {hasil}
-                </p>
+              <div>
+                <h3 className="text-xl font-semibold tracking-[-0.01em]">
+                  <span className="sr-only">Langkah {i + 1}: </span>
+                  {judul}
+                </h3>
+                <p className="mt-2 max-w-prose text-pretty text-muted-foreground">{deskripsi}</p>
+                <p className="mt-3 text-sm font-medium text-primary">→ {hasil}</p>
               </div>
             </li>
-          );
-        })}
-      </ol>
+          ))}
+        </ol>
+      </div>
+
+      <div
+        id="cta-tengah"
+        className="mt-12 flex flex-col gap-4 rounded-md border bg-card p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+      >
+        <div className="max-w-xl">
+          <h2 id="cta-tengah-judul" className="text-xl font-semibold">
+            {CTA_TENGAH.judul}
+          </h2>
+          <p className="mt-1 text-muted-foreground">{CTA_TENGAH.deskripsi}</p>
+        </div>
+        <Button asChild size="lg" className="h-12 shrink-0 rounded-md px-6 text-base">
+          <Link href={HREF_MULAI}>{CTA_TENGAH.tombol}</Link>
+        </Button>
+      </div>
     </section>
   );
 }

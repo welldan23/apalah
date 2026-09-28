@@ -39,7 +39,7 @@ export function FormNomorWa({ nomorAwal }: { /** Nomor sebelumnya, mis. saat kem
   }
 
   return (
-    <form noValidate onSubmit={kirimKode} className="flex flex-col gap-4 rounded-2xl border bg-card p-4 sm:p-6">
+    <form noValidate onSubmit={kirimKode} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-6">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="daftar-wa">Nomor WhatsApp</Label>
         <Input

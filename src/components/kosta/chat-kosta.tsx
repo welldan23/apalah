@@ -15,7 +15,7 @@ import type { PesanKosta, StatusDraftAksi, WorkspaceRingkas } from "@/lib/types"
 function IndikatorMengetik() {
   return (
     <li className="flex justify-start" aria-label="Kosta AI sedang mengetik">
-      <span className="flex gap-1 rounded-2xl rounded-bl-sm bg-card px-3 py-3 shadow-xs">
+      <span className="flex gap-1 rounded-lg rounded-tl-none bg-white px-3 py-3 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
         {[0, 150, 300].map((jeda) => (
           <span
             key={jeda}
@@ -162,10 +162,10 @@ export function ChatKosta({
     <div className="grid gap-4 lg:grid-cols-[1fr_17rem]">
       <section
         aria-labelledby="kosta-judul"
-        className="flex h-[calc(100dvh-15.5rem)] min-h-96 flex-col overflow-hidden rounded-2xl border bg-muted lg:h-[calc(100dvh-11rem)]"
+        className="flex h-[calc(100dvh-15.5rem)] min-h-96 flex-col overflow-hidden rounded-lg border bg-[#efeae2] lg:h-[calc(100dvh-11rem)]"
       >
         <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent font-semibold text-accent-foreground">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-foreground font-semibold text-primary">
             K
           </span>
           <div className="min-w-0 flex-1 leading-tight">
@@ -233,7 +233,7 @@ export function ChatKosta({
             <Fragment key={tanggal}>
               <li
                 id={`kosta-${tanggal}`}
-                className="my-1 self-center rounded-md bg-card/80 px-2 py-0.5 text-xs text-muted-foreground"
+                className="my-1 self-center rounded-md bg-white px-2.5 py-1 text-xs text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
               >
                 <time dateTime={tanggal}>{labelHari(tanggal, hariIni)}</time>
               </li>
@@ -249,7 +249,7 @@ export function ChatKosta({
           {mengetik && <IndikatorMengetik />}
         </ol>
 
-        <form onSubmit={kirim} className="flex items-center gap-2 border-t bg-card/80 px-3 py-2.5">
+        <form onSubmit={kirim} className="flex items-center gap-2 bg-[#f0f2f5] px-3 py-2.5">
           <label htmlFor="kosta-pesan" className="sr-only">
             Tulis pesan untuk Kosta AI
           </label>
@@ -257,7 +257,7 @@ export function ChatKosta({
             id="kosta-pesan"
             autoComplete="off"
             placeholder="Tanya Kosta AI…"
-            className="h-11 min-w-0 flex-1 rounded-full border border-input bg-card px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm"
+            className="h-11 min-w-0 flex-1 rounded-full border border-transparent bg-white px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm"
             value={draf}
             onChange={(e) => setDraf(e.target.value)}
           />

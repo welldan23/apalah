@@ -53,7 +53,7 @@ export function FormWorkspace({ nomorWa }: { nomorWa: string }) {
       { judul: `${siap.jumlahKamar} kamar tercatat`, ket: "Lengkapi nomor, tipe, dan harga kamar kapan saja." },
     ];
     return (
-      <section aria-live="polite" className="flex flex-col gap-5 rounded-2xl border bg-card p-4 sm:p-6">
+      <section aria-live="polite" className="flex flex-col gap-5 rounded-lg border bg-card p-4 sm:p-6">
         <div className="flex flex-col items-center gap-3 pt-2 text-center">
           <span className="grid size-12 place-items-center rounded-full bg-success-soft text-success">
             <CircleCheck className="size-6" aria-hidden="true" />
@@ -84,7 +84,7 @@ export function FormWorkspace({ nomorWa }: { nomorWa: string }) {
   }
 
   return (
-    <form noValidate onSubmit={buat} className="flex flex-col gap-4 rounded-2xl border bg-card p-4 sm:p-6">
+    <form noValidate onSubmit={buat} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-6">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="ws-nama">Nama kamu</Label>
         <Input

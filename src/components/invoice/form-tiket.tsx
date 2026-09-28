@@ -51,7 +51,7 @@ export function FormTiket({ token, namaKos }: { token: string; namaKos: string }
 
   if (terkirim) {
     return (
-      <section aria-live="polite" className="flex flex-col items-center gap-4 rounded-2xl border bg-card px-5 py-8 text-center">
+      <section aria-live="polite" className="flex flex-col items-center gap-4 rounded-lg border bg-card px-5 py-8 text-center">
         <span className="grid size-14 place-items-center rounded-full bg-success-soft text-success">
           <CircleCheck className="size-7" aria-hidden="true" />
         </span>
@@ -77,7 +77,7 @@ export function FormTiket({ token, namaKos }: { token: string; namaKos: string }
   const sisaKarakter = PANJANG_DESKRIPSI.maks - deskripsi.trim().length;
 
   return (
-    <form noValidate onSubmit={kirim} className="flex flex-col gap-5 rounded-2xl border bg-card p-5">
+    <form noValidate onSubmit={kirim} className="flex flex-col gap-5 rounded-lg border bg-card p-5">
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">Jenis masalah</legend>
         <div role="radiogroup" aria-describedby="tiket-kategori-galat" className="grid gap-2 sm:grid-cols-2">

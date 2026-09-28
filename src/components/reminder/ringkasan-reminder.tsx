@@ -12,14 +12,20 @@ export function RingkasanReminder({ statistik, menunggak, periode }: Pick<Halama
     { label: "Masih menunggak", nilai: menunggak.length, catatan: formatRupiahSingkat(nominalMenunggak), perhatian: menunggak.length > 0 },
   ];
   return (
-    <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {kartu.map(({ label, nilai, catatan, perhatian }) => (
+    <dl className="grid grid-cols-2 overflow-hidden rounded-lg border bg-card lg:grid-cols-4">
+      {kartu.map(({ label, nilai, catatan, perhatian }, i) => (
         <div
           key={label}
-          className={cn("flex flex-col gap-1 rounded-xl border bg-card p-3.5", perhatian && "border-warning/50 bg-warning-soft/60")}
+          className={cn(
+            "flex flex-col gap-1 p-4",
+            i % 2 === 1 && "border-l",
+            i >= 2 && "border-t lg:border-t-0",
+            i === 2 && "lg:border-l",
+            perhatian && "bg-warning-soft/60",
+          )}
         >
           <dt className="text-sm text-muted-foreground">{label}</dt>
-          <dd className="text-2xl font-semibold tabular-nums">{nilai}</dd>
+          <dd className="text-3xl font-semibold tracking-[-0.02em]">{nilai}</dd>
           <dd className="text-xs text-muted-foreground tabular-nums">{catatan}</dd>
         </div>
       ))}

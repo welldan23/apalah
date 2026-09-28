@@ -7,7 +7,7 @@ import { lamaTinggal } from "@/lib/penghuni";
 /** Daftar penghuni nonaktif (sudah keluar), bisa dibuka-tutup. */
 export function DaftarNonaktif({ penghuni }: { penghuni: PenghuniNonaktif[] }) {
   return (
-    <details className="group rounded-2xl border bg-card">
+    <details className="group rounded-lg border bg-card">
       <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 font-semibold [&::-webkit-details-marker]:hidden">
         <span>
           Penghuni nonaktif

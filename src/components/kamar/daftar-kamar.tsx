@@ -91,7 +91,7 @@ function StatusKamar({ status }: { status: KamarPenghuni["status"] }) {
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center rounded-full px-2 text-xs font-medium",
+        "inline-flex h-5 items-center rounded-sm px-1.5 text-xs font-medium",
         status === "terisi"
           ? "bg-accent text-accent-foreground"
           : "border border-dashed border-warning/60 bg-warning-soft text-warning",
@@ -180,12 +180,12 @@ export function DaftarKamar({ kamar, hariIni }: { kamar: KamarPenghuni[]; hariIn
                   aria-pressed={aktif}
                   onClick={() => setParam("status", value === "semua" ? null : value)}
                   className={cn(
-                    "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
-                    aktif ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
+                    "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
+                    aktif ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
                   )}
                 >
                   {label}
-                  <span className={cn("rounded-full px-1.5 text-xs tabular-nums", aktif ? "bg-primary-foreground/15" : "bg-card")}>
+                  <span className={cn("font-mono text-xs", aktif ? "text-background/70" : "text-muted-foreground")}>
                     {jumlah(value)}
                   </span>
                 </button>

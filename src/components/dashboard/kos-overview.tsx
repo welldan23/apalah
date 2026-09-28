@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 
 type Metrik = { label: string; nilai: string; catatan: string; href?: string };
 
-/** Kartu utama: kondisi kos sekilas (kamar, tagihan perlu ditagih, pemasukan). */
+/** Ringkasan kos sekilas (kamar, tagihan perlu ditagih, pemasukan) — deret angka bergaris. */
 export function KosOverview({ data }: { data: DashboardData }) {
-  const { organization, periode, kamar, tagihan, pemasukan } = data;
+  const { periode, kamar, tagihan, pemasukan } = data;
 
   const metrik: Metrik[] = [
     { label: "Total kamar", nilai: String(kamar.total), catatan: `${kamar.kosong} masih kosong` },
@@ -29,43 +29,29 @@ export function KosOverview({ data }: { data: DashboardData }) {
   ];
 
   return (
-    <section
-      aria-labelledby="kos-overview-title"
-      className="relative overflow-hidden rounded-2xl bg-primary px-5 py-5 text-primary-foreground sm:px-6"
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 -right-16 size-64 rounded-full border-[28px] border-accent/10"
-      />
-      <div className="relative flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 id="kos-overview-title" className="text-lg font-semibold tracking-tight">
-            {organization.namaKos}
-          </h2>
-          <p className="truncate text-sm text-primary-foreground/70">
-            {organization.alamat}
-          </p>
-        </div>
-        <span className="rounded-full bg-accent/15 px-2.5 py-1 text-xs font-medium text-accent">
-          Periode {formatPeriode(periode)}
-        </span>
-      </div>
-
-      <dl className="relative mt-5 grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4">
-        {metrik.map(({ label, nilai, catatan, href }) => (
+    <section aria-labelledby="kos-overview-title" className="rounded-lg border bg-card">
+      <h2 id="kos-overview-title" className="flex items-baseline justify-between gap-2 border-b px-4 py-2.5 text-sm font-medium sm:px-5">
+        Ringkasan bulan ini
+        <span className="font-normal text-muted-foreground">Periode {formatPeriode(periode)}</span>
+      </h2>
+      <dl className="grid grid-cols-2 sm:grid-cols-4">
+        {metrik.map(({ label, nilai, catatan, href }, i) => (
           <div
             key={label}
             className={cn(
-              "relative min-w-0 border-l border-primary-foreground/15 pl-3",
-              href && "group -my-1 rounded-r-lg py-1 transition-colors hover:bg-primary-foreground/5",
+              "relative min-w-0 px-4 py-4 sm:px-5",
+              i % 2 === 1 && "border-l",
+              i >= 2 && "border-t sm:border-t-0",
+              i === 2 && "sm:border-l",
+              href && "group transition-colors hover:bg-muted/60",
             )}
           >
-            <dt className="text-xs text-primary-foreground/70">{label}</dt>
-            <dd className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="mt-1 text-3xl font-semibold tracking-[-0.02em]">
               {href ? (
                 <Link
                   href={href}
-                  className="rounded outline-none after:absolute after:inset-0 focus-visible:ring-3 focus-visible:ring-accent/40"
+                  className="rounded outline-none after:absolute after:inset-0 focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   {nilai}
                   <span className="sr-only"> — lihat tagihan {label.toLowerCase()}</span>
@@ -74,13 +60,10 @@ export function KosOverview({ data }: { data: DashboardData }) {
                 nilai
               )}
             </dd>
-            <dd className="flex items-center gap-0.5 text-xs text-accent/90">
+            <dd className={cn("flex items-center gap-0.5 text-xs text-muted-foreground", href && "text-danger")}>
               {catatan}
               {href && (
-                <ChevronRight
-                  aria-hidden="true"
-                  className="size-3.5 transition-transform group-hover:translate-x-0.5"
-                />
+                <ChevronRight aria-hidden="true" className="size-3.5 transition-transform group-hover:translate-x-0.5" />
               )}
             </dd>
           </div>

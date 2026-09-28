@@ -26,7 +26,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <div className="flex items-center gap-2">
             <KosteraLogo />
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+            <span className="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs font-medium">
               <ShieldCheck className="size-3.5" aria-hidden="true" />
               Konsol platform
             </span>

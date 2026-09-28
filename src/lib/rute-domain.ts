@@ -24,7 +24,7 @@ const urlAtauNull = (nilai: string | undefined) => {
 const polaHost = (host: string) => host.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Yang tetap dilayani di domain landing: aset build, API konten landing, dan berkas situs. */
-const TETAP_DI_LANDING = "_next/|api/landing/|favicon\\.ico$|robots\\.txt$|sitemap\\.xml$";
+const TETAP_DI_LANDING = "_next/|api/landing/|icon\\.svg$|robots\\.txt$|sitemap\\.xml$";
 
 export function aturanDomain(env: Env): AturanRedirect[] {
   // Link aplikasi lama (app.kostera.id/app/#/login) tetap sampai ke halaman masuk.

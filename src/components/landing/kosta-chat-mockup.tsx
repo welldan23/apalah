@@ -6,6 +6,7 @@ import { CheckCheck, CircleCheck, Link2, RotateCcw, SendHorizontal } from "lucid
 import { CHAT_KOSTA, type PesanChat } from "@/lib/landing/content";
 import { cn } from "@/lib/utils";
 
+// Tampilannya meniru WhatsApp (latar, gelembung, centang) supaya terbaca sebagai chat sungguhan.
 // Jeda pemutaran ulang (ms): owner mengetik lebih cepat, Kosta "mengetik" dulu.
 const JEDA_OWNER = 700;
 const JEDA_KOSTA_MENGETIK = 1100;
@@ -14,16 +15,16 @@ function IsiPesan({ pesan }: { pesan: PesanChat }) {
   if ("jenis" in pesan && pesan.jenis === "preview") {
     return (
       <div className="w-56">
-        <p className="font-medium">{pesan.judul}</p>
-        <dl className="mt-1.5 divide-y rounded-lg border bg-background/60 text-xs">
+        <p className="font-semibold">{pesan.judul}</p>
+        <dl className="mt-1.5 divide-y divide-black/10 rounded-md border border-black/10 bg-[#f7f5f2] text-xs">
           {pesan.baris.map(([label, nilai]) => (
             <div key={label} className="flex justify-between gap-3 px-2.5 py-1.5">
-              <dt className="text-muted-foreground">{label}</dt>
+              <dt className="text-[#667781]">{label}</dt>
               <dd className="font-medium">{nilai}</dd>
             </div>
           ))}
         </dl>
-        <p className="mt-1.5 text-xs text-muted-foreground">{pesan.catatan}</p>
+        <p className="mt-1.5 text-xs text-[#54656f]">{pesan.catatan}</p>
       </div>
     );
   }
@@ -31,7 +32,7 @@ function IsiPesan({ pesan }: { pesan: PesanChat }) {
     return (
       <>
         {pesan.teks}
-        <span className="mt-1.5 flex w-fit items-center gap-1.5 rounded-md bg-accent px-2 py-1 text-xs font-medium text-accent-foreground">
+        <span className="mt-1.5 flex w-fit items-center gap-1.5 rounded-md bg-[#f0f2f5] px-2 py-1 text-xs font-medium text-[#027eb5]">
           <Link2 className="size-3.5" aria-hidden="true" />
           {pesan.link}
         </span>
@@ -64,18 +65,16 @@ function Gelembung({ pesan, baru }: { pesan: PesanChat; baru: boolean }) {
     >
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl px-3 py-2 text-[0.8rem] leading-snug shadow-xs",
-          dariOwner
-            ? "rounded-br-sm bg-accent text-accent-foreground"
-            : "rounded-bl-sm bg-card text-card-foreground",
+          "max-w-[85%] rounded-lg px-2.5 py-1.5 text-[0.82rem] leading-snug text-[#111b21] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]",
+          dariOwner ? "rounded-tr-none bg-[#d9fdd3]" : "rounded-tl-none bg-white",
         )}
       >
         <span className="sr-only">{dariOwner ? "Owner: " : "Kosta AI: "}</span>
         <IsiPesan pesan={pesan} />
-        <span className="mt-1 flex items-center justify-end gap-1 text-[0.65rem] text-muted-foreground">
+        <span className="mt-0.5 flex items-center justify-end gap-1 text-[0.65rem] text-[#667781]">
           {pesan.waktu}
           {dariOwner && (
-            <CheckCheck className="size-3.5 text-primary" aria-label="Sudah dibaca" />
+            <CheckCheck className="size-3.5 text-[#53bdeb]" aria-label="Sudah dibaca" />
           )}
         </span>
       </div>
@@ -86,11 +85,11 @@ function Gelembung({ pesan, baru }: { pesan: PesanChat; baru: boolean }) {
 function IndikatorMengetik() {
   return (
     <li className="flex justify-start" aria-label="Kosta AI sedang mengetik">
-      <span className="flex gap-1 rounded-2xl rounded-bl-sm bg-card px-3 py-3 shadow-xs">
+      <span className="flex gap-1 rounded-lg rounded-tl-none bg-white px-3 py-3 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
         {[0, 150, 300].map((jeda) => (
           <span
             key={jeda}
-            className="size-1.5 rounded-full bg-muted-foreground/60 motion-safe:animate-bounce"
+            className="size-1.5 rounded-full bg-[#8696a0] motion-safe:animate-bounce"
             style={{ animationDelay: `${jeda}ms` }}
           />
         ))}
@@ -141,15 +140,15 @@ export function KostaChatMockup({ className }: { className?: string }) {
   }
 
   return (
-    <figure className={cn("mx-auto w-full max-w-sm", className)}>
-      <div className="overflow-hidden rounded-[2rem] border bg-muted shadow-sm">
-        <div className="flex items-center gap-2.5 bg-primary px-4 py-3 text-primary-foreground">
-          <span className="grid size-9 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
+    <figure className={cn("mx-auto w-full max-w-sm lg:mr-0", className)}>
+      <div className="overflow-hidden rounded-xl border border-black/10 bg-[#efeae2]">
+        <div className="flex items-center gap-2.5 border-b border-black/5 bg-[#f0f2f5] px-4 py-2.5 text-[#111b21]">
+          <span className="grid size-9 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
             K
           </span>
           <div className="leading-tight">
-            <p className="text-sm font-semibold">Kosta AI</p>
-            <p className="text-xs text-primary-foreground/70">
+            <p className="text-[0.95rem] font-medium">Kosta AI</p>
+            <p className="text-xs text-[#667781]">
               {mengetik ? "mengetik…" : "Asisten Kostera · Kos Melati"}
             </p>
           </div>
@@ -161,7 +160,7 @@ export function KostaChatMockup({ className }: { className?: string }) {
           className="flex flex-col justify-end gap-2 overflow-hidden px-3 py-4"
           style={tinggiTetap ? { height: tinggiTetap } : undefined}
         >
-          <li className="mb-1 self-center rounded-md bg-card/80 px-2 py-0.5 text-[0.65rem] text-muted-foreground">
+          <li className="mb-1 self-center rounded-md bg-white px-2.5 py-1 text-[0.68rem] text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
             Hari ini
           </li>
           {CHAT_KOSTA.slice(0, tampil).map((pesan, i) => (
@@ -170,11 +169,11 @@ export function KostaChatMockup({ className }: { className?: string }) {
           {mengetik && <IndikatorMengetik />}
         </ol>
 
-        <div aria-hidden="true" className="flex items-center gap-2 border-t bg-card/70 px-3 py-2.5">
-          <span className="flex-1 rounded-full bg-card px-3.5 py-2 text-xs text-muted-foreground">
+        <div aria-hidden="true" className="flex items-center gap-2 bg-[#f0f2f5] px-3 py-2.5">
+          <span className="flex-1 rounded-full bg-white px-3.5 py-2 text-xs text-[#667781]">
             Ketik pesan
           </span>
-          <span className="grid size-8 place-items-center rounded-full bg-primary text-primary-foreground">
+          <span className="grid size-8 place-items-center rounded-full bg-[#00a884] text-white">
             <SendHorizontal className="size-4" />
           </span>
         </div>

@@ -84,12 +84,12 @@ export function PilihPenerima({ kandidat, hariIni, periode, sekarang: sekarangIs
                   aria-pressed={aktif}
                   onClick={() => setSaringan(nilai)}
                   className={cn(
-                    "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
-                    aktif ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
+                    "inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-8",
+                    aktif ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
                   )}
                 >
                   {label}
-                  <span className={cn("rounded-full px-1.5 text-xs tabular-nums", aktif ? "bg-primary-foreground/15" : "bg-card")}>
+                  <span className={cn("font-mono text-xs", aktif ? "text-background/70" : "text-muted-foreground")}>
                     {kandidat.filter(cocok).length}
                   </span>
                 </button>

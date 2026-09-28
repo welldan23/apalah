@@ -7,7 +7,7 @@ import { FaqSection } from "@/components/landing/faq-section";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { ProblemSection } from "@/components/landing/problem-section";
-import { CTA_PENUTUP, CTA_TENGAH } from "@/lib/landing/content";
+import { CTA_PENUTUP } from "@/lib/landing/content";
 import { urlLanding } from "@/lib/situs";
 
 const JUDUL = "Kostera — Tagihan kos rapi, pembayaran lebih pasti";
@@ -36,7 +36,6 @@ export default function LandingPage() {
       <ProblemSection />
       <BenefitsSection />
       <HowItWorksSection />
-      <CtaSection id="cta-tengah" cta={CTA_TENGAH} className="pt-0 sm:pt-0" />
       <DashboardPreviewSection />
       <FaqSection />
       <CtaSection id="cta-penutup" cta={CTA_PENUTUP} />

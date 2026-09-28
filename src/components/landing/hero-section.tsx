@@ -1,79 +1,34 @@
 import Link from "next/link";
-import { ArrowRight, CircleCheck } from "lucide-react";
 
 import { KostaChatMockup } from "@/components/landing/kosta-chat-mockup";
 import { HREF_MULAI } from "@/components/landing/links";
 import { Button } from "@/components/ui/button";
-import { HERO, INTIP_DASHBOARD } from "@/lib/landing/content";
-
-/** Kartu kecil cuplikan dashboard di bawah CTA (layar lebar). */
-function IntipDashboard() {
-  const { judul, periode, metrik, persenTerkumpul } = INTIP_DASHBOARD;
-  return (
-    <div className="mt-10 hidden max-w-sm rounded-2xl border bg-card p-4 shadow-xs lg:block">
-      <p className="text-xs text-muted-foreground">
-        {judul} · {periode}
-      </p>
-      <dl className="mt-3 grid grid-cols-3 gap-3">
-        {metrik.map(([label, nilai]) => (
-          <div key={label}>
-            <dt className="text-[0.7rem] text-muted-foreground">{label}</dt>
-            <dd className="text-base font-semibold tracking-tight">{nilai}</dd>
-          </div>
-        ))}
-      </dl>
-      <div
-        role="img"
-        aria-label={`${persenTerkumpul}% tagihan bulan ini sudah terkumpul`}
-        className="mt-3 h-1.5 overflow-hidden rounded-full bg-accent"
-      >
-        <div className="h-full rounded-full bg-primary" style={{ width: `${persenTerkumpul}%` }} />
-      </div>
-      <p className="mt-1.5 text-[0.7rem] text-muted-foreground">
-        {persenTerkumpul}% tagihan bulan ini terkumpul
-      </p>
-    </div>
-  );
-}
+import { HERO } from "@/lib/landing/content";
 
 export function HeroSection() {
   return (
-    <section
-      aria-labelledby="hero-judul"
-      className="relative overflow-hidden bg-[radial-gradient(60rem_30rem_at_70%_-10%,var(--color-accent),transparent_70%)]"
-    >
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-10 pb-14 sm:px-6 sm:pt-16 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:pt-20 lg:pb-20">
-        <div>
-          <p className="text-sm font-medium text-primary">{HERO.eyebrow}</p>
+    <section aria-labelledby="hero-judul" className="border-b">
+      <div className="mx-auto grid max-w-6xl gap-12 px-4 pt-12 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:pt-20 lg:pb-24">
+        <div className="lg:pt-6">
           <h1
             id="hero-judul"
-            className="mt-3 text-4xl font-semibold tracking-tight text-balance sm:text-5xl"
+            className="max-w-xl text-[2.6rem] leading-[1.02] font-semibold tracking-[-0.03em] sm:text-6xl"
           >
             {HERO.judul}
           </h1>
-          <p className="mt-4 max-w-xl text-base text-pretty text-muted-foreground sm:text-lg">
-            {HERO.deskripsi}
-          </p>
-          <div className="mt-7 flex flex-col gap-2.5 sm:flex-row">
-            <Button asChild size="lg" className="h-11 px-5 text-base">
-              <Link href={HREF_MULAI}>
-                {HERO.ctaUtama}
-                <ArrowRight data-icon="inline-end" />
-              </Link>
+          <p className="mt-6 max-w-lg text-lg text-pretty text-muted-foreground">{HERO.deskripsi}</p>
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Button asChild size="lg" className="h-12 rounded-md px-6 text-base">
+              <Link href={HREF_MULAI}>{HERO.ctaUtama}</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-11 px-5 text-base">
-              <a href="#cara-kerja">{HERO.ctaKedua}</a>
-            </Button>
+            <a
+              href="#cara-kerja"
+              className="text-base font-medium underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
+            >
+              {HERO.ctaKedua}
+            </a>
           </div>
-          <ul className="mt-6 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-5">
-            {HERO.poin.map((poin) => (
-              <li key={poin} className="flex items-center gap-1.5">
-                <CircleCheck className="size-4 shrink-0 text-success" aria-hidden="true" />
-                {poin}
-              </li>
-            ))}
-          </ul>
-          <IntipDashboard />
+          <p className="mt-10 max-w-md border-t pt-4 text-sm text-muted-foreground">{HERO.poin.join(" · ")}.</p>
         </div>
 
         <KostaChatMockup />

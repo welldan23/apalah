@@ -44,33 +44,43 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
         <span className="text-sm text-muted-foreground">Invoice sewa</span>
       </header>
 
-      <section
-        aria-labelledby="invoice-judul"
-        className="flex flex-col gap-5 rounded-2xl border bg-card p-5 shadow-xs"
-      >
+      {/* Tampil seperti nota: nomor & kode pakai huruf mono, garis putus-putus, total bergaris ganda,
+          dan cap LUNAS begitu tagihan dibayar. */}
+      <section aria-labelledby="invoice-judul" className="flex flex-col gap-5 rounded-md border bg-card p-5 sm:p-6">
+        <p className="-mt-1 flex items-center justify-between gap-3 border-b border-dashed pb-3 font-mono text-xs text-muted-foreground uppercase">
+          <span>Invoice sewa</span>
+          <span>{inv.nomorInvoice}</span>
+        </p>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 id="invoice-judul" className="text-lg font-semibold tracking-tight">
+            <h1 id="invoice-judul" className="text-xl font-semibold tracking-[-0.01em]">
               {inv.namaKos}
             </h1>
             {inv.alamatKos && <p className="text-sm text-muted-foreground">{inv.alamatKos}</p>}
-            <p className="mt-1 text-xs text-muted-foreground tabular-nums">{inv.nomorInvoice}</p>
           </div>
-          <InvoiceStatusBadge status={inv.status} className="shrink-0" />
+          {inv.status !== "lunas" && <InvoiceStatusBadge status={inv.status} className="shrink-0" />}
         </div>
-
-        <div>
+        <div className="relative">
+          {inv.status === "lunas" && (
+            <p
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1 right-0 -rotate-12 rounded-sm border-[3px] border-success/80 px-3 py-1 text-center font-mono text-xl leading-tight font-semibold tracking-[0.2em] text-success/80 uppercase"
+            >
+              Lunas
+              {inv.dibayarPada && (
+                <span className="block text-[0.6rem] tracking-[0.1em]">{formatTanggal(inv.dibayarPada)}</span>
+              )}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">Total tagihan</p>
-          <p className="text-3xl font-semibold tracking-tight tabular-nums">
-            {formatRupiah(inv.nominal)}
-          </p>
+          <p className="text-4xl font-semibold tracking-[-0.02em]">{formatRupiah(inv.nominal)}</p>
           <p className={cn("mt-1 text-sm text-muted-foreground", waktu.telat && "text-danger")}>
             {inv.status === "lunas"
               ? waktu.teks
               : `Jatuh tempo ${formatTanggal(inv.jatuhTempo)} · ${waktu.teks}`}
           </p>
           {inv.status !== "lunas" && inv.sudahDiterima > 0 && (
-            <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-sm">
+            <p className="mt-2 rounded-md bg-muted px-3 py-2 text-sm">
               Sudah dibayar <span className="font-medium tabular-nums">{formatRupiah(inv.sudahDiterima)}</span>
               {inv.sisa > 0 && (
                 <>
@@ -88,7 +98,7 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
           )}
         </div>
 
-        <dl className="divide-y rounded-lg border text-sm">
+        <dl className="flex flex-col gap-2 border-y border-dashed py-4 text-sm">
           {(
             [
               ["Penghuni", inv.namaPenghuni],
@@ -97,8 +107,9 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
               ["Diterbitkan", formatTanggal(inv.diterbitkanPada)],
             ] as const
           ).map(([label, nilai]) => (
-            <div key={label} className="flex items-start justify-between gap-4 px-3 py-2.5">
+            <div key={label} className="flex items-baseline gap-2">
               <dt className="text-muted-foreground">{label}</dt>
+              <span aria-hidden="true" className="flex-1 border-b border-dotted border-muted-foreground/40" />
               <dd className="text-right font-medium">{nilai}</dd>
             </div>
           ))}
@@ -116,7 +127,7 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
               </li>
             ))}
           </ul>
-          <div className="mt-3 flex items-center justify-between gap-4 border-t pt-3 font-semibold">
+          <div className="mt-3 flex items-center justify-between gap-4 border-t-[3px] border-double border-foreground pt-3 text-base font-semibold">
             <span>Total</span>
             <span className="tabular-nums">{formatRupiah(inv.nominal)}</span>
           </div>
@@ -127,7 +138,7 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
             <h2 id="riwayat-bayar-judul" className="mb-2 text-sm font-medium">
               Riwayat pembayaran
             </h2>
-            <ul className="divide-y rounded-lg border text-sm">
+            <ul className="divide-y rounded-md border text-sm">
               {inv.pembayaran.map((p, i) => {
                 const s = STATUS_BAYAR[p.status];
                 return (
@@ -150,14 +161,14 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
       </section>
 
       {inv.status === "lunas" ? (
-        <p className="flex items-start gap-2 rounded-xl bg-success-soft px-4 py-3 text-sm text-success">
+        <p className="flex items-start gap-2 rounded-md border border-success/30 bg-success-soft px-4 py-3 text-sm text-success">
           <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           Lunas. Terima kasih, pembayaranmu sudah diterima
           {inv.dibayarPada ? ` pada ${formatTanggal(inv.dibayarPada)}` : ""}.
         </p>
       ) : inv.status === "perlu_review" ? (
         <div className="flex flex-col gap-3">
-          <p className="flex items-start gap-2 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning">
+          <p className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning">
             <Eye className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             Pembayaranmu sedang diperiksa pemilik kos karena nominalnya belum cocok dengan
             tagihan.
@@ -172,7 +183,7 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
           )}
         </div>
       ) : (
-        <section aria-labelledby="bayar-judul" className="flex flex-col gap-3 rounded-2xl border bg-card p-5">
+        <section aria-labelledby="bayar-judul" className="flex flex-col gap-3 rounded-md border bg-card p-5 sm:p-6">
           <h2 id="bayar-judul" className="font-semibold">
             Cara bayar
           </h2>
@@ -206,7 +217,7 @@ export default async function InvoicePublikPage({ params }: PageProps<"/invoice/
 
       <Link
         href={`/invoice/${token}/tiket`}
-        className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 text-sm transition-colors hover:border-primary/40"
+        className="flex min-h-14 items-center justify-between gap-3 rounded-md border bg-card px-4 py-3 text-sm transition-colors hover:border-foreground/40"
       >
         <span>
           <span className="block font-medium">Ada masalah di kamar?</span>

@@ -164,7 +164,6 @@ export type RekapPemasukan = {
 
 export type DashboardData = {
   organization: Organization;
-  owner: Owner;
   /** Hari ini menurut server, format YYYY-MM-DD. */
   hariIni: string;
   /** Periode berjalan, format YYYY-MM. */

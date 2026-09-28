@@ -12,16 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import type { InvoiceStatus, PaymentStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-// Warna status dipakai terbatas: selalu disertai ikon + label, tidak pernah warna saja.
+// Status tampil seperti cap di nota: label + garis tepi berwarna, tidak pernah warna saja.
 export type StatusTone = "success" | "neutral" | "danger" | "warning" | "info" | "outline";
 
 const TONE_BADGE: Record<StatusTone, string> = {
-  success: "bg-success-soft text-success",
-  neutral: "bg-muted text-muted-foreground",
-  danger: "bg-danger-soft text-danger",
-  warning: "bg-warning-soft text-warning",
-  info: "bg-secondary text-secondary-foreground",
-  outline: "border-border bg-transparent text-muted-foreground",
+  success: "border-success/45 bg-success-soft/60 text-success",
+  neutral: "border-border bg-transparent text-muted-foreground",
+  danger: "border-danger/45 bg-danger-soft/60 text-danger",
+  warning: "border-warning/50 bg-warning-soft/70 text-warning",
+  info: "border-secondary-foreground/25 bg-transparent text-secondary-foreground",
+  outline: "border-dashed border-border bg-transparent text-muted-foreground",
 };
 
 /** Warna titik/penanda kecil untuk tone yang sama (legenda, rincian). */
@@ -46,7 +46,7 @@ export function StatusBadge({
   className?: string;
 }) {
   return (
-    <Badge variant="outline" className={cn("border-transparent", TONE_BADGE[tone], className)}>
+    <Badge variant="outline" className={cn("h-auto rounded-[3px] py-px font-semibold", TONE_BADGE[tone], className)}>
       <Icon data-icon="inline-start" aria-hidden="true" />
       {children}
     </Badge>
