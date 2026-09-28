@@ -1,31 +1,37 @@
 # Deploy produksi — kostera.id & app.kostera.id
 
-Runbook deploy Kostera (repo ini). Satu project Vercel melayani dua domain:
+Runbook deploy Kostera (repo ini). Satu deploy melayani dua domain:
 `https://kostera.id` = landing, `https://app.kostera.id` = aplikasi (daftar, masuk, dashboard,
 link invoice, webhook, cron). Di `kostera.id`, semua halaman selain landing & asetnya diteruskan ke
 `app.kostera.id`; di `app.kostera.id`, `/` langsung ke dashboard (atau `/masuk` bila belum login).
-Semua nilai rahasia diisi lewat secret manager (Vercel → Project → Settings → Environment
-Variables, tipe *Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
+
+Dua cara deploy: **VPS dengan Docker** (bagian 4a — aplikasi, PostgreSQL, HTTPS, jadwal, dan backup
+dalam satu server) atau **Vercel + PostgreSQL terkelola** (bagian 4). Semua nilai rahasia diisi
+lewat `deploy/vps/.env` di server (izin 600) atau Vercel → Settings → Environment Variables (tipe
+*Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
 
 ## 0. Blocker yang harus beres dulu
 
-- **`app.kostera.id` sekarang melayani aplikasi lain** (`kostera-api` v0.2.0: `/health`, SPA di
-  `/app/`). Mengarahkan domain ke deploy ini menggantikan layanan itu. Pemiliknya harus memutuskan
-  dulu nasib layanan itu dan membackup datanya. Link lama `app.kostera.id/app/…` otomatis diarahkan
-  ke `/masuk`.
-- **`kostera.id` sekarang menampilkan landing lama** (statis). Memindahkan DNS-nya ke Vercel
-  menggantinya dengan landing baru dari repo ini.
-- Akses yang dibutuhkan: project Vercel (atau token deploy), zona DNS `kostera.id` di Cloudflare,
-  database PostgreSQL produksi, akun Xendit dengan xenPlatform aktif, dan WhatsApp Business (Meta).
+- **Domain terdaftar di Hostinger, tetapi DNS-nya dikelola Cloudflare** (nameserver
+  `hans`/`susan.ns.cloudflare.com`). Record diubah di Cloudflare, bukan di panel Hostinger.
+- **Per 28 Sep 2026, `kostera.id`, `app.kostera.id`, dan `www` mengarah ke Cloudflare Tunnel yang
+  sudah mati** (error 1033). Sebelumnya tunnel itu melayani landing lama dan `kostera-api` v0.2.0
+  (`/health`, SPA di `/app/`). Bila server lama itu masih menyimpan data, backup dulu sebelum
+  record-nya diganti. Link lama `app.kostera.id/app/…` otomatis diarahkan ke `/masuk`.
+- Akses yang dibutuhkan: VPS (root/sudo) atau project Vercel, zona DNS `kostera.id` di Cloudflare,
+  akun Xendit dengan xenPlatform aktif, dan WhatsApp Business (Meta) atau nomor khusus pilot WAHA.
 
 ## 1. Arsitektur
 
-- **Aplikasi:** Vercel (sudah ada `vercel.json` untuk cron). Build `npm run build`, tanpa database.
-- **Database:** PostgreSQL persisten (mis. Supabase, connection string *Transaction pooler* port 6543).
-  Tanpa `DATABASE_URL`, aplikasi produksi **menolak jalan** (tidak memakai PGlite).
-- **DNS:** di Cloudflare, `app` (CNAME) dan `kostera.id` (apex: A record / CNAME flattening) ke
-  target yang diberikan Vercel. Paling sederhana: *DNS only* (awan abu-abu) supaya sertifikat TLS
-  diurus Vercel. Kalau diproksikan Cloudflare, SSL mode wajib *Full (strict)*.
+- **Aplikasi:** VPS (`Dockerfile` + `deploy/vps/`, bagian 4a) atau Vercel (`vercel.json` untuk
+  cron). Build `npm run build`, tanpa database.
+- **Database:** PostgreSQL persisten — di VPS berjalan sebagai container `db` (PostgreSQL 16, tidak
+  dibuka ke internet); di Vercel pakai layanan terkelola (mis. Supabase, *Transaction pooler* port
+  6543). Tanpa `DATABASE_URL`, aplikasi produksi **menolak jalan** (tidak memakai PGlite).
+- **DNS:** di Cloudflare. VPS: record A `kostera.id`, `app`, dan `www` ke IP VPS. Vercel: `app`
+  (CNAME) dan `kostera.id` (apex) ke target yang diberikan Vercel. Paling sederhana: *DNS only*
+  (awan abu-abu) supaya sertifikat TLS diurus Caddy/Vercel. Kalau diproksikan Cloudflare, SSL mode
+  wajib *Full (strict)*.
 - **Pembagian domain** diatur aplikasi lewat `APP_URL` + `LANDING_URL` (dibaca saat build — ubah
   nilainya = deploy ulang). Di Vercel → Domains, **jangan** pasang opsi "Redirect to" antar kedua
   domain; biarkan keduanya melayani deploy yang sama.
@@ -72,6 +78,42 @@ Variables, tipe *Sensitive*). Jangan menaruh nilainya di repo, chat, atau log.
    Cloudflare sesuai instruksi Vercel.
 3. Setelah admin platform masuk sekali lewat OTP: `npm run platform:admin -- tambah 62…`.
 
+## 4a. Deploy di VPS (Docker)
+
+`deploy/vps/compose.yaml` menjalankan empat container: `app` (`next start`), `db` (PostgreSQL 16,
+tidak dibuka ke internet), `caddy` (HTTPS otomatis Let's Encrypt di port 80/443), dan `jadwal`
+(cron + backup harian ke `/var/backups/kostera`, disimpan 14 hari). Butuh Ubuntu/Debian, RAM + swap
+±2 GB, disk kosong ≥ 6 GB, dan port 80/443 yang belum dipakai program lain. `pasang.sh` memeriksa
+semua itu dulu dan berhenti tanpa mengubah apa pun bila ada yang belum cocok.
+
+1. Masuk ke VPS (`ssh root@IP-VPS`), lalu ambil kodenya:
+   `git clone https://github.com/welldan23/apalah.git /opt/kostera && cd /opt/kostera`
+2. Periksa (tidak mengubah apa pun): `sudo bash deploy/vps/pasang.sh --cek` — menampilkan IP VPS.
+3. DNS di Cloudflare → DNS → Records: hapus record `kostera.id`, `app`, dan `www` yang lama (yang
+   ke tunnel; bila tidak bisa dihapus, hapus dulu *public hostname*-nya di Zero Trust → Networks →
+   Tunnels), lalu buat record **A** untuk ketiganya ke IP VPS dengan *DNS only* (awan abu-abu).
+4. Pasang: `sudo bash deploy/vps/pasang.sh`. Pertama kali skrip memasang Docker bila belum ada,
+   membuat `deploy/vps/.env` (kata sandi database & `BETTER_AUTH_SECRET` diisi acak, tidak
+   ditampilkan), build, migrasi, `cek:produksi`, lalu menyalakan semuanya. Sertifikat HTTPS dibuat
+   otomatis begitu DNS mengarah ke VPS — tidak perlu pasang ulang.
+5. Setelah admin platform masuk sekali lewat OTP:
+   `docker compose -f deploy/vps/compose.yaml exec app npm run platform:admin -- tambah 62…`
+
+- **Mengubah pengaturan** (WhatsApp, Xendit, `CRON_SECRET`): sunting `deploy/vps/.env` (contoh isi
+  di `deploy/vps/env.contoh`), lalu jalankan lagi `sudo bash deploy/vps/pasang.sh`.
+- **Memperbarui aplikasi:** `cd /opt/kostera && git pull && sudo bash deploy/vps/pasang.sh`. Database
+  otomatis di-backup sebelum migrasi.
+- **Jadwal otomatis** jalan begitu `CRON_SECRET` diisi: pekerjaan harian 00.05 WIB, pengingat dicek
+  tiap jam. Backup 02.00 WIB selalu jalan. Log: `docker compose -f deploy/vps/compose.yaml logs jadwal`.
+- **Backup** ada di `/var/backups/kostera/*.dump` (hanya root) — salin berkala ke luar VPS. Memulihkan:
+  ```bash
+  docker compose -f deploy/vps/compose.yaml stop app jadwal
+  docker compose -f deploy/vps/compose.yaml exec -T db pg_restore --clean --no-owner -U kostera -d kostera < /var/backups/kostera/<berkas>.dump
+  docker compose -f deploy/vps/compose.yaml start app jadwal
+  ```
+- Pilot WAHA (bagian 6a) bisa dijalankan di VPS yang sama; container-nya belum termasuk di
+  `deploy/vps/`.
+
 ## 5. Verifikasi setelah deploy (dari luar server)
 
 ```bash
@@ -116,7 +158,8 @@ tagihan, buka link invoice dari ponsel lain.
      `npm run cek:produksi`, perbarui URL webhook di dashboard live.
   Status Lunas hanya bila token webhook cocok, transaksinya dibuat Kostera, dan status + nominalnya
   dibaca ulang dari API Xendit atas nama sub-akun kos.
-- **Cron:** setelah WA & pembayaran terverifikasi, isi `CRON_SECRET` lalu redeploy. Vercel Cron
+- **Cron:** setelah WA & pembayaran terverifikasi, isi `CRON_SECRET` lalu redeploy (VPS: isi di
+  `deploy/vps/.env`, jalankan lagi `pasang.sh`; container `jadwal` yang memanggil). Vercel Cron
   mengirim header `Authorization: Bearer <CRON_SECRET>` otomatis (jadwal di `vercel.json`).
 
 ## 6a. Pilot WAHA (sementara, khusus owner)
@@ -143,14 +186,12 @@ self-hosted, **tidak resmi**). Aturannya ketat supaya tidak ada pesan nyasar ke 
 
 ## 7. Operasional
 
-| Kebutuhan | Vercel |
-| --- | --- |
-| Status | Dashboard → Deployments, atau `vercel ls` |
-| Log (tanpa isi pesan/OTP) | Dashboard → Logs, atau `vercel logs <url-deployment>` |
-| Restart | *Redeploy* deployment terakhir (tidak ada proses yang perlu di-restart) |
-| Rollback aplikasi | *Instant Rollback* ke deployment sebelumnya, atau `vercel rollback` |
-| Rollback database | `drizzle/rollback/*.down.sql` (terbaru dulu, lihat README di folder itu) atau pulihkan dump: `pg_restore --clean --no-owner -d "$DATABASE_URL" <file.dump>` |
+Di VPS, `dc` = `docker compose -f deploy/vps/compose.yaml` (jalankan dari `/opt/kostera`).
 
-Bila suatu saat memakai VPS: `npm ci && npm run build && npm run start` di belakang reverse proxy
-HTTPS (jangan membuka port Node langsung), dengan environment yang sama dan cron lewat crontab
-seperti di README.
+| Kebutuhan | VPS (Docker) | Vercel |
+| --- | --- | --- |
+| Status | `dc ps` | Dashboard → Deployments, atau `vercel ls` |
+| Log (tanpa isi pesan/OTP) | `dc logs -f app` (atau `caddy`, `jadwal`) | Dashboard → Logs, atau `vercel logs <url-deployment>` |
+| Restart | `dc restart app` | *Redeploy* deployment terakhir |
+| Rollback aplikasi | `git checkout <commit-lama> && sudo bash deploy/vps/pasang.sh` | *Instant Rollback*, atau `vercel rollback` |
+| Rollback database | `drizzle/rollback/*.down.sql` (terbaru dulu, lihat README di folder itu) atau pulihkan dump (VPS: bagian 4a; Vercel: `pg_restore --clean --no-owner -d "$DATABASE_URL" <file.dump>`) | sama |

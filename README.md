@@ -50,7 +50,10 @@ paling banyak sekali per penyewa per 24 jam, dan jadwal yang terlewat disusulkan
 
 - **Vercel:** sudah diatur di `vercel.json`. Paket Hobby hanya mengizinkan cron harian, jadi
   pengingat dijalankan sekali sehari pukul 09.05 WIB.
-- **VPS:** tambahkan ke `crontab -e` (jam server UTC; 17.05 UTC = 00.05 WIB), ganti domain dan
+- **VPS dengan `deploy/vps/`:** sudah diatur container `jadwal` — cukup isi `CRON_SECRET` di
+  `deploy/vps/.env` lalu jalankan lagi `sudo bash deploy/vps/pasang.sh` (lihat
+  `docs/deploy-produksi.md` bagian 4a).
+- **Server lain:** tambahkan ke `crontab -e` (jam server UTC; 17.05 UTC = 00.05 WIB), ganti domain dan
   isi `CRON_SECRET` sama dengan environment aplikasi:
 
   ```cron

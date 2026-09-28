@@ -1,0 +1,77 @@
+# Kostera di VPS: aplikasi + PostgreSQL + Caddy (HTTPS otomatis) + jadwal (cron & backup harian).
+# Jalankan lewat deploy/vps/pasang.sh. Rahasia ada di deploy/vps/.env (tidak di-commit).
+
+name: kostera-vps
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kostera
+      POSTGRES_USER: kostera
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD kosong, jalankan deploy/vps/pasang.sh}
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kostera -d kostera"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build:
+      context: ../..
+      args:
+        APP_URL: https://${KOSTERA_DOMAIN_APP:?KOSTERA_DOMAIN_APP kosong}
+        LANDING_URL: https://${KOSTERA_DOMAIN_LANDING:?KOSTERA_DOMAIN_LANDING kosong}
+    image: kostera-app:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://kostera:${POSTGRES_PASSWORD}@db:5432/kostera
+      APP_URL: https://${KOSTERA_DOMAIN_APP}
+      LANDING_URL: https://${KOSTERA_DOMAIN_LANDING}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      KOSTERA_DOMAIN_APP: ${KOSTERA_DOMAIN_APP}
+      KOSTERA_DOMAIN_LANDING: ${KOSTERA_DOMAIN_LANDING}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  # Memakai image postgres supaya pg_dump-nya sama versi dengan database; cron-nya crond busybox.
+  jadwal:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    entrypoint: ["sh", "/jadwal.sh"]
+    environment:
+      CRON_SECRET: ${CRON_SECRET:-}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./jadwal.sh:/jadwal.sh:ro
+      - ${KOSTERA_BACKUP_DIR:-/var/backups/kostera}:/backup
+    # Folder data bawaan image postgres tidak dipakai di sini; tmpfs mencegah volume anonim menumpuk.
+    tmpfs:
+      - /var/lib/postgresql/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db:
+  caddy_data:
+  caddy_config:
