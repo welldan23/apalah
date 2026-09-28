@@ -1,0 +1,11 @@
+# HTTPS otomatis (Let's Encrypt) untuk landing & aplikasi. Domain diambil dari deploy/vps/.env.
+# Pembagian halaman antar-domain diatur aplikasinya sendiri (src/lib/rute-domain.ts).
+
+{$KOSTERA_DOMAIN_LANDING}, {$KOSTERA_DOMAIN_APP} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
+www.{$KOSTERA_DOMAIN_LANDING} {
+	redir https://{$KOSTERA_DOMAIN_LANDING}{uri} permanent
+}

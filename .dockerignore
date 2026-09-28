@@ -1,0 +1,10 @@
+# Jangan pernah masukkan rahasia atau database lokal ke image (termasuk deploy/vps/.env).
+**/.env*
+!.env.example
+.data
+.git
+.next
+node_modules
+.claude
+.ngodingpakeai
+**/*.log
