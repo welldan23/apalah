@@ -13,6 +13,7 @@ backup() {
   berkas="/backup/kostera-$(date -u +%Y%m%d-%H%M%S).dump"
   if pg_dump -h db -U kostera -d kostera --format=custom --no-owner -f "$berkas.tmp"; then
     mv "$berkas.tmp" "$berkas"
+    chown "${BACKUP_UID:-0}" "$berkas" # pemilik = user yang memasang, supaya bisa disalin tanpa sudo
     echo "$(waktu) backup ok: $(basename "$berkas")"
   else
     rm -f "$berkas.tmp"

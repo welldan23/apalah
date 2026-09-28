@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Pasang atau perbarui Kostera di VPS (Ubuntu/Debian) memakai Docker.
 #
-#   sudo bash deploy/vps/pasang.sh --cek   # hanya memeriksa VPS & DNS, tidak mengubah apa pun
-#   sudo bash deploy/vps/pasang.sh         # pasang pertama kali, atau perbarui setelah `git pull`
+#   bash deploy/vps/pasang.sh --cek   # hanya memeriksa VPS & DNS, tidak mengubah apa pun
+#   bash deploy/vps/pasang.sh         # pasang pertama kali, atau perbarui setelah `git pull`
 #
+# Tidak harus root: user biasa cukup sudah boleh memakai Docker (grup docker). Root/sudo hanya
+# perlu kalau Docker belum terpasang — skrip memasangnya sendiri bila dijalankan sebagai root.
 # Aman diulang. Tidak pernah menampilkan isi rahasia. Tidak menyentuh container/program lain:
 # kalau port 80/443 sudah dipakai program lain, skrip berhenti sebelum mengubah apa pun.
 # Database di-backup dulu sebelum migrasi setiap kali memperbarui.
@@ -24,7 +26,8 @@ compose() { docker compose -f "$DIR/compose.yaml" "$@"; }
 nilai() { grep -E "^$1=" "${2:-$ENV_FILE}" 2>/dev/null | tail -1 | cut -d= -f2- || true; }
 
 echo "== Memeriksa VPS =="
-[[ $EUID -eq 0 ]] || { echo "  ✗ Jalankan dengan sudo (atau sebagai root)."; exit 1; }
+root=false
+if [[ $EUID -eq 0 ]]; then root=true; ok "Jalan sebagai root"; else ok "Jalan sebagai user $(id -un) (tanpa root)"; fi
 
 # shellcheck disable=SC1091
 . /etc/os-release
@@ -46,10 +49,18 @@ if ((disk < 6000)); then masalah "Sisa disk ${disk} MB, butuh minimal 6 GB."; el
 
 punya_docker=false
 if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then
-  punya_docker=true
-  ok "$(docker --version)"
-else
+  if docker info >/dev/null 2>&1; then
+    punya_docker=true
+    ok "$(docker --version)"
+  elif $root; then
+    masalah "Docker terpasang tapi belum jalan. Nyalakan dulu: systemctl start docker"
+  else
+    masalah "User $(id -un) belum boleh memakai Docker. Sekali saja: sudo usermod -aG docker $(id -un), lalu keluar & masuk lagi ke VPS."
+  fi
+elif $root; then
   catatan "Docker belum terpasang — akan dipasang otomatis."
+else
+  masalah "Docker belum terpasang. Pasang sekali pakai sudo: curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $(id -un), lalu keluar & masuk lagi ke VPS."
 fi
 
 # Port 80/443: boleh dipakai Caddy milik Kostera sendiri (saat memperbarui), selain itu berhenti.
@@ -58,9 +69,10 @@ if $punya_docker; then caddy_kostera=$(compose ps -q caddy 2>/dev/null || true);
 if command -v ss >/dev/null; then
   port_bebas=true
   for port in 80 443; do
-    pemakai=$(ss -Hltnp "sport = :$port" 2>/dev/null | grep -o 'users:(("[^"]*"' | cut -d'"' -f2 | sort -u | xargs || true)
-    if [[ -n "$pemakai" && -z "$caddy_kostera" ]]; then
-      masalah "Port $port sudah dipakai: ${pemakai}. Hentikan dulu program itu (mis. nginx/apache/panel hosting), atau tanyakan dulu kalau ragu."
+    if [[ -n "$(ss -Hltn "sport = :$port" 2>/dev/null)" && -z "$caddy_kostera" ]]; then
+      # Nama program milik user lain hanya terlihat kalau skrip jalan sebagai root.
+      pemakai=$(ss -Hltnp "sport = :$port" 2>/dev/null | grep -o 'users:(("[^"]*"' | cut -d'"' -f2 | sort -u | xargs || true)
+      masalah "Port $port sudah dipakai ${pemakai:-program lain (namanya terlihat kalau dicek pakai sudo)}. Hentikan dulu program itu (mis. nginx/apache/panel hosting), atau tanyakan dulu kalau ragu."
       port_bebas=false
     fi
   done
@@ -101,11 +113,11 @@ if $ada_masalah; then
 fi
 if $CEK_SAJA; then
   echo
-  echo "Pemeriksaan selesai, belum ada yang diubah. Pasang dengan: sudo bash deploy/vps/pasang.sh"
+  echo "Pemeriksaan selesai, belum ada yang diubah. Pasang dengan: bash deploy/vps/pasang.sh"
   exit 0
 fi
 
-if ! $punya_docker; then
+if ! $punya_docker; then # hanya sampai sini sebagai root; user biasa sudah dihentikan di atas
   echo "== Memasang Docker =="
   curl -fsSL https://get.docker.com | sh
 fi
@@ -130,7 +142,13 @@ chmod 600 "$ENV_FILE"
   { echo "  ✗ POSTGRES_PASSWORD/BETTER_AUTH_SECRET di deploy/vps/.env kosong atau terlalu pendek."; exit 1; }
 
 backup_dir=$(nilai KOSTERA_BACKUP_DIR)
-install -d -m 700 "${backup_dir:-/var/backups/kostera}"
+if [[ -z "$backup_dir" ]] && ! $root; then
+  # User biasa tidak bisa menulis ke /var/backups: simpan di home, berkasnya dimiliki user ini.
+  backup_dir="$HOME/kostera-backup"
+  printf 'KOSTERA_BACKUP_DIR=%s\nKOSTERA_BACKUP_UID=%s\n' "$backup_dir" "$(id -u)" >>"$ENV_FILE"
+fi
+backup_dir=${backup_dir:-/var/backups/kostera}
+install -d -m 700 "$backup_dir"
 
 echo "== Build aplikasi (pertama kali bisa 5–15 menit) =="
 compose build app
@@ -174,4 +192,5 @@ else
   echo "  $landing, app, dan www → ${ip_vps:-IP VPS} dengan Proxy status: DNS only (awan abu-abu)."
   echo "  Sertifikat HTTPS dibuat otomatis beberapa menit setelah DNS benar — tidak perlu pasang ulang."
 fi
+echo "  Backup   : $backup_dir (tiap hari 02.00 WIB)"
 echo "  Log      : docker compose -f deploy/vps/compose.yaml logs -f app"

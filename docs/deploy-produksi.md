@@ -18,7 +18,7 @@ lewat `deploy/vps/.env` di server (izin 600) atau Vercel → Settings → Enviro
   sudah mati** (error 1033). Sebelumnya tunnel itu melayani landing lama dan `kostera-api` v0.2.0
   (`/health`, SPA di `/app/`). Bila server lama itu masih menyimpan data, backup dulu sebelum
   record-nya diganti. Link lama `app.kostera.id/app/…` otomatis diarahkan ke `/masuk`.
-- Akses yang dibutuhkan: VPS (root/sudo) atau project Vercel, zona DNS `kostera.id` di Cloudflare,
+- Akses yang dibutuhkan: VPS (user yang boleh memakai Docker, atau root) atau project Vercel, zona DNS `kostera.id` di Cloudflare,
   akun Xendit dengan xenPlatform aktif, dan WhatsApp Business (Meta) atau nomor khusus pilot WAHA.
 
 ## 1. Arsitektur
@@ -82,33 +82,38 @@ lewat `deploy/vps/.env` di server (izin 600) atau Vercel → Settings → Enviro
 
 `deploy/vps/compose.yaml` menjalankan empat container: `app` (`next start`), `db` (PostgreSQL 16,
 tidak dibuka ke internet), `caddy` (HTTPS otomatis Let's Encrypt di port 80/443), dan `jadwal`
-(cron + backup harian ke `/var/backups/kostera`, disimpan 14 hari). Butuh Ubuntu/Debian, RAM + swap
-±2 GB, disk kosong ≥ 6 GB, dan port 80/443 yang belum dipakai program lain. `pasang.sh` memeriksa
-semua itu dulu dan berhenti tanpa mengubah apa pun bila ada yang belum cocok.
+(cron + backup harian, disimpan 14 hari). Butuh Ubuntu/Debian, RAM + swap ±2 GB, disk kosong
+≥ 6 GB, dan port 80/443 yang belum dipakai program lain. `pasang.sh` memeriksa semua itu dulu dan
+berhenti tanpa mengubah apa pun bila ada yang belum cocok.
 
-1. Masuk ke VPS (`ssh root@IP-VPS`), lalu ambil kodenya:
-   `git clone https://github.com/welldan23/apalah.git /opt/kostera && cd /opt/kostera`
-2. Periksa (tidak mengubah apa pun): `sudo bash deploy/vps/pasang.sh --cek` — menampilkan IP VPS.
+Tidak harus root. User biasa cukup sudah boleh memakai Docker; kalau Docker belum ada, pasang sekali
+pakai sudo: `curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $USER`, lalu
+keluar & masuk lagi ke VPS. Backup disimpan di `~/kostera-backup` (user biasa) atau
+`/var/backups/kostera` (root).
+
+1. Masuk ke VPS (`ssh user@IP-VPS`, tidak harus root), lalu ambil kodenya:
+   `git clone https://github.com/welldan23/apalah.git ~/kostera && cd ~/kostera`
+2. Periksa (tidak mengubah apa pun): `bash deploy/vps/pasang.sh --cek` — menampilkan IP VPS.
 3. DNS di Cloudflare → DNS → Records: hapus record `kostera.id`, `app`, dan `www` yang lama (yang
    ke tunnel; bila tidak bisa dihapus, hapus dulu *public hostname*-nya di Zero Trust → Networks →
    Tunnels), lalu buat record **A** untuk ketiganya ke IP VPS dengan *DNS only* (awan abu-abu).
-4. Pasang: `sudo bash deploy/vps/pasang.sh`. Pertama kali skrip memasang Docker bila belum ada,
-   membuat `deploy/vps/.env` (kata sandi database & `BETTER_AUTH_SECRET` diisi acak, tidak
+4. Pasang: `bash deploy/vps/pasang.sh`. Pertama kali skrip memasang Docker bila belum ada (hanya
+   kalau dijalankan sebagai root), membuat `deploy/vps/.env` (kata sandi database & `BETTER_AUTH_SECRET` diisi acak, tidak
    ditampilkan), build, migrasi, `cek:produksi`, lalu menyalakan semuanya. Sertifikat HTTPS dibuat
    otomatis begitu DNS mengarah ke VPS — tidak perlu pasang ulang.
 5. Setelah admin platform masuk sekali lewat OTP:
    `docker compose -f deploy/vps/compose.yaml exec app npm run platform:admin -- tambah 62…`
 
 - **Mengubah pengaturan** (WhatsApp, Xendit, `CRON_SECRET`): sunting `deploy/vps/.env` (contoh isi
-  di `deploy/vps/env.contoh`), lalu jalankan lagi `sudo bash deploy/vps/pasang.sh`.
-- **Memperbarui aplikasi:** `cd /opt/kostera && git pull && sudo bash deploy/vps/pasang.sh`. Database
+  di `deploy/vps/env.contoh`), lalu jalankan lagi `bash deploy/vps/pasang.sh`.
+- **Memperbarui aplikasi:** `cd ~/kostera && git pull && bash deploy/vps/pasang.sh`. Database
   otomatis di-backup sebelum migrasi.
 - **Jadwal otomatis** jalan begitu `CRON_SECRET` diisi: pekerjaan harian 00.05 WIB, pengingat dicek
   tiap jam. Backup 02.00 WIB selalu jalan. Log: `docker compose -f deploy/vps/compose.yaml logs jadwal`.
-- **Backup** ada di `/var/backups/kostera/*.dump` (hanya root) — salin berkala ke luar VPS. Memulihkan:
+- **Backup** ada di folder backup (`~/kostera-backup` atau `/var/backups/kostera`, lihat akhir keluaran `pasang.sh`) — salin berkala ke luar VPS. Memulihkan:
   ```bash
   docker compose -f deploy/vps/compose.yaml stop app jadwal
-  docker compose -f deploy/vps/compose.yaml exec -T db pg_restore --clean --no-owner -U kostera -d kostera < /var/backups/kostera/<berkas>.dump
+  docker compose -f deploy/vps/compose.yaml exec -T db pg_restore --clean --no-owner -U kostera -d kostera < <folder-backup>/<berkas>.dump
   docker compose -f deploy/vps/compose.yaml start app jadwal
   ```
 - Pilot WAHA (bagian 6a) bisa dijalankan di VPS yang sama; container-nya belum termasuk di
@@ -186,12 +191,12 @@ self-hosted, **tidak resmi**). Aturannya ketat supaya tidak ada pesan nyasar ke 
 
 ## 7. Operasional
 
-Di VPS, `dc` = `docker compose -f deploy/vps/compose.yaml` (jalankan dari `/opt/kostera`).
+Di VPS, `dc` = `docker compose -f deploy/vps/compose.yaml` (jalankan dari `~/kostera`).
 
 | Kebutuhan | VPS (Docker) | Vercel |
 | --- | --- | --- |
 | Status | `dc ps` | Dashboard → Deployments, atau `vercel ls` |
 | Log (tanpa isi pesan/OTP) | `dc logs -f app` (atau `caddy`, `jadwal`) | Dashboard → Logs, atau `vercel logs <url-deployment>` |
 | Restart | `dc restart app` | *Redeploy* deployment terakhir |
-| Rollback aplikasi | `git checkout <commit-lama> && sudo bash deploy/vps/pasang.sh` | *Instant Rollback*, atau `vercel rollback` |
+| Rollback aplikasi | `git checkout <commit-lama> && bash deploy/vps/pasang.sh` | *Instant Rollback*, atau `vercel rollback` |
 | Rollback database | `drizzle/rollback/*.down.sql` (terbaru dulu, lihat README di folder itu) atau pulihkan dump (VPS: bagian 4a; Vercel: `pg_restore --clean --no-owner -d "$DATABASE_URL" <file.dump>`) | sama |
