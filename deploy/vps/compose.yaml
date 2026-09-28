@@ -61,6 +61,7 @@ services:
     environment:
       CRON_SECRET: ${CRON_SECRET:-}
       PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_UID: ${KOSTERA_BACKUP_UID:-0}
     volumes:
       - ./jadwal.sh:/jadwal.sh:ro
       - ${KOSTERA_BACKUP_DIR:-/var/backups/kostera}:/backup
