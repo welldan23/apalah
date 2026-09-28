@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowRight, ChevronDown } from "lucide-react";
 
@@ -10,6 +11,7 @@ import {
   type StatusFilter,
 } from "@/components/dashboard/status-filter";
 import { InvoiceStatusBadge } from "@/components/status-badge";
+import { StatusFilterChips } from "@/components/status-filter-chips";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,30 +30,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  formatPeriode,
-  formatRupiah,
-  formatTanggalPendek,
-  selisihHari,
-} from "@/lib/format";
+import { formatPeriode, formatRupiah, formatTanggalPendek } from "@/lib/format";
+import { keteranganWaktu } from "@/lib/invoice";
 import type { InvoiceRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const BARIS_AWAL = 8;
-
-// Filter yang selalu tampil walau jumlahnya nol (status utama di PRD).
-const FILTER_TETAP = new Set<StatusFilter>(["semua", "jatuh_tempo", "menunggu", "lunas"]);
-
-/** Keterangan waktu: kapan dibayar, atau seberapa dekat/lewat jatuh tempo. */
-function keteranganWaktu(inv: InvoiceRow, hariIni: string) {
-  if (inv.status === "lunas" && inv.dibayarPada) {
-    return { teks: `Dibayar ${formatTanggalPendek(inv.dibayarPada)}`, telat: false };
-  }
-  const sisa = selisihHari(hariIni, inv.jatuhTempo);
-  if (sisa < 0) return { teks: `Lewat ${-sisa} hari`, telat: true };
-  if (sisa === 0) return { teks: "Jatuh tempo hari ini", telat: false };
-  return { teks: `${sisa} hari lagi`, telat: false };
-}
 
 /** Tabel Status Bayar: invoice periode berjalan, bisa disaring per status. */
 export function InvoiceStatusTable({
@@ -69,12 +53,6 @@ export function InvoiceStatusTable({
   // Daftar lengkap hanya berlaku untuk filter yang sedang dibuka.
   const [diperluasUntuk, setDiperluasUntuk] = useState<StatusFilter | null>(null);
   const semuaBaris = diperluasUntuk === filter;
-
-  const jumlah = (f: StatusFilter) =>
-    f === "semua" ? invoices.length : invoices.filter((inv) => inv.status === f).length;
-  const pilihan = STATUS_FILTER.filter(
-    (f) => FILTER_TETAP.has(f.value) || f.value === filter || jumlah(f.value) > 0,
-  );
 
   const tersaring =
     filter === "semua" ? invoices : invoices.filter((inv) => inv.status === filter);
@@ -98,47 +76,21 @@ export function InvoiceStatusTable({
           {invoices.length} tagihan · {formatPeriode(periode)}
         </CardDescription>
         <CardAction>
-          <Button variant="ghost" size="sm" disabled title="Daftar invoice segera hadir">
-            Lihat semua
-            <ArrowRight data-icon="inline-end" />
+          <Button asChild variant="ghost" size="sm">
+            <Link href={filter === "semua" ? "/tagihan" : `/tagihan?status=${filter}`}>
+              Lihat semua
+              <ArrowRight data-icon="inline-end" />
+            </Link>
           </Button>
         </CardAction>
       </CardHeader>
 
-      <div
-        role="group"
-        aria-label="Saring status tagihan"
-        className="flex gap-1.5 overflow-x-auto border-b px-4 pt-3 pb-3 [scrollbar-width:none]"
-      >
-        {pilihan.map(({ value, label }) => {
-          const aktif = filter === value;
-          return (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={aktif}
-              onClick={() => gantiFilter(value)}
-              className={cn(
-                "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-medium sm:h-8 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                aktif
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {label}
-              <span
-                className={cn(
-                  "rounded-full px-1.5 text-xs tabular-nums",
-                  aktif ? "bg-primary-foreground/15" : "bg-card",
-                  !aktif && value === "jatuh_tempo" && jumlah(value) > 0 && "text-danger",
-                )}
-              >
-                {jumlah(value)}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <StatusFilterChips
+        invoices={invoices}
+        filter={filter}
+        onChange={gantiFilter}
+        className="border-b px-4 pt-3 pb-3"
+      />
 
       <CardContent className="px-0">
         {baris.length === 0 ? (

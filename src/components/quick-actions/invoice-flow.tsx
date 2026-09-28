@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { FilePlus2, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Check, FilePlus2, Plus, Search, X } from "lucide-react";
 
 import {
-  CatatanSimulasi,
   FieldError,
+  GalatServer,
   PreviewRows,
   SelesaiState,
   SheetActions,
   SheetBody,
-  simulasiKirim,
+  kirimAksi,
 } from "@/components/quick-actions/action-sheet";
 import { RupiahInput } from "@/components/quick-actions/rupiah-input";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -24,31 +26,64 @@ import {
   formatTanggal,
   periodeBerikutnya,
 } from "@/lib/format";
+import { peringatanTagihan } from "@/lib/invoice";
 import type { RoomCell } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Langkah = "isi" | "preview" | "menyimpan" | "selesai";
-type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal", string>>;
+type Hasil = { dibuat: number; totalNominal: number; dilewati: string[] };
+type Galat = Partial<Record<"periode" | "jatuhTempo" | "kamar" | "nominal" | "biaya", string>>;
+type BarisBiaya = { id: number; label: string; nominal: number | null };
 
-/** Buat Tagihan: pilih kamar, nominal & jatuh tempo → preview → konfirmasi owner. */
+const MAKS_BIAYA = 10;
+
+/** Buat Tagihan: pilih satu/banyak kamar, nominal & jatuh tempo → preview → konfirmasi owner. */
 export function InvoiceFlow({
   periode,
+  periodeAwal = periodeBerikutnya(periode),
+  hariIni,
   kamar,
 }: {
-  /** Periode berjalan (YYYY-MM); default tagihan untuk periode berikutnya. */
+  /** Periode berjalan (YYYY-MM). */
   periode: string;
+  /** Hari ini (YYYY-MM-DD, WIB) — untuk peringatan jatuh tempo yang sudah lewat. */
+  hariIni: string;
+  /** Periode tagihan yang dipilih saat form dibuka; default periode berikutnya. */
+  periodeAwal?: string;
   /** Kamar terisi yang bisa ditagih. */
   kamar: RoomCell[];
 }) {
-  const periodeAwal = periodeBerikutnya(periode);
+  const router = useRouter();
   const [langkah, setLangkah] = useState<Langkah>("isi");
+  const [hasil, setHasil] = useState<Hasil | null>(null);
+  const [galatServer, setGalatServer] = useState<string | null>(null);
   const [periodeTagihan, setPeriodeTagihan] = useState(periodeAwal);
   const [jatuhTempo, setJatuhTempo] = useState(`${periodeAwal}-10`);
   const [dipilih, setDipilih] = useState(() => new Set(kamar.map((k) => k.id)));
   const [modeNominal, setModeNominal] = useState<"sewa" | "khusus">("sewa");
   const [nominalKhusus, setNominalKhusus] = useState<number | null>(null);
+  const [biaya, setBiaya] = useState<BarisBiaya[]>([]);
+  const idBiaya = useRef(0);
   const [cari, setCari] = useState("");
   const [galat, setGalat] = useState<Galat>({});
+  // Kamar yang sudah punya tagihan di periode terpilih (dicek ke server tiap periode berganti).
+  const [ditagih, setDitagih] = useState<{ periode: string; roomIds: Set<string> } | null>(null);
+  const sudahDitagih = ditagih?.periode === periodeTagihan ? ditagih.roomIds : null;
+
+  useEffect(() => {
+    if (!/^\d{4}-\d{2}$/.test(periodeTagihan)) return;
+    const batal = new AbortController();
+    fetch(`/api/dashboard/invoices?periode=${periodeTagihan}`, { signal: batal.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { invoices: { roomId: string }[] } | null) => {
+        if (data) {
+          setDitagih({ periode: periodeTagihan, roomIds: new Set(data.invoices.map((inv) => inv.roomId)) });
+        }
+      })
+      // Gagal cek tidak menghalangi: server tetap melewati kamar yang sudah ditagih.
+      .catch(() => {});
+    return () => batal.abort();
+  }, [periodeTagihan]);
 
   // Galat sebuah field hilang begitu field itu diubah.
   const bersihkan = (kunci: keyof Galat) =>
@@ -63,11 +98,21 @@ export function InvoiceFlow({
       )
     : kamar;
 
+  // Baris biaya yang benar-benar kosong diabaikan.
+  const biayaTerisi = biaya.filter((b) => b.label.trim() || b.nominal);
+  const tambahan = biayaTerisi.reduce((jumlah, b) => jumlah + (b.nominal ?? 0), 0);
   const nominalUntuk = (k: RoomCell) =>
-    modeNominal === "sewa" ? k.hargaSewa : (nominalKhusus ?? 0);
-  const penerima = kamar.filter((k) => dipilih.has(k.id));
+    (modeNominal === "sewa" ? (k.hargaSewaPenghuni ?? k.hargaSewa) : (nominalKhusus ?? 0)) + tambahan;
+
+  function ubahBiaya(id: number, perubahan: Partial<BarisBiaya>) {
+    bersihkan("biaya");
+    setBiaya((daftar) => daftar.map((b) => (b.id === id ? { ...b, ...perubahan } : b)));
+  }
+  const tersedia = sudahDitagih ? kamar.filter((k) => !sudahDitagih.has(k.id)) : kamar;
+  const penerima = tersedia.filter((k) => dipilih.has(k.id));
   const total = penerima.reduce((jumlah, k) => jumlah + nominalUntuk(k), 0);
-  const semuaDipilih = dipilih.size === kamar.length;
+  const semuaDipilih = penerima.length === tersedia.length;
+  const jumlahSudahDitagih = kamar.length - tersedia.length;
 
   function toggle(id: string, cek: boolean) {
     bersihkan("kamar");
@@ -83,23 +128,46 @@ export function InvoiceFlow({
     const g: Galat = {};
     if (!periodeTagihan) g.periode = "Pilih periode tagihan.";
     if (!jatuhTempo) g.jatuhTempo = "Isi tanggal jatuh tempo.";
-    if (penerima.length === 0) g.kamar = "Pilih minimal satu kamar.";
+    if (tersedia.length === 0) g.kamar = "Semua kamar sudah punya tagihan untuk periode ini.";
+    else if (penerima.length === 0) g.kamar = "Pilih minimal satu kamar.";
     if (modeNominal === "khusus" && !nominalKhusus) g.nominal = "Isi nominal tagihan.";
+    if (biayaTerisi.some((b) => !b.label.trim() || !b.nominal)) {
+      g.biaya = "Lengkapi nama dan nominal setiap biaya tambahan.";
+    }
     setGalat(g);
     if (Object.keys(g).length === 0) setLangkah("preview");
   }
 
   async function konfirmasi() {
     setLangkah("menyimpan");
-    await simulasiKirim();
-    setLangkah("selesai");
+    setGalatServer(null);
+    try {
+      const data = await kirimAksi<Hasil>("/api/dashboard/aksi/tagihan", {
+        periode: periodeTagihan,
+        jatuhTempo,
+        roomIds: penerima.map((k) => k.id),
+        nominalKhusus: modeNominal === "khusus" ? nominalKhusus : null,
+        biayaTambahan: biayaTerisi.map((b) => ({ label: b.label.trim(), nominal: b.nominal })),
+      });
+      setHasil(data);
+      setLangkah("selesai");
+      router.refresh();
+    } catch (err) {
+      setGalatServer((err as Error).message);
+      setLangkah("preview");
+    }
   }
 
-  if (langkah === "selesai") {
+  if (langkah === "selesai" && hasil) {
+    const kamarDilewati =
+      hasil.dilewati.length > 5 ? `${hasil.dilewati.length} kamar` : `Kamar ${hasil.dilewati.join(", ")}`;
+    const dilewati = hasil.dilewati.length
+      ? ` ${kamarDilewati} dilewati karena sudah punya tagihan periode ini.`
+      : "";
     return (
       <SelesaiState
-        judul={`${penerima.length} tagihan ${formatPeriode(periodeTagihan)} dibuat`}
-        pesan="Setiap tagihan punya link invoice publik yang bisa dibuka penyewa tanpa login."
+        judul={`${hasil.dibuat} tagihan ${formatPeriode(periodeTagihan)} dibuat`}
+        pesan={`Total ${formatRupiah(hasil.totalNominal)}. Setiap tagihan punya link invoice publik yang bisa dibuka penyewa tanpa login.${dilewati}`}
       />
     );
   }
@@ -113,9 +181,34 @@ export function InvoiceFlow({
               ["Penerima", `${penerima.length} penyewa`],
               ["Periode", formatPeriode(periodeTagihan)],
               ["Jatuh tempo", formatTanggal(jatuhTempo)],
+              [
+                "Nominal",
+                modeNominal === "sewa"
+                  ? "Sesuai harga sewa penghuni"
+                  : `${formatRupiah(nominalKhusus ?? 0)} per kamar`,
+              ],
+              ...(biayaTerisi.length > 0
+                ? [
+                    [
+                      "Biaya tambahan",
+                      `${biayaTerisi.map((b) => `${b.label.trim()} ${formatRupiah(b.nominal ?? 0)}`).join(" + ")} per kamar`,
+                    ] as [string, string],
+                  ]
+                : []),
               ["Total nominal", formatRupiah(total)],
+              ...(jumlahSudahDitagih > 0
+                ? [["Dilewati", `${jumlahSudahDitagih} kamar sudah ditagih`] as [string, string]]
+                : []),
             ]}
           />
+          {peringatanTagihan({ periode: periodeTagihan, jatuhTempo, hariIni }).map((pesan) => (
+            <p key={pesan} role="status" className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning">
+              {pesan}
+            </p>
+          ))}
+          <p className="text-xs text-muted-foreground">
+            Setiap penyewa mendapat link invoice publik. Status awal tagihan: Menunggu pembayaran.
+          </p>
           <section aria-labelledby="tagihan-penerima">
             <h3 id="tagihan-penerima" className="mb-2 text-sm font-medium">
               Rincian per kamar
@@ -134,7 +227,7 @@ export function InvoiceFlow({
               ))}
             </ul>
           </section>
-          <CatatanSimulasi />
+          <GalatServer pesan={galatServer} />
         </SheetBody>
         <SheetActions>
           <Button
@@ -198,7 +291,7 @@ export function InvoiceFlow({
           <legend className="mb-1.5 text-sm font-medium">Nominal</legend>
           {(
             [
-              ["sewa", "Sesuai harga sewa kamar"],
+              ["sewa", "Sesuai harga sewa penghuni"],
               ["khusus", "Nominal sama untuk semua kamar"],
             ] as const
           ).map(([nilai, label]) => (
@@ -238,17 +331,73 @@ export function InvoiceFlow({
           )}
         </fieldset>
 
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-sm font-medium">
+            Biaya tambahan <span className="font-normal text-muted-foreground">(opsional)</span>
+          </legend>
+          {biaya.map((b, i) => (
+            <div key={b.id} className="flex items-center gap-2">
+              <Input
+                aria-label={`Nama biaya ${i + 1}`}
+                placeholder="Mis. Listrik"
+                maxLength={60}
+                className="h-10 min-w-0 flex-1 bg-card"
+                value={b.label}
+                onChange={(e) => ubahBiaya(b.id, { label: e.target.value })}
+                aria-describedby="tagihan-biaya-galat"
+              />
+              <RupiahInput
+                aria-label={`Nominal biaya ${i + 1}`}
+                placeholder="50.000"
+                className="w-32 shrink-0"
+                value={b.nominal}
+                onChange={(nilai) => ubahBiaya(b.id, { nominal: nilai })}
+                aria-describedby="tagihan-biaya-galat"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-10 shrink-0"
+                aria-label={`Hapus biaya ${b.label.trim() || i + 1}`}
+                onClick={() => {
+                  bersihkan("biaya");
+                  setBiaya((daftar) => daftar.filter((x) => x.id !== b.id));
+                }}
+              >
+                <X />
+              </Button>
+            </div>
+          ))}
+          <FieldError id="tagihan-biaya-galat" pesan={galat.biaya} />
+          {biaya.length < MAKS_BIAYA && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 self-start bg-card"
+              onClick={() => setBiaya((daftar) => [...daftar, { id: ++idBiaya.current, label: "", nominal: null }])}
+            >
+              <Plus data-icon="inline-start" />
+              Tambah biaya (listrik, air…)
+            </Button>
+          )}
+          {biaya.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Ditambahkan ke setiap tagihan dan tampil sebagai rincian di invoice.
+            </p>
+          )}
+        </fieldset>
+
         <section aria-labelledby="tagihan-kamar" className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
             <h3 id="tagihan-kamar" className="text-sm font-medium">
-              Kamar · {dipilih.size} dipilih
+              Kamar · {penerima.length} dipilih
             </h3>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 bersihkan("kamar");
-                setDipilih(semuaDipilih ? new Set() : new Set(kamar.map((k) => k.id)));
+                setDipilih(semuaDipilih ? new Set() : new Set(tersedia.map((k) => k.id)));
               }}
             >
               {semuaDipilih ? "Kosongkan" : "Pilih semua"}
@@ -269,12 +418,20 @@ export function InvoiceFlow({
           <ul className="divide-y rounded-lg border bg-card">
             {tampil.map((k) => {
               const id = `tagihan-${k.id}`;
+              const ditagihPeriodeIni = sudahDitagih?.has(k.id) ?? false;
               return (
                 <li key={k.id}>
-                  <label htmlFor={id} className="flex cursor-pointer items-center gap-3 px-3 py-2">
+                  <label
+                    htmlFor={id}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2",
+                      ditagihPeriodeIni ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+                    )}
+                  >
                     <Checkbox
                       id={id}
-                      checked={dipilih.has(k.id)}
+                      checked={!ditagihPeriodeIni && dipilih.has(k.id)}
+                      disabled={ditagihPeriodeIni}
                       onCheckedChange={(cek) => toggle(k.id, cek === true)}
                     />
                     <span className="w-9 shrink-0 text-sm font-medium tabular-nums">
@@ -283,9 +440,15 @@ export function InvoiceFlow({
                     <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
                       {k.namaPenghuni}
                     </span>
-                    <span className="shrink-0 text-sm tabular-nums">
-                      {formatRupiah(nominalUntuk(k))}
-                    </span>
+                    {ditagihPeriodeIni ? (
+                      <StatusBadge tone="neutral" icon={Check}>
+                        Sudah ditagih
+                      </StatusBadge>
+                    ) : (
+                      <span className="shrink-0 text-sm tabular-nums">
+                        {formatRupiah(nominalUntuk(k))}
+                      </span>
+                    )}
                   </label>
                 </li>
               );

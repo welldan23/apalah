@@ -1,7 +1,7 @@
-// Data tiruan (stub) untuk tahap frontend: satu kos contoh, "Kos Melati".
+// Data contoh satu kos, "Kos Melati" — diisikan ke database oleh seed (npm run db:seed) dan dipakai uji.
 // Angkanya sengaja disusun agar cocok dengan contoh di PRD:
-// 40 kamar, 34 terisi, 3 tagihan jatuh tempo, Rp12,5jt masuk bulan ini.
-// Akan diganti query database saat lapisan backend dibangun.
+// 40 kamar, 34 terisi, 3 tagihan jatuh tempo, Rp12,5jt masuk bulan ini — plus satu
+// pembayaran yang nominalnya tidak cocok (C09) untuk contoh status Perlu Review.
 
 import type {
   Invoice,
@@ -70,7 +70,7 @@ const PENGHUNI: TenantSeed[] = [
   ["C06", "Wayan Aditya", "2026-05-11", "lunas", "2026-09-10"],
   ["C07", "Kadek Sri Wahyuni", "2025-10-14", "lunas", "2026-09-14"],
   ["C08", "Ilham Syahputra", "2026-07-25", "menunggu"],
-  ["C09", "Grace Natalia", "2025-03-27", "menunggu"],
+  ["C09", "Grace Natalia", "2025-03-27", "perlu_review"],
   ["C11", "Bima Aryasatya", "2025-11-28", "menunggu"],
   ["C12", "Aulia Rahmah", "2026-08-30", "menunggu"],
 ];
@@ -110,6 +110,32 @@ export const mockTenants: Tenant[] = PENGHUNI.map(
   },
 );
 
+/** Mantan penghuni (status keluar) — kamarnya kini kosong. */
+export const mockPenghuniKeluar: Tenant[] = [
+  {
+    id: "tnt_keluar_A07",
+    organizationId: mockOrganization.id,
+    nama: "Rudi Hartono",
+    nomorWa: "6281377001122",
+    roomId: "room_A07",
+    tanggalMasuk: "2024-03-01",
+    tanggalKeluar: "2026-06-30",
+    status: "keluar",
+    hargaSewa: 500_000,
+  },
+  {
+    id: "tnt_keluar_B05",
+    organizationId: mockOrganization.id,
+    nama: "Mega Lestari",
+    nomorWa: "6281377003344",
+    roomId: "room_B05",
+    tanggalMasuk: "2025-01-10",
+    tanggalKeluar: "2026-08-31",
+    status: "keluar",
+    hargaSewa: 650_000,
+  },
+];
+
 /** Jatuh tempo bulanan mengikuti tanggal masuk penghuni. */
 function jatuhTempoPeriodeIni(tanggalMasuk: string) {
   const hari = tanggalMasuk.slice(8, 10);
@@ -145,7 +171,7 @@ export const mockInvoices: Invoice[] = PENGHUNI.map(
 const METODE_BAYAR = ["QRIS", "VA BCA", "VA Mandiri", "QRIS", "VA BRI"] as const;
 
 // Pembayaran tercatat dari webhook gateway (status valid) untuk invoice yang lunas.
-export const mockPayments: Payment[] = mockInvoices
+const pembayaranLunas: Payment[] = mockInvoices
   .filter((inv) => inv.status === "lunas" && inv.dibayarPada)
   .map((inv, i) => {
     const jam = String(8 + ((i * 5) % 13)).padStart(2, "0");
@@ -155,9 +181,50 @@ export const mockPayments: Payment[] = mockInvoices
       invoiceId: inv.id,
       nominalDibayar: inv.nominal,
       metode: METODE_BAYAR[i % METODE_BAYAR.length],
-      provider: "midtrans",
+      provider: "xendit",
       referensiProvider: `demo-ref-${inv.id}`,
       status: "valid",
       diverifikasiPada: `${inv.dibayarPada}T${jam}:${menit}:00+07:00`,
     };
   });
+
+// Nominal tidak cocok: Grace (C09) membayar Rp750.000 untuk tagihan Rp800.000 → invoice Perlu Review.
+const pembayaranTidakCocok: Payment = {
+  id: `pay_inv_${MOCK_PERIODE}_C09`,
+  invoiceId: `inv_${MOCK_PERIODE}_C09`,
+  nominalDibayar: 750_000,
+  metode: "QRIS",
+  provider: "xendit",
+  referensiProvider: `demo-ref-inv_${MOCK_PERIODE}_C09`,
+  status: "tidak_cocok",
+  diverifikasiPada: `${MOCK_PERIODE}-23T19:42:00+07:00`,
+};
+
+export const mockPayments: Payment[] = [...pembayaranLunas, pembayaranTidakCocok];
+
+// Riwayat pengingat otomatis (H-3/H/H+3, jam 09.00 WIB) untuk tagihan contoh sampai hari ini.
+// [kamar, jenis, tanggal kirim, status]
+const RIWAYAT_PENGINGAT: [string, string, string, "terkirim" | "gagal"][] = [
+  ["A05", "H-3", "2026-09-12", "terkirim"],
+  ["A05", "H", "2026-09-15", "terkirim"],
+  ["B06", "H-3", "2026-09-15", "terkirim"],
+  ["C05", "H-3", "2026-09-17", "terkirim"],
+  ["A05", "H+3", "2026-09-18", "terkirim"],
+  ["B06", "H", "2026-09-18", "terkirim"],
+  ["C05", "H", "2026-09-20", "gagal"],
+  ["B06", "H+3", "2026-09-21", "terkirim"],
+  ["B15", "H-3", "2026-09-21", "terkirim"],
+  ["A03", "H-3", "2026-09-23", "terkirim"],
+];
+
+export const mockReminders = RIWAYAT_PENGINGAT.map(([kamar, jenis, tanggal, status]) => ({
+  id: `rem_${kamar}_${jenis}`,
+  organizationId: mockOrganization.id,
+  invoiceId: `inv_${MOCK_PERIODE}_${kamar}`,
+  tenantId: `tnt_${kamar}`,
+  jenis,
+  kanal: "whatsapp",
+  status,
+  terkirimPada: `${tanggal}T09:00:00+07:00`,
+}));
+

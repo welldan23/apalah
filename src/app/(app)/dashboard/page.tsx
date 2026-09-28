@@ -3,9 +3,15 @@ import type { Metadata } from "next";
 import { IncomeSummary } from "@/components/dashboard/income-summary";
 import { InvoiceStatusTable } from "@/components/dashboard/invoice-status-table";
 import { KosOverview } from "@/components/dashboard/kos-overview";
+import { KontrolKosta } from "@/components/kosta/kontrol-kosta";
+import { BannerPerluReview } from "@/components/pembayaran/banner-perlu-review";
+import { BannerTiket } from "@/components/tiket/banner-tiket";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RoomSummary } from "@/components/dashboard/room-summary";
+import { getDb } from "@/db";
 import { getDashboardData } from "@/lib/data/dashboard";
+import { getKontrolKosta } from "@/lib/data/kontrol-kosta";
+import { getWorkspaceSession } from "@/lib/data/session";
 import { formatHari } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -13,30 +19,31 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
-  const namaDepan = data.owner.nama.split(" ")[0];
+  const session = await getWorkspaceSession();
+  const [data, kosta] = await Promise.all([
+    getDashboardData(),
+    getKontrolKosta(await getDb(), { organizationId: session.organization.id, userId: session.user.id }),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 lg:gap-6">
       <div className="grid min-w-0 gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <header className="lg:col-start-1 lg:row-start-1">
           <p className="text-sm text-muted-foreground">{formatHari(data.hariIni)}</p>
-          <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">
-            Halo, {namaDepan}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ini kondisi {data.organization.namaKos} hari ini.
-          </p>
+          <h1 className="mt-0.5 text-3xl font-semibold tracking-[-0.02em]">{data.organization.namaKos}</h1>
+          {data.organization.alamat && <p className="mt-1 text-sm text-muted-foreground">{data.organization.alamat}</p>}
         </header>
 
-        <div className="order-2 lg:order-none lg:col-span-2 lg:row-start-2">
+        <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-2 lg:row-start-2">
           <KosOverview data={data} />
+          <BannerPerluReview items={data.perluReview} />
+          <BannerTiket jumlah={data.tiket} />
+          <KontrolKosta data={kosta} />
         </div>
 
         <div className="order-3 lg:order-none lg:col-start-2 lg:row-start-1">
           <h2 className="sr-only">Aksi cepat</h2>
           <QuickActions
-            namaKos={data.organization.namaKos}
             periode={data.periode}
             hariIni={data.hariIni}
             kamar={data.kamar.daftar}

@@ -37,11 +37,14 @@ export function IncomeSummary({
   const persen = target > 0 ? Math.round((pemasukan.bulanIni / target) * 100) : 0;
   const belumMasuk = Math.max(0, target - pemasukan.bulanIni);
 
-  const rincian = [
-    { status: "lunas", rekap: tagihan.lunas },
-    { status: "menunggu", rekap: tagihan.menunggu },
-    { status: "jatuh_tempo", rekap: tagihan.jatuhTempo },
-  ] as const;
+  const rincian = (
+    [
+      { status: "lunas", rekap: tagihan.lunas },
+      { status: "menunggu", rekap: tagihan.menunggu },
+      { status: "jatuh_tempo", rekap: tagihan.jatuhTempo },
+      { status: "perlu_review", rekap: tagihan.perluReview },
+    ] as const
+  ).filter(({ status, rekap }) => status !== "perlu_review" || rekap.jumlah > 0);
 
   return (
     <Card className="shadow-none">

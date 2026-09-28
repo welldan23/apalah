@@ -1,27 +1,23 @@
 import { cn } from "@/lib/utils";
 
+/** Judul seksi landing: judul besar + satu paragraf, tanpa label kecil di atasnya. */
 export function SectionHeading({
   id,
-  eyebrow,
   judul,
   deskripsi,
   className,
 }: {
   id: string;
-  eyebrow: string;
   judul: string;
   deskripsi?: string;
   className?: string;
 }) {
   return (
     <div className={cn("max-w-2xl", className)}>
-      <p className="text-sm font-medium text-primary">{eyebrow}</p>
-      <h2 id={id} className="mt-2 text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+      <h2 id={id} className="text-3xl leading-[1.1] font-semibold tracking-[-0.02em] sm:text-4xl">
         {judul}
       </h2>
-      {deskripsi && (
-        <p className="mt-3 text-base text-pretty text-muted-foreground">{deskripsi}</p>
-      )}
+      {deskripsi && <p className="mt-4 text-lg text-pretty text-muted-foreground">{deskripsi}</p>}
     </div>
   );
 }

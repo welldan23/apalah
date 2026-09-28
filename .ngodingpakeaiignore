@@ -6,3 +6,6 @@
 # docs/internal/
 # *.snap
 # fixtures/
+
+# Skill desain pihak ketiga (Hallmark), bukan kode Kostera.
+.claude/skills/hallmark/

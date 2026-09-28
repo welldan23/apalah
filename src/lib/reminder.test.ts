@@ -1,0 +1,136 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import {
+  antrianPengingat,
+  bolehDiingatkan,
+  dalamJamKirim,
+  JADWAL_BAWAAN,
+  jenisDiRiwayat,
+  keteranganJadwal,
+  labelJadwal,
+  labelJenisReminder,
+  parseStatusRiwayat,
+  periksaJadwal,
+  periodeDiRiwayat,
+  saringRiwayatReminder,
+  slotPengingatJatuhWaktu,
+} from "./reminder.ts";
+
+describe("label jadwal pengingat", () => {
+  it("H-3 / H / H+3 dan kalimatnya", () => {
+    assert.deepEqual(JADWAL_BAWAAN.map((j) => labelJadwal(j.offsetHari)), ["H-3", "H", "H+3"]);
+    assert.equal(keteranganJadwal(-3), "3 hari sebelum jatuh tempo");
+    assert.equal(keteranganJadwal(0), "Di hari jatuh tempo");
+    assert.equal(keteranganJadwal(7), "7 hari setelah jatuh tempo");
+    assert.equal(labelJenisReminder("manual"), "Manual");
+    assert.equal(labelJenisReminder("H+3"), "H+3");
+  });
+});
+
+describe("antrianPengingat", () => {
+  const t = (jatuhTempo: string, nominal: number, status = "menunggu") => ({ jatuhTempo, nominal, status });
+
+  it("mengelompokkan per tanggal & jenis dalam 7 hari ke depan", () => {
+    const tagihan = [t("2026-09-26", 500_000), t("2026-09-28", 650_000), t("2026-09-26", 800_000), t("2026-09-22", 500_000, "jatuh_tempo")];
+    assert.deepEqual(antrianPengingat(tagihan, JADWAL_BAWAAN, "2026-09-24"), [
+      { tanggal: "2026-09-25", jenis: "H-3", jam: "09:00", jumlah: 1, nominal: 650_000 },
+      { tanggal: "2026-09-25", jenis: "H+3", jam: "09:00", jumlah: 1, nominal: 500_000 },
+      { tanggal: "2026-09-26", jenis: "H", jam: "09:00", jumlah: 2, nominal: 1_300_000 },
+      { tanggal: "2026-09-28", jenis: "H", jam: "09:00", jumlah: 1, nominal: 650_000 },
+      { tanggal: "2026-09-29", jenis: "H+3", jam: "09:00", jumlah: 2, nominal: 1_300_000 },
+    ]);
+  });
+
+  it("tagihan lunas, jadwal nonaktif, dan tanggal yang sudah lewat diabaikan", () => {
+    const jadwal = JADWAL_BAWAAN.map((j) => ({ ...j, aktif: j.offsetHari === 0 }));
+    assert.deepEqual(antrianPengingat([t("2026-09-26", 1, "lunas"), t("2026-09-20", 1)], jadwal, "2026-09-24"), []);
+    assert.deepEqual(antrianPengingat([t("2026-10-05", 1)], JADWAL_BAWAAN, "2026-09-24"), []);
+  });
+});
+
+describe("periksaJadwal", () => {
+  const j = (offsetHari: number, jam = "09:00") => ({ offsetHari, jam, aktif: true });
+  it("jadwal valid & ubahan jadwal sendiri tidak dianggap bentrok", () => {
+    assert.equal(periksaJadwal(j(-1), JADWAL_BAWAAN), "");
+    assert.equal(periksaJadwal(j(-3, "07:30"), JADWAL_BAWAAN, 0), "");
+  });
+  it("menolak offset di luar batas, jam tidak wajar, bentrok, dan terlalu banyak", () => {
+    assert.match(periksaJadwal(j(15), JADWAL_BAWAAN), /0–14 hari/);
+    assert.match(periksaJadwal(j(1, "9:00"), JADWAL_BAWAAN), /Isi jam kirim/);
+    assert.match(periksaJadwal(j(1, "22:00"), JADWAL_BAWAAN), /06\.00 dan 21\.00/);
+    assert.match(periksaJadwal(j(0), JADWAL_BAWAAN), /Sudah ada jadwal H\./);
+    assert.match(periksaJadwal(j(3), JADWAL_BAWAAN, 0), /Sudah ada jadwal H\+3/);
+    const lima = [j(-5), j(-3), j(0), j(3), j(5)];
+    assert.match(periksaJadwal(j(7), lima), /Maksimal 5 jadwal/);
+  });
+});
+
+describe("bolehDiingatkan", () => {
+  const sekarang = new Date("2026-09-24T09:00:00+07:00");
+  it("belum pernah atau sudah ≥ 24 jam → boleh; kurang dari 24 jam → tidak", () => {
+    assert.equal(bolehDiingatkan(undefined, sekarang), true);
+    assert.equal(bolehDiingatkan("2026-09-23T09:00:00+07:00", sekarang), true);
+    assert.equal(bolehDiingatkan("2026-09-23T10:00:00+07:00", sekarang), false);
+  });
+});
+
+describe("saring riwayat reminder", () => {
+  const riwayat = [
+    { id: "1", jenis: "H+3", status: "terkirim", periode: "2026-08", namaPenghuni: "Rizky Ramadhan", nomorKamar: "A05" },
+    { id: "2", jenis: "manual", status: "gagal", periode: "2026-09", namaPenghuni: "Dewi Lestari", nomorKamar: "B06" },
+    { id: "3", jenis: "H", status: "gagal", periode: "2026-09", namaPenghuni: "Tiara Ramadhani", nomorKamar: "B16" },
+    { id: "4", jenis: "H-3", status: "terkirim", periode: "2026-09", namaPenghuni: "Budi", nomorKamar: "C05" },
+    { id: "5", jenis: "H-7", status: "terkirim", periode: "2026-10", namaPenghuni: "Sari", nomorKamar: "A03" },
+  ];
+  const semua = { status: "semua", jenis: "", tagihan: "", cari: "" } as const;
+  const id = (hasil: { id: string }[]) => hasil.map((r) => r.id);
+
+  it("status, jenis, periode tagihan, dan kata kunci (nama/kamar, tanpa beda huruf besar) digabung", () => {
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, semua)), ["1", "2", "3", "4", "5"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, status: "gagal" })), ["2", "3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, jenis: "manual" })), ["2"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, tagihan: "2026-09" })), ["2", "3", "4"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, cari: " ramadhan" })), ["1", "3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, status: "gagal", cari: "b1" })), ["3"]);
+    assert.deepEqual(id(saringRiwayatReminder(riwayat, { ...semua, status: "terkirim", tagihan: "2026-09", cari: "ramadhan" })), []);
+  });
+
+  it("pilihan jenis urut Manual, H-x → H+x; periode tagihan terbaru dulu; status dari URL", () => {
+    assert.deepEqual(jenisDiRiwayat([...riwayat, { jenis: "H-3" }, { jenis: "lain" }]), ["manual", "H-7", "H-3", "H", "H+3", "lain"]);
+    assert.deepEqual(periodeDiRiwayat(riwayat), ["2026-10", "2026-09", "2026-08"]);
+    assert.equal(parseStatusRiwayat("gagal"), "gagal");
+    assert.equal(parseStatusRiwayat("lunas"), "semua");
+    assert.equal(parseStatusRiwayat(null), "semua");
+  });
+});
+
+describe("slot pengingat otomatis", () => {
+  const wib = (iso: string) => new Date(`${iso}+07:00`);
+  const slot = (sekarang: string, jadwal = JADWAL_BAWAAN) =>
+    slotPengingatJatuhWaktu(jadwal, wib(sekarang)).map((s) => `${s.jenis} ${s.jatuhTempo} ${s.waktuKirim.toISOString()}`);
+
+  it("slot dihitung dari tanggal kirim WIB: H-3 hari ini → jatuh tempo 3 hari lagi", () => {
+    assert.deepEqual(slot("2026-09-27T09:00:00"), [
+      "H-3 2026-09-30 2026-09-27T02:00:00.000Z",
+      "H 2026-09-27 2026-09-27T02:00:00.000Z",
+      "H+3 2026-09-24 2026-09-27T02:00:00.000Z",
+    ]);
+  });
+
+  it("hanya slot dalam 24 jam terakhir; sebelum jamnya belum; jadwal nonaktif dilewati", () => {
+    assert.deepEqual(slot("2026-09-27T08:59:00", [{ offsetHari: 0, jam: "09:00", aktif: true }]), ["H 2026-09-26 2026-09-26T02:00:00.000Z"]);
+    assert.deepEqual(slot("2026-09-28T09:00:00", [{ offsetHari: 0, jam: "09:00", aktif: true }]), ["H 2026-09-28 2026-09-28T02:00:00.000Z"]);
+    assert.deepEqual(slot("2026-09-27T12:00:00", [{ offsetHari: 0, jam: "18:00", aktif: true }]), ["H 2026-09-26 2026-09-26T11:00:00.000Z"]);
+    assert.deepEqual(slot("2026-09-27T12:00:00", [{ offsetHari: 0, jam: "09:00", aktif: false }]), []);
+  });
+
+  it("jam kirim wajar 06.00–21.00 WIB", () => {
+    assert.equal(dalamJamKirim(wib("2026-09-27T05:59:00")), false);
+    assert.equal(dalamJamKirim(wib("2026-09-27T06:00:00")), true);
+    assert.equal(dalamJamKirim(wib("2026-09-27T21:00:00")), true);
+    assert.equal(dalamJamKirim(wib("2026-09-27T21:01:00")), false);
+    // 23.30 UTC = 06.30 WIB esok hari.
+    assert.equal(dalamJamKirim(new Date("2026-09-26T23:30:00Z")), true);
+  });
+});
