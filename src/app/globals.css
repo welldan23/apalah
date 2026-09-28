@@ -1,3 +1,7 @@
+/* Hallmark · macrostructure (landing): narrative-workflow · genre: editorial · theme: custom (kertas & tinta)
+ * nav: N1a (dua tujuan: Masuk, Daftar) · footer: Ft5 statement · hero: H2 split diptych
+ * pre-emit critique: P4 H4 E4 S5 R4 V4 · honest: pass (46) · chrome: pass (47) · tokens: pass (48)
+ */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -10,6 +14,15 @@
   --font-sans: var(--font-plex-sans);
   --font-heading: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
+  --color-wa-wallpaper: var(--wa-wallpaper);
+  --color-wa-keluar: var(--wa-keluar);
+  --color-wa-masuk: var(--wa-masuk);
+  --color-wa-tinta: var(--wa-tinta);
+  --color-wa-meta: var(--wa-meta);
+  --color-wa-centang: var(--wa-centang);
+  --color-wa-bar: var(--wa-bar);
+  --color-wa-tautan: var(--wa-tautan);
+  --color-wa-lembar: var(--wa-lembar);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -95,6 +108,18 @@
   --sidebar-accent-foreground: oklch(0.2 0.013 255);
   --sidebar-border: oklch(0.875 0.011 82);
   --sidebar-ring: oklch(0.45 0.07 160);
+
+  /* Warna WhatsApp — hanya untuk menampilkan percakapan Kosta AI apa adanya (landing & chat web). */
+  --wa-wallpaper: oklch(0.939 0.012 80);
+  --wa-keluar: oklch(0.957 0.067 141);
+  --wa-masuk: oklch(0.995 0.002 90);
+  --wa-tinta: oklch(0.215 0.019 235);
+  --wa-meta: oklch(0.559 0.025 234);
+  --wa-centang: oklch(0.755 0.117 230);
+  --wa-bar: oklch(0.96 0.005 258);
+  --wa-tautan: oklch(0.563 0.124 238);
+  --wa-lembar: oklch(0.971 0.005 78);
+  --wa-bayangan: oklch(0.185 0.018 238 / 0.13);
 }
 
 .dark {
@@ -141,6 +166,11 @@
   html {
     @apply font-sans;
   }
+  /* Tidak ada scroll horizontal di lebar mana pun; clip (bukan hidden) menjaga sticky tetap jalan. */
+  html,
+  body {
+    overflow-x: clip;
+  }
   /* Angka di tabel & ringkasan selalu sejajar kolomnya. */
   body {
     font-variant-numeric: tabular-nums;
@@ -149,6 +179,8 @@
   h2,
   h3 {
     text-wrap: balance;
+    overflow-wrap: anywhere;
+    min-width: 0;
   }
 }
 
@@ -161,4 +193,9 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Bayangan tipis gelembung chat WhatsApp. */
+@utility bayangan-wa {
+  box-shadow: 0 1px 0.5px var(--wa-bayangan);
 }

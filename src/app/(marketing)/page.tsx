@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 
-import { BenefitsSection } from "@/components/landing/benefits-section";
-import { CtaSection } from "@/components/landing/cta-section";
-import { DashboardPreviewSection } from "@/components/landing/dashboard-preview-section";
+import { AlurSection } from "@/components/landing/alur-section";
 import { FaqSection } from "@/components/landing/faq-section";
 import { HeroSection } from "@/components/landing/hero-section";
-import { HowItWorksSection } from "@/components/landing/how-it-works-section";
-import { ProblemSection } from "@/components/landing/problem-section";
-import { CTA_PENUTUP } from "@/lib/landing/content";
 import { urlLanding } from "@/lib/situs";
 
 const JUDUL = "Kostera — Tagihan kos rapi, pembayaran lebih pasti";
@@ -30,15 +25,12 @@ export const metadata: Metadata = {
 };
 
 export default function LandingPage() {
+  // Narrative Workflow: hero → satu bulan di kos tahap demi tahap → tanya-jawab; penutupnya di footer.
   return (
     <>
       <HeroSection />
-      <ProblemSection />
-      <BenefitsSection />
-      <HowItWorksSection />
-      <DashboardPreviewSection />
+      <AlurSection />
       <FaqSection />
-      <CtaSection id="cta-penutup" cta={CTA_PENUTUP} />
     </>
   );
 }

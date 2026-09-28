@@ -3,8 +3,8 @@
 export const HREF_MULAI = "/daftar";
 export const HREF_MASUK = "/masuk";
 
+/** Tautan di dalam halaman (dipakai footer). */
 export const NAV_LANDING = [
-  { href: "#fitur", label: "Fitur" },
   { href: "#cara-kerja", label: "Cara kerja" },
   { href: "#faq", label: "FAQ" },
 ];
